@@ -1361,18 +1361,55 @@ export class PokemonBattleArena {
             const inInput = active && ['INPUT', 'SELECT', 'TEXTAREA'].includes(active.tagName);
             const isMod = e.ctrlKey || e.metaKey;
 
+            // Don't fire shortcuts if the user is typing in an input,
+            // UNLESS it's a modifier shortcut (like Ctrl+Z).
             if (inInput && !isMod) return;
 
-            // Undo / Redo
-            if (isMod && e.key === 'z' && !e.shiftKey) { e.preventDefault(); document.getElementById('undo-btn')?.click(); return; }
-            if (isMod && e.key === 'z' && e.shiftKey) { e.preventDefault(); document.getElementById('redo-btn')?.click(); return; }
+            // ── Undo / Redo ──────────────────────────────────────────────
+            if (isMod && e.key?.toLowerCase() === 'z') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    document.getElementById('redo-btn')?.click();
+                } else {
+                    document.getElementById('undo-btn')?.click();
+                }
+                return;
+            }
+            if (isMod && e.key?.toLowerCase() === 'y') {
+                e.preventDefault();
+                document.getElementById('redo-btn')?.click();
+                return;
+            }
 
-            // Close modals
-            if (e.key === 'Escape') { this.modals.closeAll(); this.audio.play('click'); return; }
+            // ── Modals ──────────────────────────────────────────────────
+            if (e.key === 'Escape') {
+                if (this.modals.anyOpen()) {
+                    this.modals.closeAll();
+                    this.audio.play('click');
+                    return;
+                }
+            }
 
             // Don't fire arena shortcuts when a modal is open.
             if (this.modals.anyOpen()) return;
 
+            // ── Timer controls ───────────────────────────────────────────
+            if (e.key?.toLowerCase() === 't') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    document.getElementById('timer-reset')?.click();
+                } else {
+                    // Toggle: if running, pause; if paused, start.
+                    if (this.timer.isRunning) {
+                        document.getElementById('timer-pause')?.click();
+                    } else {
+                        document.getElementById('timer-start')?.click();
+                    }
+                }
+                return;
+            }
+
+            // ── Battle Actions ───────────────────────────────────────────
             const shortcuts = {
                 ' ': 'end-round-btn',
                 'p': 'physical-attack-btn',
@@ -1381,21 +1418,28 @@ export class PokemonBattleArena {
                 'f': 'change-form-btn',
                 'r': 'generate-number-btn',
             };
-            if (shortcuts[e.key?.toLowerCase()]) {
+            const key = e.key?.toLowerCase();
+            if (shortcuts[key]) {
                 e.preventDefault();
-                document.getElementById(shortcuts[e.key.toLowerCase()])?.click();
+                document.getElementById(shortcuts[key])?.click();
                 return;
             }
 
-            // 1-6: select player as attacker
+            // ── Player Selection (1-6) ───────────────────────────────────
             if (e.key >= '1' && e.key <= '6') {
                 e.preventDefault();
-                const player = this.gs.players[parseInt(e.key) - 1];
+                const playerIndex = parseInt(e.key) - 1;
+                const player = this.gs.players[playerIndex];
                 const sel = document.getElementById('attacker-select');
-                if (player && sel) { sel.value = player.id; sel.dispatchEvent(new Event('change')); this.audio.play('click'); }
+                if (player && sel) {
+                    sel.value = player.id;
+                    sel.dispatchEvent(new Event('change'));
+                    this.audio.play('click');
+                }
             }
         });
     }
+
 
     // ── MULTIPLAYER UI SETUP ──────────────────────────────────────────────
 

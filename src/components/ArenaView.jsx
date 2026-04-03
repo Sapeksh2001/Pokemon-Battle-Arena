@@ -230,7 +230,7 @@ export default function ArenaView() {
                       className="bg-surface-variant text-yellow-400 hover:bg-surface-bright p-2 border border-[#40485d] font-bold uppercase step-animation transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled>
                       <span className="material-symbols-outlined text-[20px] align-middle" style={{ fontVariationSettings: "'FILL' 1" }}>redo</span> REDO
-                      <div className="text-[10px] text-on-surface-variant mt-0.5 tracking-wider">Ctrl+⇧+Z</div>
+                      <div className="text-[10px] text-on-surface-variant mt-0.5 tracking-wider">Ctrl+⇧+Z / Ctrl+Y</div>
                     </button>
                   </div>
                   <div className="border-t-2 border-outline-variant pt-2">
@@ -247,6 +247,8 @@ export default function ArenaView() {
                       <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">E</kbd> Evolve</div>
                       <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">F</kbd> Form Change</div>
                       <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">R</kbd> Random #</div>
+                      <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">T</kbd> Toggle Timer</div>
+                      <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Shift+T</kbd> Reset Timer</div>
                       <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Esc</kbd> Close Modal</div>
                     </div>
                   </div>

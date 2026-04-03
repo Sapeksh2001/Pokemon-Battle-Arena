@@ -1,0 +1,99 @@
+.edit-hp-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.edit-hp-sprite {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
+}
+
+.edit-hp-bar-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.edit-hp-track {
+  height: 12px;
+}
+
+.edit-hp-numbers {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+.edit-hp-sep { color: var(--outline); }
+
+.edit-hp-pct {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-left: var(--space-1);
+}
+
+/* Slider */
+.edit-hp-slider-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.edit-hp-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+
+.edit-hp-slider {
+  width: 100%;
+  accent-color: var(--primary);
+  height: 4px;
+  cursor: pointer;
+}
+
+/* Number input */
+.edit-hp-input-block {
+  display: flex;
+  justify-content: center;
+}
+
+.edit-hp-input-block .edit-slot-input {
+  max-width: 160px;
+}
+
+/* Quick-set chips */
+.edit-hp-quick {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.edit-hp-quick-btn {
+  padding: 4px 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-high);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.edit-hp-quick-btn:hover {
+  color: var(--primary);
+  border-color: rgba(204, 151, 255, 0.4);
+  background: rgba(204, 151, 255, 0.08);
+}

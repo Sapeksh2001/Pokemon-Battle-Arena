@@ -34,7 +34,7 @@
     - `[x]` Phase 4: Core Features (Phases/Phase4_Features.md)
     - `[x]` Phase 5: Testing (Phases/Phase5_Testing.md)
     - `[x]` Phase 6: Deployment (Phases/Phase6_Deployment.md)
-- `[ ]` Deployment Execution
-    - `[ ]` GitHub Push
-    - `[ ]` Firebase Deploy
-    - `[ ]` Vercel Deploy
+- `[x]` Deployment Execution
+    - `[x]` GitHub Push
+    - `[x]` Firebase Deploy
+    - `[x]` Vercel Deploy

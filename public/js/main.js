@@ -785,17 +785,34 @@ export class PokemonBattleArena {
         const [pid, sid] = val.split('-').map(Number);
         const player = this.gs.players.find(p => p.id === pid);
         const pokemon = player?.team[sid];
-        if (!pokemon?.baseData) return;
+        if (!pokemon) return;
 
-        const forms = [pokemon.baseData, ...Object.values(pokemon.baseData.forms || {})]
-            .filter(f => f?.Name && f.Name !== pokemon.fullName);
+        // Aggregate forms from both the current node and the base species node.
+        // This ensures we can switch between all sister-variants and also revert to base.
+        const formsMap = new Map();
+        const addForm = (f) => {
+            const name = f?.Name || f?.name;
+            if (name) {
+                // Ensure the node has the normalized 'Name' for the selection grid display
+                if (!f.Name) f.Name = f.name;
+                formsMap.set(name, f);
+            }
+        };
 
-        if (forms.length === 0) {
-            this._announce(`${pokemon.fullName} has no other forms.`, true);
+        if (pokemon.baseData) addForm(pokemon.baseData);
+        if (pokemon.data) addForm(pokemon.data);
+        if (pokemon.baseData?.forms) Object.values(pokemon.baseData.forms).forEach(addForm);
+        if (pokemon.data?.forms) Object.values(pokemon.data.forms).forEach(addForm);
+
+        const otherForms = [...formsMap.values()].filter(f => f.Name !== pokemon.fullName);
+
+        if (otherForms.length === 0) {
+            this._announce(`${pokemon.fullName} has no other forms available.`, true);
             return;
         }
+
         document.getElementById('selection-modal-title').textContent = `Change ${pokemon.fullName}'s Form`;
-        this._populateSelectionGrid(forms, name => this._confirmFormChange(name));
+        this._populateSelectionGrid(otherForms, name => this._confirmFormChange(name));
         this.modals.open('selection');
     }
 

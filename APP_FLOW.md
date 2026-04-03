@@ -1,90 +1,147 @@
-# Application Flow & Navigation
+# Application Flow & Navigation: Pokémon Battle Arena
 
 ## 1. Entry Points
-### Primary Entry Point
-- **Lobby Modal Overlay**: Automatically mounts via `index.html` masking the main UI (`<div id="lobby-overlay">`).
+### Primary Entry Points
+- **Direct URL**: Users landing on the root domain see the "Welcome Invitation" overlay.
+- **Deep Links**: URLs containing `?room=123456` parameters bypass the initial code entry and land directly in the name-entry screen.
+
+### Secondary Entry Points
+- **Social Media Invites**: Metadata-rich links (OpenGraph) that allow one-click entry into a lobby.
+
+---
 
 ## 2. Core User Flows
 
-### Flow 1: Session Initialization (Lobby → Game)
-**Goal**: Connect with an opponent to start a match.
+### Flow 1: Room Lifecycle (Lobby)
+**Goal**: Transition from a single user to a synchronized 6-player group.
+**Entry Point**: Root Landing Page.
 
 #### Happy Path
-1. **State: DOM Loaded**
-   - `window.MergedPokemonData` and dependencies load. `script.js` invokes `init()`.
-2. **Page: Lobby Modal**
-   - Elements: Name Input, Room Code Input, Audio Toggle.
-   - User Action: Submits credentials.
-   - Trigger: `socketClient.joinRoom(roomId, playerName)` executes.
-3. **Network**: Firebase checks `/rooms/$roomId`. If 404, creates room with `hostId: localPlayer`. Pushes user to `/rooms/$roomId/players`.
-4. **State Transition**: Lobby `display: none`. Game UI `opacity: 1; pointer-events: auto`.
-5. **System Action**: `UIRenderer.renderAll(state)` fires, painting the 6 empty player card slots.
+1. **Screen: Welcome Invitation**
+   - Elements: Name Input, 6-Digit Code Input, Join/Create buttons.
+   - User Action: Enters "Ash", enters "654321", clicks "Join".
+   - System Action: Handshake with Firebase `rooms/654321`.
+2. **Screen: Active Lobby**
+   - Elements: Player slots (1-6), Sprite selectors, "Ready" toggle.
+   - User Action: Selects "Pikachu" sprite, toggles "Ready".
+   - Success State: All players show "Ready" checkmarks; Host clicks "Start Battle".
 
-### Flow 2: Live Battle Execution
-**Goal**: Engage in turn-based combat.
+#### Error States
+- **Invalid Name**: Alert "Name must be 2-12 characters".
+- **Invalid Code**: Red border on input; "Room not found".
+- **Room Full**: Modal "Arena is at capacity (6/6)".
 
-#### Happy Path
-1. **Page: Attack Command Panel**
-   - User Action: Selects Attacker (Dropdown), Selects Target (Dropdown).
-   - Dynamic Update: Move dropdown populates based on Attacker moveset.
-2. **Page: Status & Stats Panel**
-   - Trigger: User selects a Move.
-   - UI: Pre-loads the selected Move's Base Power and Type into the display grid.
-3. **Execution**:
-   - User Action: Clicks Attack (Physical/Special depending on move).
-   - System Action: `BattleEngine.executeAttack()` calculates RNG, STAB, Type Effectiveness, Weather modifiers.
-   - Memory Update: Opponent HP decreases, Status applies.
-4. **Network**: `socketClient.updateState()` broadcasts the changed memory objects array to Firebase.
-5. **Visual Feedback**:
-   - Opponent's circular SVG HP Gauge dynamically recalculates `stroke-dasharray` via CSS transitions.
-   - Pokémon Sprite `transform: translateX` animation fires (shake effect).
-   - Battle Log appends string: `[Attacker] used [Move]! It's super effective!`.
+---
 
-### Flow 3: Form Change / Evolution Handling
-**Goal**: Swap a Pokémon to an alternate form or evolve mid-battle.
+### Flow 2: Turn Execution (Arena)
+**Goal**: Synchronized move resolution across all clients.
+**Entry Point**: Post-Lobby transition.
 
 #### Happy Path
-1. **Page: Management Controls Panel**
-   - User Action: Selects Active Pokémon from dropdown.
-   - System: Analyzes `db.getForms(fullName)` by resolving dataset strings (`node?.Name || node?.name`).
-   - UI Update: Unlocks `[EVO]` or `[FORM]` buttons.
-2. **Action: Mousedown `[FORM]`**
-   - Trigger: `UIRenderer.openFormChangeModal()` fires.
-3. **Page: Form Modal Overlay**
-   - Display: Grid of form sprites (e.g., Alolan, Galarian).
-   - User Action: Clicks Form.
-   - System Action: `Pokemon._updateFormOrEvolution()` triggers. Recalculates MaxHP, retains current percentage HP ratio to prevent 0-division bugs. Merges new types.
-4. **Network**: Local `pokemon` object pushed to Firebase. Peers seamlessly re-render the new form sprite immediately.
+1. **Screen: Battle Arena**
+   - Elements: Health bars, Move buttons, Battle log, Terrain indicator, Sprite Pickers.
+2. **User Action: Execute Move**
+   - User selects an Attacker sprite and a Target sprite from the horizontal pickers.
+   - User clicks "Thunderbolt".
+   - System Action: `BattleEngine` calculates damage vs target; updates Firebase `battle_state`.
+3. **Remote Sync**
+   - Other clients receive the `value` update from Firebase.
+   - HP bars slide down; Log appends text.
 
-## 3. Navigation Map (DOM Hierarchy)
+#### Edge Cases
+- **Simultaneous Action**: If two players click a move at the exact same millisecond, Firebase security rules/transactions process the first one and the second one is queued or rejected based on turn state.
+- **Terrain Shift**: A move that changes terrain (e.g., "Electric Terrain") triggers an immediate background swap and particle effect across all 6 clients.
+
+---
+
+## 3. Navigation Map (DOM State)
 ```text
-body
-├── #lobby-overlay (z-index: 100)
-├── main-container (dynamic vmin scaling)
-│   ├── #arena-header (Scores, Round Timer)
-│   ├── .arena-grid (Active Pokémon Cards - 6 slots)
-│   │   └── .player-card (Sprite, Types, Scaled SVG HP Gauge, Raw Stats)
-│   └── footer-controls
-│       ├── .panel-attack (Moves, Power, Types)
-│       ├── .panel-status (Ailment Buttons, Weather Toggles)
-│       ├── .panel-utility (RNG Roller 1-100)
-│       ├── .panel-management (Form, Evo, Team Swapper)
-│       ├── .panel-history (Undo / Redo buffers)
-│       └── .panel-battlelog (Auto-scrolling terminal output)
+Root
+└── BattleApp (React State)
+    ├── Lobby (Overlay)
+    │   ├── LoginView (Public)
+    │   └── RoomView (Authenticated/Joined)
+    └── Arena (Main)
+        ├── HUD (Header: Timer, Terrain)
+        ├── Battlefield (Grid: 1-6 Players)
+        └── Terminal (Footer: Controls, Log)
 ```
 
-## 4. Screen Inventory & States
+---
 
-### Screen: Main Battle Interface
-- **State: Preparation (Pre-Battle)**
-   - All panels locked except `.panel-management`.
-   - Goal: Players construct their 6-mon team.
-- **State: Active Combat**
-   - All panels unlocked.
-   - Goal: Perform actions.
-- **State: Room Full / Disconnected**
-   - Overlay blocks input. Message details connection loss. Re-attempts Firebase reconnection automatically.
+## 4. Screen Inventory
 
-## 5. Event Driven Micro-Interactions
-- **SVG HP Gauge**: Relies on a CSS circumfrence calculation `getHPPercent()`. Guards against `maxHp === 0` to prevent `NaN` crashes on invalid spawns.
-- **CSS Modals**: Use class-based `.hidden` toggle instead of DOM removal to maintain layout painting speed.
+### Screen: Lobby View
+- **Route**: state `view: "lobby"`
+- **Access**: Public (Joining) / Private (Inside Room)
+- **Actions**: `joinRoom()`, `toggleReady()`, `selectSprite()`
+- **States**: `Idle`, `Joining`, `Ready`, `Starting`
+
+### Screen: Arena View
+- **Route**: state `view: "arena"`
+- **Access**: Room-Authenticated
+- **Actions**: `useMove()`, `switchPokemon()`, `updateStat()`, `endRound()`, `selectFromPicker()`
+- **States**: `Active`, `Resolving`, `Fainted`, `Victory`
+- **Picker Interaction**:
+  - `Attacker/Target/Status`: Select from horizontal strip of all active Pokémon sprites.
+  - `Management`: Select from filtered strip showing only your current active Pokémon.
+
+---
+
+## 5. Decision Points (Engine Logic)
+
+### Decision: User Joining
+```text
+IF player_count < 6
+THEN add_player_to_firebase(room_id, player_data)
+AND redirect_to_lobby(room_id)
+ELSE
+THEN show_modal("Arena Full")
+AND block_entry()
+```
+
+### Decision: Damage Multipliers
+```text
+IF move_type == current_terrain_type
+THEN apply_multiplier(damage, 1.2)
+AND set_message_flag("TERRAIN_BOOST")
+ELSE IF target_type == move_type.weakness
+THEN apply_multiplier(damage, 2.0)
+AND set_message_flag("SUPER_EFFECTIVE")
+ELSE
+THEN apply_multiplier(damage, 1.0)
+```
+
+### Decision: Turn Synchronization
+```text
+IF current_player_action == "move_selected"
+THEN disable_buttons(current_player)
+AND push_to_rtdb("battle_state/actions", move_data)
+AND wait_for_resolution()
+```
+
+---
+
+## 6. Error Handling
+
+### 404 Room Missing
+- **Display**: Custom Toast "The arena code you entered has expired or is invalid."
+- **Action**: Reset state to `LoginView`.
+
+### Network Desync
+- **Display**: "DESYNC DETECTED" banner in the terminal.
+- **Action**: Fetch `battle_state` snapshot and force React to re-render all HP bars/Status effects.
+
+---
+
+## 7. Responsive Behavior
+- **Mobile**: Vertical stack. HP bars are slimmed to icons. Battle Log is 3 lines high.
+- **Desktop**: 3x2 Grid. Full move names. 10-line scrolling Battle Log.
+- **Touch Targets**: All interactive labels and buttons >= 48px height.
+
+---
+
+## 8. Animations & Transitions
+- **Lobby to Arena**: `fade-in` (500ms) with `blur-out` on lobby elements.
+- **HP Change**: `linear-slide` (800ms) for HP bars.
+- **Terminal Output**: Typewriter effect (20ms/char) for log entries.

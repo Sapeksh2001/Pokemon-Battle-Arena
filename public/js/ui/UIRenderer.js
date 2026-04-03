@@ -351,14 +351,23 @@ export class UIRenderer {
         reviveBtn.disabled = !pokemon.isFainted();
         if (!pokemon.isFainted()) {
             evolveBtn.disabled = !(pokemon.data?.evolutions?.some(e => e?.Name));
-            const base = pokemon.baseData || pokemon.data;
-            // Form entries in the dataset use lowercase `name` (not `Name`).
-            // Check both to correctly detect forms like Diglett-Alola, Meowth-Alola, etc.
-            const otherForms = [base, ...Object.values(base.forms || {})]
-                .filter(f => {
-                    const fname = f?.Name || f?.name;
-                    return fname && fname !== pokemon.fullName;
-                });
+            // Aggregate forms from both the current node and the base species node.
+            // This ensures we can switch between all sister-variants and also revert to base.
+            const formsMap = new Map();
+            const addForm = (f) => {
+                const name = f?.Name || f?.name;
+                if (name) formsMap.set(name, f);
+            };
+
+            if (pokemon.baseData) addForm(pokemon.baseData);
+            if (pokemon.data) addForm(pokemon.data);
+            if (pokemon.baseData?.forms) Object.values(pokemon.baseData.forms).forEach(addForm);
+            if (pokemon.data?.forms) Object.values(pokemon.data.forms).forEach(addForm);
+
+            const otherForms = [...formsMap.values()].filter(f => {
+                const fname = f.Name || f.name;
+                return fname && fname !== pokemon.fullName;
+            });
             formBtn.disabled = otherForms.length === 0;
         }
     }

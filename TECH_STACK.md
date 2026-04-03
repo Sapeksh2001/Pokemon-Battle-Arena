@@ -1,59 +1,112 @@
-# Technology Stack & Architecture
+# Technology Stack: Pokémon Battle Arena
 
 ## 1. Stack Overview
-**Last Updated**: 2026-03-22
-**Version**: 1.0.1
+**Last Updated**: 2026-04-03
+**Version**: 1.1.0
 
 ### Architecture Pattern
-- **Type**: Serverless Peer-to-Peer State Sync Architecture.
-- **Engine**: Monolithic vanilla JavaScript cleanly separated into ES6 modules (Domain, Service, UI).
-- **Deployment**: Firebase Hosting edge CDN.
+- **Type**: Serverless Real-time Web App
+- **Pattern**: Component-based UI with Global RTDB State Sync
+- **Deployment**: Firebase Hosting (Primary) + GitHub Actions (CI/CD)
 
 ---
 
-## 2. Frontend Constraints & Decisions
+## 2. Frontend Stack
 
-### Core Framework: Vanilla ES6 Modules
-- **Why Vanilla?**: To maintain raw performance and precise DOM manipulation needed for high frequency SVG/CSS animation updates without the overhead of React's Virtual DOM reconciliation.
-- **Data Structures**:
-  - `Trie.js`: Custom implementation to index 1000+ Pokémon names (including forms). Allows instant `O(L)` autocomplete lookups in the management dropdowns where `L` is prefix length.
-  - `RingBuffer.js`: Fixed-size circular array to handle History (Undo/Redo) without memory leaks. Caps at 50 turns.
+### Core Framework
+- **Framework**: React 19
+- **Version**: `19.0.0`
+- **Reason**: Use of `useActionState`, `useFormStatus`, and better Concurrent Rendering.
+- **Documentation**: https://react.dev
 
-### UI Styling & Layout
-- **Responsiveness**: Everything is calculated in `vmin` (viewport minimum) tied via CSS `clamp()` functions. This guarantees the 16x9 arena never spawns scrollbars on any monitor size, preventing zoom-related layout breakage.
-- **Retro Aesthetic Rules**:
-  - `image-rendering: pixelated;` applied to all sprites.
-  - Custom font loading (`Press Start 2P`).
-  - No CSS box-shadow blurring—solid dropped pixel borders required.
+### Bundler & Runner
+- **Tool**: Vite 8
+- **Version**: `8.0.5`
+- **Reason**: Sub-second Hot Module Replacement (HMR) for fast UI iteration.
 
-### Audio Subsystem
-- **Library**: `Tone.js`
-- **Application**: Synthesizing raw oscillators (`square`, `sawtooth` waves) instead of loading heavy MP3 assets to perfectly emulate GameBoy/DS era Pokémon sound chips.
+### Styling System
+- **Library**: Tailwind CSS 4
+- **Version**: `4.0.0-beta.1`
+- **Reason**: High-performance JIT engine with native CSS variable support for Indigo Plateau tokens.
+- **Plugins**: `@tailwindcss/vite`
 
----
-
-## 3. Backend Stack / Firebase Integration
-
-### 3.1 Firebase Realtime Database
-- **Role**: Sits as the central source of truth, but does *not* compute game logic.
-- **Schema Key Binding**:
-  - `/rooms/$room_id/players/$uuid`: User arrays are converted to localized objects to prevent Firebase index collision when array elements are swapped during gameplay.
-
-### 3.2 State Synchronization Engine
-The `socketClient.js` module handles all networking securely:
-1. **Local Mutation**: User clicks attack. Local DOM updates immediately for zero-latency feel (Optimistic UI).
-2. **Patch Broadcasting**: `.update(payload)` fires to Firebase updating precise JSON keys (e.g., `hp: 120`).
-3. **Peer Listening**: `.onValue()` listener triggers on the opponent's client, re-hydrating their `Pokemon` instances with the new JSON data and calling `UIRenderer.renderAll()`.
-
-### 3.3 Security Model
-- **Current Trust Level**: "Trusted Peer". The clients do not challenge the RNG or damage calculations of the opponent.
-- **Protection**: Room codes act as ephemeral passwords.
-- **Data Safety**: No environment variables for database auth are exposed; uses Firebase Web Apps restricted by domain `pokemon-1248.web.app`.
+### Audio & Soundscape
+- **Utility**: Tone.js
+- **Version**: `15.1.22`
+- **Reason**: Web Audio API wrapper for low-latency battle music and SFX synchronization.
 
 ---
 
-## 4. Big Data Parsing Strategy
-- Raw files `Pokemon_NewDataset.js` and `moves_data.js` total over 5MB.
-- They are loaded via deferred scripts sequentially.
-- `PokemonDatabase.js` immediately parses the raw JSON into memory.
-- **Normalization Strategy**: The database handles edge cases where raw JSON keys differ in case sensitivity format (e.g., resolving `f.name` and `f.Name` equally inside `getForms()`) to ensure the client code never fails on case mismatch.
+## 3. Backend & Synchronization
+
+### Real-time Data
+- **Service**: Firebase Realtime Database
+- **SDK Version**: `12.11.0`
+- **Reason**: Sub-100ms latency for 6-player synchronized state updates.
+- **Data Model**: NoSQL JSON Tree (Rooms > Players > BattleState).
+
+### Persistence & Storage
+- **Service**: Firebase Firestore (Optional/Future for Replays)
+- **Service**: Firebase Authentication (Future - Anonymous login for tracking player count).
+
+---
+
+## 4. Dependencies Lock (package.json)
+```json
+{
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "firebase": "^12.11.0",
+    "tone": "^15.1.22",
+    "lucide-react": "^1.7.0",
+    "framer-motion": "^12.0.0"
+  },
+  "devDependencies": {
+    "vite": "^8.0.5",
+    "@tailwindcss/vite": "^4.0.0-beta.1",
+    "@vitejs/plugin-react": "^4.3.4"
+  }
+}
+```
+
+---
+
+## 5. Security & Governance
+
+### Access Control (RTDB Rules)
+```json
+{
+  "rules": {
+    "rooms": {
+      "$room_id": {
+        ".read": "true",
+        ".write": "!data.exists() || data.child('host').val() === auth.uid",
+        "players": {
+          ".read": "true",
+          ".write": "auth != null && data.parent().exists()"
+        }
+      }
+    }
+  }
+}
+```
+
+### Rate Limiting & Limits
+- **Concurrent Connections**: Max 6 players per `room_id`.
+- **Payload Size**: < 64KB for entire `battle_state` JSON tree.
+- **Write Frequency**: Throttled at 200ms per player to prevent spamming moves.
+
+---
+
+## 6. Compatibility & Infrastructure
+
+### Hardware/Browser Support
+- **Desktop**: Chrome 120+, Firefox 115+, Safari 17+.
+- **Mobile**: iOS 17+ (Safari), Android 14+ (Chrome).
+- **Screens**: Responsive from 320px to 4K (using `vmin` scaling).
+
+### CD/CI Pipeline
+- **Branch Strategy**: `main` (Production), `develop` (Integration).
+- **Automation**: GitHub Action for `npm run build` and `firebase deploy`.
+- **Environments**: `development`, `staging`, `production`.

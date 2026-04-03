@@ -75,26 +75,6 @@ export class PokemonBattleArena {
         window.removePlayer = id => this.removePlayer(id);
     }
 
-    _setupMultiplayerUI() {
-        // Expose methods to global scope for HTML buttons in index.html
-        window.createMultiplayerRoom = () => {
-            const name = prompt('Enter your trainer name (Host):');
-            if (name) {
-                this.multiplayer.connect();
-                setTimeout(() => this.multiplayer.createRoom(name), 500);
-            }
-        };
-
-        window.joinMultiplayerRoom = () => {
-            const code = prompt('Enter the 6-digit room code:');
-            const name = prompt('Enter your trainer name:');
-            if (code && name) {
-                this.multiplayer.connect();
-                setTimeout(() => this.multiplayer.joinRoom(code.toUpperCase(), name), 500);
-            }
-        };
-    }
-
     _registerModals() {
         [
             ['team', 'team-modal'],
@@ -102,6 +82,8 @@ export class PokemonBattleArena {
             ['hpEdit', 'hp-edit-modal'],
             ['confirm', 'confirm-modal'],
             ['multiplayerLobby', 'multiplayer-lobby-modal'],
+            ['createRoom', 'room-modal'],
+            ['joinRoom', 'join-modal'],
         ].forEach(([name, id]) => this.modals.register(name, document.getElementById(id)));
     }
 
@@ -1400,48 +1382,115 @@ export class PokemonBattleArena {
     // ── MULTIPLAYER UI SETUP ──────────────────────────────────────────────
 
     _setupMultiplayerUI() {
-        // Connect to existing CREATE ROOM and JOIN ROOM buttons (NO duplicate buttons!)
-        const createRoomBtn = document.getElementById('create-room-btn');
-        const joinRoomBtn = document.getElementById('join-room-btn');
         const trainerNameInput = document.getElementById('trainer-name-input');
 
-        if (createRoomBtn) {
-            createRoomBtn.addEventListener('click', () => {
-                const playerName = trainerNameInput?.value.trim() || 'Trainer';
-                if (!playerName) {
-                    this._announce('Please enter your trainer name first!', true);
-                    return;
-                }
-                // Connect to multiplayer server
-                this.multiplayer.connect();
-                // Wait a moment for connection, then create room
+        // ── QUICK BATTLE (bypasses multiplayer, goes straight to arena) ────
+        const quickBattleBtn = document.getElementById('quick-battle-btn');
+        if (quickBattleBtn) {
+            quickBattleBtn.addEventListener('click', () => {
+                this.audio.play('confirm');
+                const lobbyView = document.getElementById('lobby-view');
+                const arenaView = document.getElementById('arena-view');
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) loadingScreen.classList.remove('hidden');
                 setTimeout(() => {
-                    this.multiplayer.createRoom(playerName);
-                }, 500);
-                this.audio.play('click');
+                    if (lobbyView) lobbyView.classList.add('hidden');
+                    if (arenaView) arenaView.classList.remove('hidden');
+                    if (loadingScreen) loadingScreen.classList.add('hidden');
+                    this.log.add('Quick Battle started! Good luck, trainer!', 'system');
+                    this.renderer.renderAll();
+                }, 800);
             });
         }
 
-        if (joinRoomBtn) {
-            joinRoomBtn.addEventListener('click', () => {
-                const playerName = trainerNameInput?.value.trim() || 'Trainer';
-                if (!playerName) {
-                    this._announce('Please enter your trainer name first!', true);
-                    return;
-                }
-                // Prompt for room code
-                const roomCode = prompt('Enter 6-digit room code:');
-                if (roomCode && roomCode.length === 6) {
-                    // Connect to multiplayer server
-                    this.multiplayer.connect();
-                    // Wait a moment for connection, then join room
-                    setTimeout(() => {
-                        this.multiplayer.joinRoom(roomCode.toUpperCase(), playerName);
-                    }, 500);
-                }
+        // ── CREATE ROOM: open the modal first ────────────────────────────
+        const createRoomBtn = document.getElementById('create-room-btn');
+        if (createRoomBtn) {
+            createRoomBtn.addEventListener('click', () => {
                 this.audio.play('click');
+                // Pre-fill room name with trainer name if available
+                const trainerName = trainerNameInput?.value.trim();
+                const roomNameInput = document.getElementById('room-name-input');
+                if (roomNameInput && trainerName) {
+                    roomNameInput.value = `${trainerName}'s Battle Room`;
+                }
+                this.modals.open('createRoom');
             });
         }
+
+        // ── CREATE ROOM MODAL: confirm button creates the Firebase room ───
+        const createRoomConfirmBtn = document.getElementById('create-room-confirm-btn');
+        if (createRoomConfirmBtn) {
+            createRoomConfirmBtn.addEventListener('click', () => {
+                const playerName = trainerNameInput?.value.trim();
+                if (!playerName) {
+                    this._announce('Please enter your trainer name in the lobby first!', true);
+                    this.audio.play('error');
+                    return;
+                }
+                this.modals.close('createRoom');
+                this.audio.play('confirm');
+                this.multiplayer.connect();
+                setTimeout(() => this.multiplayer.createRoom(playerName), 300);
+            });
+        }
+
+        // Close create-room modal
+        document.getElementById('close-room-modal')?.addEventListener('click', () => {
+            this.audio.play('click');
+            this.modals.close('createRoom');
+        });
+
+        // ── JOIN ROOM: open the join modal ────────────────────────────────
+        const joinRoomBtn = document.getElementById('join-room-btn');
+        if (joinRoomBtn) {
+            joinRoomBtn.addEventListener('click', () => {
+                this.audio.play('click');
+                // Clear stale code from prior sessions
+                const codeInput = document.getElementById('room-code-input');
+                if (codeInput) codeInput.value = '';
+                this.modals.open('joinRoom');
+            });
+        }
+
+        // ── JOIN ROOM MODAL: confirm button joins the Firebase room ───────
+        const joinRoomConfirmBtn = document.getElementById('join-room-confirm-btn');
+        if (joinRoomConfirmBtn) {
+            joinRoomConfirmBtn.addEventListener('click', () => {
+                const playerName = trainerNameInput?.value.trim();
+                const roomCode = document.getElementById('room-code-input')?.value.trim();
+                if (!playerName) {
+                    this._announce('Please enter your trainer name in the lobby first!', true);
+                    this.audio.play('error');
+                    return;
+                }
+                if (!roomCode || roomCode.length !== 6 || isNaN(Number(roomCode))) {
+                    this._announce('Please enter a valid 6-digit room code.', true);
+                    this.audio.play('error');
+                    return;
+                }
+                this.modals.close('joinRoom');
+                this.audio.play('confirm');
+                this.multiplayer.connect();
+                setTimeout(() => this.multiplayer.joinRoom(roomCode, playerName), 300);
+            });
+        }
+
+        // Close join modal
+        document.getElementById('close-join-modal')?.addEventListener('click', () => {
+            this.audio.play('click');
+            this.modals.close('joinRoom');
+        });
+
+        // ── Quick-fill join code from lobby recent-rooms list ─────────────
+        document.querySelectorAll('.room-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const codeEl = btn.querySelector('.font-headline');
+                const code = codeEl?.textContent?.trim();
+                const codeInput = document.getElementById('room-code-input');
+                if (code && codeInput) codeInput.value = code;
+            });
+        });
 
         // Expose arena globally for onclick handlers in HTML
         window.arena = this;

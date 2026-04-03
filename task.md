@@ -1,18 +1,40 @@
-# React Migration Tasks
-
-- `[x]` Phase 1: Vite + React Scaffolding
-  - `[x]` Scaffold Vite + React in `./react-migrated`
-  - `[x]` Configure Tailwind CSS
-  - `[x]` Migrate static assets (CSS, Datasets, Scripts) to public/
-- `[x]` Phase 2: Game Engine Encapsulation
-  - `[x]` Engine Wrapper (Context)
-  - `[x]` Custom Hook for State Sync
-- `[x]` Phase 3: Componentizing the UI
-  - `[x]` App Routing / Entry
-  - `[x]` Lobby Views (Layout, Create/Join Modals, Settings)
-  - `[x]` Battle Interface (TrainerCard, CommandPanel, BattleLog)
-  - `[x]` Overlays (Loading screen, Weather)
-- `[/]` Phase 4 & 5: Visual Polish and Verification
-  - `[x]` CSS scoping and parallax verification
-  - `[x]` Pixel-perfect visual comparison
-  - `[ ]` Multiplayer / Engine functionality testing
+- `[x]` Project Documentation
+    - `[x]` PRD (Project/PRD.md)
+    - `[x]` README (Project/README.md)
+    - `[x]` AppFlow (Project/APP_FLOW.md)
+    - `[x]` TechStack (Project/TECH_STACK.md)
+- `[x]` Technical Documentation
+    - `[x]` Architecture Overview (Technical/Architecture_Overview.md)
+    - `[x]` Database Schema (Technical/Database_Schema.md)
+    - `[x]` API Endpoints (Technical/API_Endpoints.md)
+    - `[x]` Security Considerations (Technical/Security_Considerations.md)
+    - `[x]` Error Handling (Technical/Error_Handling.md)
+    - `[x]` Performance Guidelines (Technical/Performance_Guidelines.md)
+    - `[x]` Backup & Recovery (Technical/Backup_Recovery.md)
+- `[x]` Design System Documentation
+    - `[x]` Design Principles (Design_System/Design_Principles.md)
+    - `[x]` Layout System (Design_System/Layout_System.md)
+    - `[x]` Component Library (Design_System/Component_Library.md)
+    - `[x]` Accessibility Guidelines (Design_System/Accessibility_Guidelines.md)
+    - `[x]` Animation Guidelines (Design_System/Animation_Guidelines.md)
+    - `[x]` Icon System (Design_System/Icon_System.md)
+    - `[x]` State Indicators (Design_System/State_Indicators.md)
+    - `[x]` Responsive Design (Design_System/Responsive_Design.md)
+- `[x]` Data Management Documentation
+    - `[x]` Data Validation Rules (Data_Management/Validation_Rules.md)
+    - `[x]` Caching Strategy (Data_Management/Caching_Strategy.md)
+    - `[x]` Database Migrations (Data_Management/Database_Migrations.md)
+- `[x]` Governance Documentation
+    - `[x]` Version Upgrade Policy (Governance/Version_Upgrade_Policy.md)
+    - `[x]` API Versioning (Governance/API_Versioning.md)
+- `[x]` Project Phases
+    - `[x]` Phase 1: Foundation (Phases/Phase1_Foundation.md)
+    - `[x]` Phase 2: Design System (Phases/Phase2_DesignSystem.md)
+    - `[x]` Phase 3: Authentication (Phases/Phase3_Auth.md)
+    - `[x]` Phase 4: Core Features (Phases/Phase4_Features.md)
+    - `[x]` Phase 5: Testing (Phases/Phase5_Testing.md)
+    - `[x]` Phase 6: Deployment (Phases/Phase6_Deployment.md)
+- `[ ]` Deployment Execution
+    - `[ ]` GitHub Push
+    - `[ ]` Firebase Deploy
+    - `[ ]` Vercel Deploy

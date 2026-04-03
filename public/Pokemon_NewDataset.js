@@ -7629,7 +7629,29 @@ var MergedPokemonData = {
             "sprite": "https://play.pokemonshowdown.com/sprites/ani/linoone-galar.gif",
             "cry": "https://play.pokemonshowdown.com/audio/cries/linoone.mp3",
             "tier": "Galarian",
-            "isSeparateEntry": false
+            "isSeparateEntry": false,
+            "evolutions": [
+              {
+                "Name": "Obstagoon",
+                "stats": {
+                  "hp": 390,
+                  "attack": 306,
+                  "defence": 331,
+                  "specialAttack": 240,
+                  "specialDefence": 287,
+                  "speed": 317
+                },
+                "types": [
+                  "Dark",
+                  "Normal"
+                ],
+                "sprite": "https://play.pokemonshowdown.com/sprites/ani/obstagoon.gif",
+                "cry": "https://play.pokemonshowdown.com/audio/cries/obstagoon.mp3",
+                "evolutions": [],
+                "forms": {},
+                "tier": "Form"
+              }
+            ]
           }
         },
         "tier": "Final"
@@ -28569,6 +28591,67 @@ var MergedPokemonData = {
     ],
     "forms": {},
     "tier": "Galarian"
+  },
+  "LinooneGalar": {
+    "Name": "Linoone-Galar",
+    "stats": {
+      "hp": 360,
+      "attack": 262,
+      "defence": 243,
+      "specialAttack": 218,
+      "specialDefence": 243,
+      "speed": 328
+    },
+    "types": [
+      "Dark",
+      "Normal"
+    ],
+    "sprite": "https://play.pokemonshowdown.com/sprites/ani/linoone-galar.gif",
+    "cry": "https://play.pokemonshowdown.com/audio/cries/linoone.mp3",
+    "evolutions": [
+      {
+        "Name": "Obstagoon",
+        "stats": {
+          "hp": 390,
+          "attack": 306,
+          "defence": 331,
+          "specialAttack": 240,
+          "specialDefence": 287,
+          "speed": 317
+        },
+        "types": [
+          "Dark",
+          "Normal"
+        ],
+        "sprite": "https://play.pokemonshowdown.com/sprites/ani/obstagoon.gif",
+        "cry": "https://play.pokemonshowdown.com/audio/cries/obstagoon.mp3",
+        "evolutions": [],
+        "forms": {},
+        "tier": "Form"
+      }
+    ],
+    "forms": {},
+    "tier": "Galarian"
+  },
+  "Obstagoon": {
+    "Name": "Obstagoon",
+    "stats": {
+      "hp": 390,
+      "attack": 306,
+      "defence": 331,
+      "specialAttack": 240,
+      "specialDefence": 287,
+      "speed": 317
+    },
+    "types": [
+      "Dark",
+      "Normal"
+    ],
+    "sprite": "https://play.pokemonshowdown.com/sprites/ani/obstagoon.gif",
+    "cry": "https://play.pokemonshowdown.com/audio/cries/obstagoon.mp3",
+    "evolutions": [],
+    "forms": {},
+    "tier": "Form"
   },
   "DarumakaGalar": {
     "Name": "Darumaka-Galar",

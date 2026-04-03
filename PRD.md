@@ -60,6 +60,13 @@ Pokémon fans often want to engage in quick, synchronized battles without the ov
    - Acceptance Criteria:
      - [ ] All panels maintain readability with background blurs.
      - [ ] Footer log follows the "Holographic Terminal" design tokens (Cyan/Amber glows).
+4. **Unified Sprite-Only Pokémon Selectors**
+   - Description: Replaces legacy dropdowns with a visual, horizontal strip of Pokémon sprites across all control panels.
+   - User Story: "As a trainer, I want to pick my target or switch my Pokémon by clicking their icons, not selecting names from a list."
+   - Acceptance Criteria:
+     - [ ] Interactive sprites with yellow selection highlights.
+     - [ ] Management panel filters to show only the active Pokémon for the current player.
+     - [ ] Zero text labels or HP bars in the selector to maintain a minimal, visual aesthetic.
 
 ### Should-Have Features (P1)
 1. **Dynamic Terrain Engine**

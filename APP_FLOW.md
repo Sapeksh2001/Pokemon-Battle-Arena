@@ -39,8 +39,9 @@
 
 #### Happy Path
 1. **Screen: Battle Arena**
-   - Elements: Health bars, Move buttons, Battle log, Terrain indicator.
+   - Elements: Health bars, Move buttons, Battle log, Terrain indicator, Sprite Pickers.
 2. **User Action: Execute Move**
+   - User selects an Attacker sprite and a Target sprite from the horizontal pickers.
    - User clicks "Thunderbolt".
    - System Action: `BattleEngine` calculates damage vs target; updates Firebase `battle_state`.
 3. **Remote Sync**
@@ -79,8 +80,11 @@ Root
 ### Screen: Arena View
 - **Route**: state `view: "arena"`
 - **Access**: Room-Authenticated
-- **Actions**: `useMove()`, `switchPokemon()`, `updateStat()`, `endRound()`
+- **Actions**: `useMove()`, `switchPokemon()`, `updateStat()`, `endRound()`, `selectFromPicker()`
 - **States**: `Active`, `Resolving`, `Fainted`, `Victory`
+- **Picker Interaction**:
+  - `Attacker/Target/Status`: Select from horizontal strip of all active Pokémon sprites.
+  - `Management`: Select from filtered strip showing only your current active Pokémon.
 
 ---
 

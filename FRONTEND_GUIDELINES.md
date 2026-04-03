@@ -79,6 +79,22 @@ const HealthBar = ({ current, max }) => {
 };
 ```
 
+### Component: PokemonPicker
+A visual, horizontal strip for selection across Attacker, Target, Status, and Management panels.
+- **Sprite-Only**: Displays 44x44px Pokémon icons without text or HP bars.
+- **Highlight**: Active selection indicated by a `ring-2 ring-yellow-400` border glow.
+- **Filtered Mode**: In the Management panel, only displays the current player's active Pokémon.
+- **No-Scrollbar**: Uses the `.no-scrollbar` utility for a clean interaction.
+```jsx
+const PokemonPicker = ({ pokemons, selectedId, onSelect }) => (
+  <div className="flex gap-2 overflow-x-auto no-scrollbar py-2 px-1">
+    {pokemons.map(p => (
+      <PokemonCard key={p.id} pokemon={p} isSelected={p.id === selectedId} onClick={() => onSelect(p.id)} />
+    ))}
+  </div>
+);
+```
+
 ### Component: HolographicTerminal
 The scrolling log container.
 ```jsx

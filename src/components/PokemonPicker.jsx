@@ -72,8 +72,7 @@ export default function PokemonPicker({ selectId }) {
       // Management select value is playerIdx-pkIdx
       let val;
       if (selectId === 'management-pokemon-select') {
-        const playerIdx = arena.gs.players.indexOf(player);
-        val = `${playerIdx}-${player.activePokemonIndex}`;
+        val = `${player.id}-${player.activePokemonIndex}`;
       } else {
         val = player.id.toString();
       }

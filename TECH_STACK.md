@@ -1,59 +1,68 @@
-# Technology Stack & Architecture
+# Technology Stack & Architecture: Pokémon Battle Arena
 
 ## 1. Stack Overview
-**Last Updated**: 2026-03-22
-**Version**: 1.0.1
+**Last Updated**: 2026-04-03
+**Version**: 2.0.0 (React Migration Release)
 
 ### Architecture Pattern
-- **Type**: Serverless Peer-to-Peer State Sync Architecture.
-- **Engine**: Monolithic vanilla JavaScript cleanly separated into ES6 modules (Domain, Service, UI).
-- **Deployment**: Firebase Hosting edge CDN.
+- **Type**: Serverless Real-time State Synchronization.
+- **Pattern**: Component-based UI (React) with decoupled Domain Services (ES6 Modules).
+- **Deployment**: Firebase Hosting (Global CDN).
 
 ---
 
-## 2. Frontend Constraints & Decisions
+## 2. Frontend Stack
 
-### Core Framework: Vanilla ES6 Modules
-- **Why Vanilla?**: To maintain raw performance and precise DOM manipulation needed for high frequency SVG/CSS animation updates without the overhead of React's Virtual DOM reconciliation.
-- **Data Structures**:
-  - `Trie.js`: Custom implementation to index 1000+ Pokémon names (including forms). Allows instant `O(L)` autocomplete lookups in the management dropdowns where `L` is prefix length.
-  - `RingBuffer.js`: Fixed-size circular array to handle History (Undo/Redo) without memory leaks. Caps at 50 turns.
+### Core Framework
+- **Framework**: React 19.2.4
+- **Build Tool**: Vite 8.0.1
+- **Reason**: React 19 provides superior state management via concurrent rendering, essential for keeping 6-player battle states fluid and reactive.
 
-### UI Styling & Layout
-- **Responsiveness**: Everything is calculated in `vmin` (viewport minimum) tied via CSS `clamp()` functions. This guarantees the 16x9 arena never spawns scrollbars on any monitor size, preventing zoom-related layout breakage.
-- **Retro Aesthetic Rules**:
-  - `image-rendering: pixelated;` applied to all sprites.
-  - Custom font loading (`Press Start 2P`).
-  - No CSS box-shadow blurring—solid dropped pixel borders required.
+### UI & Styling
+- **CSS Framework**: Tailwind CSS 4.2.2 (Alpha/Vite Plugin)
+- **Icons**: Lucide React (v1.7.0)
+- **Design Tokens**: Standardized HSL values used for "Indigo Plateau" glassmorphism theme.
+- **Responsiveness**: `vmin` and `clamp()` based container scaling to ensure a locked 16:9 aspect ratio across all devices.
+
+### Domain Logic (Vanilla JS Utilities)
+*While the UI is React, the core engine remains high-performance vanilla JS:*
+- **Trie.js**: Custom prefix tree for `O(L)` autocomplete lookups of 1000+ Pokémon.
+- **BattleEngine.js**: Pure function library for Gen 5 damage calculations.
+- **DataLoader.js**: Parallel asset loader for sprites and move data.
 
 ### Audio Subsystem
-- **Library**: `Tone.js`
-- **Application**: Synthesizing raw oscillators (`square`, `sawtooth` waves) instead of loading heavy MP3 assets to perfectly emulate GameBoy/DS era Pokémon sound chips.
+- **Library**: Tone.js (v15.1.22)
+- **Usage**: Web Audio API oscillator synthesis to recreate authentic GameBoy-era chiptunes without heavy audio files.
 
 ---
 
-## 3. Backend Stack / Firebase Integration
+## 3. Backend & Infrastructure
 
-### 3.1 Firebase Realtime Database
-- **Role**: Sits as the central source of truth, but does *not* compute game logic.
-- **Schema Key Binding**:
-  - `/rooms/$room_id/players/$uuid`: User arrays are converted to localized objects to prevent Firebase index collision when array elements are swapped during gameplay.
+### 3.1 Firebase Services (v12.11.0)
+- **Realtime Database (RTDB)**: Low-latency JSON synchronization (<100ms).
+- **Hosting**: Automated deployment from GitHub `main` branch.
 
-### 3.2 State Synchronization Engine
-The `socketClient.js` module handles all networking securely:
-1. **Local Mutation**: User clicks attack. Local DOM updates immediately for zero-latency feel (Optimistic UI).
-2. **Patch Broadcasting**: `.update(payload)` fires to Firebase updating precise JSON keys (e.g., `hp: 120`).
-3. **Peer Listening**: `.onValue()` listener triggers on the opponent's client, re-hydrating their `Pokemon` instances with the new JSON data and calling `UIRenderer.renderAll()`.
-
-### 3.3 Security Model
-- **Current Trust Level**: "Trusted Peer". The clients do not challenge the RNG or damage calculations of the opponent.
-- **Protection**: Room codes act as ephemeral passwords.
-- **Data Safety**: No environment variables for database auth are exposed; uses Firebase Web Apps restricted by domain `pokemon-1248.web.app`.
+### 3.2 State Sync Protocol
+1. **Mutation**: User triggers action (e.g., uses `useBattleAction` hook).
+2. **Local Update**: React state updates optimistically.
+3. **Remote Sync**: `socketClient` pushes delta to `/rooms/$roomId/state`.
+4. **Broadcast**: Opponents' `useEffect` hooks trigger on `onValue` change, re-rendering the updated HP/Status.
 
 ---
 
-## 4. Big Data Parsing Strategy
-- Raw files `Pokemon_NewDataset.js` and `moves_data.js` total over 5MB.
-- They are loaded via deferred scripts sequentially.
-- `PokemonDatabase.js` immediately parses the raw JSON into memory.
-- **Normalization Strategy**: The database handles edge cases where raw JSON keys differ in case sensitivity format (e.g., resolving `f.name` and `f.Name` equally inside `getForms()`) to ensure the client code never fails on case mismatch.
+## 4. Data Management
+
+### Datasets
+- **Pokemon_NewDataset.js**: Comprehensive Gen 5+ stats (indexed by Trie).
+- **Moves_data.js**: Move power, accuracy, and effect metadata.
+
+### Storage Strategy
+- All static meta-data is loaded into memory on initial boot (Lobby stage).
+- Only dynamic state (HP, status, turn count) is synced via Firebase.
+
+---
+
+## 5. Deployment & CI/CD
+- **Dev Environment**: `npm run dev` (Vite Hot Module Replacement).
+- **Production CI**: GitHub Actions (planned) triggers `firebase deploy` on merge to `main`.
+- **Environment Isolation**: `.env.local` for local dev; Secret environment variables managed via GitHub Actions/Firebase console.

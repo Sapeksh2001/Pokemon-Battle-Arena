@@ -6,8 +6,8 @@ import { applyModification } from '../utils/helpers.js';
 
 export class Pokemon {
     constructor(data, baseData) {
-        this.baseName = baseData.Name;
-        this.fullName = data.Name;
+        this.baseName = baseData.Name || baseData.name;
+        this.fullName = data.Name || data.name;
         this.maxHp = data.stats.hp;
         this.currentHP = data.stats.hp;
         this.stats = { ...data.stats };

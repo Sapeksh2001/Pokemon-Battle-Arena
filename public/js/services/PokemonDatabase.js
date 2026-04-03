@@ -122,8 +122,21 @@ export class PokemonDatabase {
     getForms(name) {
         const result = this.find(name);
         if (!result || !result.baseNode) return [];
-        const formsObj = result.baseNode.forms || {};
-        // Dataset uses lowercase `name` for form entries; fall back to f.name if f.Name missing
-        return Object.values(formsObj).map(f => f && (f.Name || f.name)).filter(Boolean);
+
+        const speciesNode = result.baseNode;
+        const names = new Set();
+
+        // Add the base species name
+        const baseName = speciesNode.Name || speciesNode.name;
+        if (baseName) names.add(baseName);
+
+        // Add all names from the forms dictionary
+        const formsObj = speciesNode.forms || {};
+        Object.values(formsObj).forEach(f => {
+            const fname = f?.Name || f?.name;
+            if (fname) names.add(fname);
+        });
+
+        return [...names];
     }
 }

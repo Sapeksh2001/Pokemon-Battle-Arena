@@ -4,6 +4,8 @@
  * Contains the battle header, player grid, control panel, and battle log.
  * All IDs are preserved for legacy engine compatibility.
  */
+import PokemonPicker from './PokemonPicker';
+
 export default function ArenaView() {
   return (
     <div id="arena-view" className="hidden">
@@ -64,18 +66,21 @@ export default function ArenaView() {
                   <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-red-500/50 to-transparent" />
                   <h4 className="text-yellow-400 font-label text-[11px] mb-1.5 uppercase tracking-widest text-glow">Attack Command</h4>
                   <div className="space-y-1 text-xs font-body">
-                    <div className="grid grid-cols-2 gap-2">
-                      <label className="text-on-surface-variant uppercase tracking-wider text-[10px]">ATTACKER</label>
-                      <label className="text-on-surface-variant uppercase tracking-wider text-[10px]">TARGET</label>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <select id="attacker-select" className="w-full bg-surface-container-lowest border border-outline-variant p-1 text-[11px] text-on-surface focus:border-yellow-400 focus:ring-0">
-                        <option value="">Select Attacker</option>
-                      </select>
-                      <select id="attack-target-select" className="w-full bg-surface-container-lowest border border-outline-variant p-1 text-[11px] text-on-surface focus:border-yellow-400 focus:ring-0">
-                        <option value="">Select Target</option>
-                      </select>
-                    </div>
+
+                    {/* Attacker Picker */}
+                    <label className="text-on-surface-variant uppercase tracking-wider text-[10px] block">ATTACKER</label>
+                    <select id="attacker-select" className="sr-only" aria-label="Select Attacker">
+                      <option value="">Select Attacker</option>
+                    </select>
+                    <PokemonPicker selectId="attacker-select" />
+
+                    {/* Target Picker */}
+                    <label className="text-on-surface-variant uppercase tracking-wider text-[10px] block mt-1">TARGET</label>
+                    <select id="attack-target-select" className="sr-only" aria-label="Select Target">
+                      <option value="">Select Target</option>
+                    </select>
+                    <PokemonPicker selectId="attack-target-select" />
+
                     <div>
                       <label className="text-on-surface-variant uppercase tracking-wider text-[10px]">MOVE</label>
                     </div>
@@ -125,9 +130,10 @@ export default function ArenaView() {
                     </div>
                     <div>
                       <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-sm">TARGET</label>
-                      <select id="status-target-select" className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-sm text-on-surface focus:border-yellow-400 focus:ring-0">
+                      <select id="status-target-select" className="sr-only" aria-label="Select Status Target">
                         <option value="">Select Target</option>
                       </select>
+                      <PokemonPicker selectId="status-target-select" />
                     </div>
                     {/* Stat Modification */}
                     <div className="space-y-1">
@@ -196,9 +202,10 @@ export default function ArenaView() {
                   <div className="space-y-2 text-sm font-body">
                     <div>
                       <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-sm">POKÉMON</label>
-                      <select id="management-pokemon-select" className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-sm text-on-surface focus:border-yellow-400 focus:ring-0">
+                      <select id="management-pokemon-select" className="sr-only" aria-label="Select Pokémon for Management">
                         <option value="">Select</option>
                       </select>
+                      <PokemonPicker selectId="management-pokemon-select" />
                     </div>
                     <div className="grid grid-cols-3 gap-1 mt-2">
                       <button id="evolve-btn" className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm" disabled>EVO</button>

@@ -11,84 +11,103 @@ Pokémon fans often want to engage in quick, synchronized battles without the ov
 
 ## 3. Goals & Objectives
 ### Business Goals
-- Establish a widely recognized "zero-install" Pokémon battle platform.
-- Build a documentation-first codebase that can be easily extended by AI.
+- **Goal 1**: Achieve < 1s latency for all state updates across 6 concurrent players (Reliability).
+- **Goal 2**: Maintain a 100% "AI-First" documentation parity, where every feature is documented before being coded (Scalability).
+- **Goal 3**: Reach 1,000 unique room creations within the first month of deployment (Growth).
 
 ### User Goals
-- Start a battle in under 30 seconds from landing on the site.
-- Experience high-fidelity, synchronized battles with friends using simple 6-digit codes.
-- Enjoy a premium "Indigo Plateau" aesthetic with high-quality SFX and music.
+- **Goal 1**: Join a battle in under 30 seconds from initial page load (Speed).
+- **Goal 2**: Experience a premium "Indigo Plateau" aesthetic with zero visual flickering during transitions (Immersion).
 
 ## 4. Success Metrics
-- **Activation Rate**: 80% of users who enter a room code successfully start a battle.
-- **Performance**: <100ms synchronization latency between clients.
-- **Load Time**: <1s for the Lobby-to-Arena transition.
-- **Engagement**: Average of 3 battles per session per user.
+- **Activation Rate**: 80% of users who enter a room code successfully start a battle within 60 seconds.
+- **Sync Latency**: 95th percentile of state synchronization updates should be < 150ms.
+- **Retention**: 40% of users returning for at least 2 battles per session.
+- **Error Rate**: < 1% of moves failing due to synchronization conflicts or engine bugs.
 
 ## 5. Target Users & Personas
-### Primary Persona: Casual Trainer (Alex)
-- **Pain Points**: Doesn't want to manage an account; finds current simulators "too competitive."
-- **Goals**: Quickly battle friends during a break; enjoy the visual and audio effects.
-- **Technical Proficiency**: Moderate (uses mobile browser).
+### Primary Persona: Alex (The Casual Speedster)
+- **Demographics**: 18-35, Mobile-first user, loves Pokémon but finds competitive play too high-barrier.
+- **Pain Points**: Hates account creation, finds technical jargon in simulators confusing, limited time for gaming.
+- **Goals**: Quickly challenge a friend to a 5-minute duel on a commute; enjoy high-quality sprites and sounds.
+- **Technical Proficiency**: Average (uses standard mobile apps but avoids complex software).
 
-### Secondary Persona: Mechanics Tester (Jordan)
-- **Pain Points**: Needs accurate Gen 5 damage calculations for theory-crafting.
-- **Goals**: Verify terrain-based stat boosts and move interactions.
-- **Technical Proficiency**: High (competitive Pokémon background).
+### Secondary Persona: Jordan (The Theory Crafter)
+- **Demographics**: 20-40, Desktop user, competitive background, interested in new mechanics.
+- **Pain Points**: Simulators often lag or miscalculate terrain-specific boosts; lacks visual feedback for stat changes.
+- **Goals**: Precisely test the 20% Terrain Stat Boost mechanic; evaluate move effectiveness in a synchronized environment.
+- **Technical Proficiency**: High (familiar with APIs, Gen 5 mechanics, and damage calculators).
 
 ## 6. Features & Requirements
 ### Must-Have Features (P0)
-1. **Real-time 6-Player Synchronization**
-   - Goal: Keep all players in sync during lobby and battle.
-   - User Story: "As a player, I want to see my friends join the room instantly so we can start the battle."
+1. **Real-time 6-Player Sync (Firebase RTDB)**
+   - Description: Synchronized lobby and battle state for up to 6 players per room.
+   - User Story: "As a host, I want to see exactly who is in my lobby so I can start the battle fairly."
    - Acceptance Criteria:
-     - [ ] Lobby updates in <100ms via Firebase RTDB.
-     - [ ] Support for 1 to 6 players per room.
-2. **Gen 5 Battle Engine**
-   - Goal: Pixel-accurate damage and stat calculation.
-   - User Story: "As a trainer, I want my moves to do the expected damage based on my stats."
+     - [ ] Player list updates in <100ms when a new user joins.
+     - [ ] "Ready" status toggles are instantly visible to all participants.
+     - [ ] Support for 1 to 6 players per room code.
+2. **Gen 5 Core Battle Engine**
+   - Description: Accurate calculation of Base Power, STAB, Type Effectiveness, and Move Category (Physical/Special).
+   - User Story: "As a trainer, I want my moves to resolve correctly based on my Pokémon's stats and the target's typing."
    - Acceptance Criteria:
-     - [ ] Base power, STAB, and type effectiveness implemented.
-     - [ ] Support for all 18 Pokémon types.
-3. **Responsive Arena UI**
-   - Goal: Premium "Indigo Plateau" experience.
-   - User Story: "As a user, I want a beautiful interface that works on my laptop and phone."
+     - [ ] Damage calculations handle 18 types and 4 main categories (Atk, Def, SpA, SpD).
+     - [ ] HP bars update proportionally to calculated damage.
+     - [ ] Critical hits and status effects (Burn, Poison, Paralyze) resolve accurately.
+3. **Responsive Glassmorphism UI (Indigo Plateau)**
+   - Description: A mobile-first, premium interface with glass-effect panels and glowing terminal outputs.
+   - User Story: "As a user, I want the interface to look premium and readable on both my iPhone and MacBook."
    - Acceptance Criteria:
-     - [ ] Glassmorphism design system applied.
-     - [ ] Holographic terminal footer for logs.
+     - [ ] All panels maintain readability with background blurs.
+     - [ ] Footer log follows the "Holographic Terminal" design tokens (Cyan/Amber glows).
 
 ### Should-Have Features (P1)
-1. **Terrain Engine (18 Unique Types)**
-   - Goal: Dynamic field effects that impact battle.
-   - Acceptance Criteria: 20% power boost for matching move types; 20% boost to primary stats.
-2. **Tone.js Soundscape**
-   - Goal: Immersive chiptune/orchestral music and SFX.
-   - Acceptance Criteria: Dynamic music transitions between Lobby and Arena.
+1. **Dynamic Terrain Engine**
+   - Description: 18 unique terrains (Electric, Grassy, etc.) providing 20% boosts to matching types and primary stats.
+   - Acceptance Criteria: Boosts apply to damage calculation and UI stat displays dynamically.
+2. **Tone.js Audio Master**
+   - Description: Dynamic soundscapes that transition between "Lobby Chill" and "Arena Tension".
 
 ### Nice-to-Have Features (P2)
-1. **Replay System**: Shareable links to watch past battles.
-2. **Advanced Move Animations**: Particle effects and screen shakes for heavy hits.
+1. **Replay Engine**: Snapshotting battle logs for social sharing.
+2. **Animated Particle Effects**: Shaders and screen shakes for critical hits and terrain shifts.
 
 ## 7. Explicitly OUT OF SCOPE
-- **Account Creation**: No persistent usernames or passwords (all data is ephemeral).
-- **Matchmaking (Elo-based)**: This is for casual friend battles, not a global ladder.
-- **Full Campaign/Story Mode**: This is a battle simulator only.
+- **Auth/Accounts**: No login, sign-up, or persistent user profiles.
+- **Ranked Matchmaking**: No ELO, leaderboards, or global queuing.
+- **Full Pokedex**: Only core Gen 5 Pokemon/Moves supported in MVP.
 
 ## 8. User Scenarios
-### Scenario 1: Quick Duel
-- **Context**: Two friends in the same room want to battle.
+### Scenario 1: The Quick Duel (Alex)
+- **Context**: Alex is at a cafe and wants to battle a friend sitting nearby.
 - **Steps**:
-  1. User A creates a room and gets a 6-digit code.
-  2. User B enters the code on the landing page.
-  3. Both enter names and select "Join".
-  4. User A clicks "Start Battle" once both are ready.
-- **Outcome**: Successful transition to the Indigo Plateau Arena within 1 second.
+  1. Alex enters name "Ash" and clicks "Create Room".
+  2. Alex shares the 6-digit code with his friend.
+  3. The friend joins; both click "Ready".
+  4. Alex clicks "Start Battle".
+- **Outcome**: Both transition to the Arena in < 1s; music changes; battle begins.
+
+### Scenario 2: Mechanics Verification (Jordan)
+- **Context**: Jordan wants to test if "Grassy Terrain" correctly boosts "Leaf Storm".
+- **Steps**:
+  1. Jordan joins a room and selects a Grass-type moveset.
+  2. Mid-battle, a player shifts the environment to "Grassy Terrain".
+  3. Jordan executes "Leaf Storm".
+- **Outcome**: The Battle Log shows a specific "Terrain Boost!" message; damage calculation is 20% higher than baseline.
+
+### Scenario 3: Mid-Battle Reconnection
+- **Context**: A player's phone switches from Wi-Fi to 5G, causing a momentary disconnect.
+- **Steps**:
+  1. The player loses connection for 5 seconds.
+  2. The app's Firebase listener detects the drop and shows a "Reconnecting" banner.
+  3. The connection is restored.
+- **Outcome**: The app automatically fetches the latest `battle_state` from RTDB; the UI restores exactly where the battle left off.
 
 ## 9. Non-Functional Requirements
-- **Performance**: < 2s initial page load.
-- **Security**: Strict Firebase rules to prevent unauthorized room modification.
-- **Accessibility**: WCAG 2.1 AA (high contrast text for health bars).
+- **Performance**: < 2s initial app load; zero-flicker transitions.
+- **Security**: Public room codes but restricted database access via Firebase Security Rules.
+- **Accessibility**: 44px minimum touch targets; high-contrast HP bars (Green-to-Red).
 
 ## 10. Risks & Assumptions
-- **Assumption**: Firebase RTDB can handle the simultaneous connections at current scale.
-- **Risk**: High latency on slow mobile networks could desync battle states (mitigated by authoritative server-side-like state management in RTDB).
+- **Risk**: Firebase RTDB concurrent connection limits on free-tier.
+- **Assumption**: Tone.js audio assets will be small enough to load without blocking the UI.

@@ -1,68 +1,112 @@
-# Technology Stack & Architecture: Pokémon Battle Arena
+# Technology Stack: Pokémon Battle Arena
 
 ## 1. Stack Overview
 **Last Updated**: 2026-04-03
-**Version**: 2.0.0 (React Migration Release)
+**Version**: 1.1.0
 
 ### Architecture Pattern
-- **Type**: Serverless Real-time State Synchronization.
-- **Pattern**: Component-based UI (React) with decoupled Domain Services (ES6 Modules).
-- **Deployment**: Firebase Hosting (Global CDN).
+- **Type**: Serverless Real-time Web App
+- **Pattern**: Component-based UI with Global RTDB State Sync
+- **Deployment**: Firebase Hosting (Primary) + GitHub Actions (CI/CD)
 
 ---
 
 ## 2. Frontend Stack
 
 ### Core Framework
-- **Framework**: React 19.2.4
-- **Build Tool**: Vite 8.0.1
-- **Reason**: React 19 provides superior state management via concurrent rendering, essential for keeping 6-player battle states fluid and reactive.
+- **Framework**: React 19
+- **Version**: `19.0.0`
+- **Reason**: Use of `useActionState`, `useFormStatus`, and better Concurrent Rendering.
+- **Documentation**: https://react.dev
 
-### UI & Styling
-- **CSS Framework**: Tailwind CSS 4.2.2 (Alpha/Vite Plugin)
-- **Icons**: Lucide React (v1.7.0)
-- **Design Tokens**: Standardized HSL values used for "Indigo Plateau" glassmorphism theme.
-- **Responsiveness**: `vmin` and `clamp()` based container scaling to ensure a locked 16:9 aspect ratio across all devices.
+### Bundler & Runner
+- **Tool**: Vite 8
+- **Version**: `8.0.5`
+- **Reason**: Sub-second Hot Module Replacement (HMR) for fast UI iteration.
 
-### Domain Logic (Vanilla JS Utilities)
-*While the UI is React, the core engine remains high-performance vanilla JS:*
-- **Trie.js**: Custom prefix tree for `O(L)` autocomplete lookups of 1000+ Pokémon.
-- **BattleEngine.js**: Pure function library for Gen 5 damage calculations.
-- **DataLoader.js**: Parallel asset loader for sprites and move data.
+### Styling System
+- **Library**: Tailwind CSS 4
+- **Version**: `4.0.0-beta.1`
+- **Reason**: High-performance JIT engine with native CSS variable support for Indigo Plateau tokens.
+- **Plugins**: `@tailwindcss/vite`
 
-### Audio Subsystem
-- **Library**: Tone.js (v15.1.22)
-- **Usage**: Web Audio API oscillator synthesis to recreate authentic GameBoy-era chiptunes without heavy audio files.
-
----
-
-## 3. Backend & Infrastructure
-
-### 3.1 Firebase Services (v12.11.0)
-- **Realtime Database (RTDB)**: Low-latency JSON synchronization (<100ms).
-- **Hosting**: Automated deployment from GitHub `main` branch.
-
-### 3.2 State Sync Protocol
-1. **Mutation**: User triggers action (e.g., uses `useBattleAction` hook).
-2. **Local Update**: React state updates optimistically.
-3. **Remote Sync**: `socketClient` pushes delta to `/rooms/$roomId/state`.
-4. **Broadcast**: Opponents' `useEffect` hooks trigger on `onValue` change, re-rendering the updated HP/Status.
+### Audio & Soundscape
+- **Utility**: Tone.js
+- **Version**: `15.1.22`
+- **Reason**: Web Audio API wrapper for low-latency battle music and SFX synchronization.
 
 ---
 
-## 4. Data Management
+## 3. Backend & Synchronization
 
-### Datasets
-- **Pokemon_NewDataset.js**: Comprehensive Gen 5+ stats (indexed by Trie).
-- **Moves_data.js**: Move power, accuracy, and effect metadata.
+### Real-time Data
+- **Service**: Firebase Realtime Database
+- **SDK Version**: `12.11.0`
+- **Reason**: Sub-100ms latency for 6-player synchronized state updates.
+- **Data Model**: NoSQL JSON Tree (Rooms > Players > BattleState).
 
-### Storage Strategy
-- All static meta-data is loaded into memory on initial boot (Lobby stage).
-- Only dynamic state (HP, status, turn count) is synced via Firebase.
+### Persistence & Storage
+- **Service**: Firebase Firestore (Optional/Future for Replays)
+- **Service**: Firebase Authentication (Future - Anonymous login for tracking player count).
 
 ---
 
-## 5. Deployment & CI/CD
-- **Dev Environment**: `npm run dev` (Vite Hot Module Replacement).
-- **Production CI**: GitHub Actions (planned) triggers `firebase deploy` on merge to `main`.
-- **Environment Isolation**: `.env.local` for local dev; Secret environment variables managed via GitHub Actions/Firebase console.
+## 4. Dependencies Lock (package.json)
+```json
+{
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "firebase": "^12.11.0",
+    "tone": "^15.1.22",
+    "lucide-react": "^1.7.0",
+    "framer-motion": "^12.0.0"
+  },
+  "devDependencies": {
+    "vite": "^8.0.5",
+    "@tailwindcss/vite": "^4.0.0-beta.1",
+    "@vitejs/plugin-react": "^4.3.4"
+  }
+}
+```
+
+---
+
+## 5. Security & Governance
+
+### Access Control (RTDB Rules)
+```json
+{
+  "rules": {
+    "rooms": {
+      "$room_id": {
+        ".read": "true",
+        ".write": "!data.exists() || data.child('host').val() === auth.uid",
+        "players": {
+          ".read": "true",
+          ".write": "auth != null && data.parent().exists()"
+        }
+      }
+    }
+  }
+}
+```
+
+### Rate Limiting & Limits
+- **Concurrent Connections**: Max 6 players per `room_id`.
+- **Payload Size**: < 64KB for entire `battle_state` JSON tree.
+- **Write Frequency**: Throttled at 200ms per player to prevent spamming moves.
+
+---
+
+## 6. Compatibility & Infrastructure
+
+### Hardware/Browser Support
+- **Desktop**: Chrome 120+, Firefox 115+, Safari 17+.
+- **Mobile**: iOS 17+ (Safari), Android 14+ (Chrome).
+- **Screens**: Responsive from 320px to 4K (using `vmin` scaling).
+
+### CD/CI Pipeline
+- **Branch Strategy**: `main` (Production), `develop` (Integration).
+- **Automation**: GitHub Action for `npm run build` and `firebase deploy`.
+- **Environments**: `development`, `staging`, `production`.

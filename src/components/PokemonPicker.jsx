@@ -103,7 +103,7 @@ export default function PokemonPicker({ selectId }) {
   if (entries.length === 0) return null;
 
   return (
-    <div className="flex gap-1.5 overflow-x-auto pb-1 mt-1 picker-scroll no-scrollbar">
+    <div className="flex justify-between items-center w-full pb-1 mt-1 picker-scroll no-scrollbar">
       {entries.map(({ value, pokemon, isFainted }) => (
         <PokemonCard
           key={value}

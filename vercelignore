@@ -1,0 +1,15 @@
+# Ignore server files (these go to Render, not Vercel)
+server.js
+package.json
+package-lock.json
+render.yaml
+node_modules/
+
+# Ignore development files
+.env
+.env.local
+*.log
+
+# Ignore Git
+.git/
+.gitignore

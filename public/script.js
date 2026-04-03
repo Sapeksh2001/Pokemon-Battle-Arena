@@ -1,0 +1,138 @@
+import { PokemonBattleArena } from './js/main.js';
+import { escapeHTML } from './js/utils/helpers.js';
+import { loadGameData } from './js/services/DataLoader.js';
+
+window.escapeHTML = escapeHTML;
+
+// ── Loading overlay helpers ──────────────────────────────────────────────────
+function updateLoadingOverlay(loaded, total, label) {
+    // Expose progress for ArenaContext to pick up via polling
+    window.__loadProgress = Math.round((loaded / total) * 95); // cap at 95 until arena ready
+    window.__loadLabel    = `Loading ${label}… (${loaded}/${total})`;
+
+    const msgEl = document.getElementById('loading-message');
+    const barEl = document.getElementById('loading-bar-fill');
+    const pctEl = document.getElementById('loading-pct');
+    const pct   = Math.round((loaded / total) * 100);
+    if (msgEl) msgEl.textContent = `Loading ${label}… ${loaded}/${total}`;
+    if (barEl) barEl.style.width = `${pct}%`;
+    if (pctEl) pctEl.textContent = `${pct}%`;
+}
+
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('data-loading-overlay');
+    if (overlay) {
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.4s ease';
+        setTimeout(() => overlay.remove(), 450);
+    }
+}
+
+// ── Main startup ─────────────────────────────────────────────────────────────
+async function startApp() {
+    try {
+        await loadGameData(updateLoadingOverlay);
+    } catch (err) {
+        const msgEl = document.getElementById('loading-message');
+        if (msgEl) msgEl.textContent = `⚠️ Failed to load data: ${err.message}`;
+        console.error('[DataLoader]', err);
+        window.__arenaError = err.message;
+        return;
+    }
+
+    hideLoadingOverlay();
+
+    const arena = new PokemonBattleArena();
+    window.arena = arena; // ArenaContext polls for this
+    arena.init();
+
+    // Auto-join from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomCode = urlParams.get('room');
+    if (roomCode && roomCode.length === 6) {
+        setTimeout(() => {
+            const name = prompt(`Join room ${roomCode}?\nEnter your trainer name:`);
+            if (name && name.trim()) {
+                if (arena.multiplayer) {
+                    arena.multiplayer.connect();
+                    setTimeout(() => arena.multiplayer.joinRoom(roomCode, name.trim()), 1000);
+                }
+            }
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }, 2000);
+    }
+}
+
+console.log('[App] script.js module execution started.');
+
+// Wait for React to finish its first render, then start the game engine.
+// React sets window.__reactReady = true in App.jsx after the first render.
+function waitForReactAndStart() {
+    if (window.__reactReady) {
+        startApp();
+    } else {
+        setTimeout(waitForReactAndStart, 50);
+    }
+}
+
+if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', waitForReactAndStart);
+} else {
+    waitForReactAndStart();
+}
+
+// Expose globals for HTML onclick handlers
+window.copyRoomCode = function() {
+    const roomCode = document.getElementById('room-code-display')?.textContent?.trim();
+    if (!roomCode) return;
+    navigator.clipboard.writeText(roomCode).then(() => {
+        const feedback = document.getElementById('copy-feedback');
+        if (feedback) {
+            feedback.textContent = '✅ Code copied!';
+            feedback.classList.remove('hidden');
+            setTimeout(() => feedback.classList.add('hidden'), 2000);
+        }
+        const btn = document.getElementById('copy-code-btn');
+        if (btn) {
+            btn.textContent = '✅ Copied!';
+            setTimeout(() => { btn.textContent = '📋 Copy Code'; }, 2000);
+        }
+    }).catch(() => {
+        const codeEl = document.getElementById('room-code-display');
+        if (codeEl) {
+            const range = document.createRange();
+            range.selectNode(codeEl);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+        }
+    });
+};
+
+window.shareRoomLink = function() {
+    const roomCode = document.getElementById('room-code-display')?.textContent?.trim();
+    if (!roomCode) return;
+    const joinUrl  = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+    const shareText = `Join my Pokémon Battle Arena! Room Code: ${roomCode}`;
+    if (navigator.share) {
+        navigator.share({ title: 'Pokémon Battle Arena - Join My Room!', text: shareText, url: joinUrl })
+            .catch(() => window.copyToClipboardWithFeedback(joinUrl));
+    } else {
+        window.copyToClipboardWithFeedback(joinUrl);
+    }
+};
+
+window.copyToClipboardWithFeedback = function(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        const feedback = document.getElementById('copy-feedback');
+        if (feedback) {
+            feedback.textContent = '🔗 Link copied to clipboard!';
+            feedback.classList.remove('hidden');
+            setTimeout(() => feedback.classList.add('hidden'), 3000);
+        }
+        const btn = document.getElementById('share-link-btn');
+        if (btn) {
+            btn.textContent = '✅ Link Copied!';
+            setTimeout(() => { btn.textContent = '🔗 Share Link'; }, 2000);
+        }
+    });
+};

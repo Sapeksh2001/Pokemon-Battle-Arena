@@ -79,20 +79,49 @@ export class MultiplayerManager {
         this.leaveRoom();
     }
 
-    async createRoom(playerName) {
-        this.playerName = playerName;
-        const code = generateRoomCode();
-        this.roomCode = code;
-        this.isHost = true;
-        this.mode = 'creating';
+    _getFlattenedPool() {
+        if (typeof window.MergedPokemonData === 'undefined') return [];
+        const flat = [];
+        
+        const recurse = (obj) => {
+            if (obj.name) {
+                // Ensure we don't add the same Pokemon multiple times if referenced twice
+                if (!flat.some(p => p.name === obj.name)) {
+                    flat.push(obj);
+                }
+            }
+            if (obj.evolutions && Array.isArray(obj.evolutions)) {
+                obj.evolutions.forEach(recurse);
+            }
+            if (obj.forms && Array.isArray(obj.forms)) {
+                obj.forms.forEach(recurse);
+            }
+        };
 
-        const roomRef = ref(db, `rooms/${code}`);
+        Object.values(window.MergedPokemonData).forEach(recurse);
+        return flat;
+    }
+
+    async createRoom(trainerName, settings = {}) {
+        if (!trainerName) return;
+        
+        const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        this.roomCode = roomCode;
+        this.isHost = true;
+        this.trainerName = trainerName;
+        this.playerId = Math.random().toString(36).substring(2, 10);
         const playerRef = ref(db, `rooms/${code}/players/${this.playerId}`);
         
         await set(roomRef, {
             createdAt: Date.now(),
             hostId: this.playerId,
-            status: 'lobby'
+            status: 'lobby',
+            settings: {
+                roomName: settings.roomName || 'Epic Battle Room',
+                maxPlayers: settings.maxPlayers || 2,
+                battleType: settings.battleType || 'singles',
+                selectedTiers: settings.selectedTiers || ['Basic', 'Final']
+            }
         });
 
         await set(playerRef, {
@@ -110,7 +139,7 @@ export class MultiplayerManager {
         this._listenToLobby();
     }
 
-    async joinRoom(roomCode, playerName) {
+    async joinRoom(roomCode, playerName, role = 'player') {
         this.playerName = playerName;
         const roomRef = ref(db, `rooms/${roomCode}`);
         const snapshot = await get(roomRef);
@@ -121,13 +150,7 @@ export class MultiplayerManager {
         }
 
         const roomData = snapshot.val();
-        
-        // Determine role from radio button in UI (if available)
-        const roleRadios = document.getElementsByName('join-role');
-        let selectedRole = 'player';
-        for (let r of roleRadios) {
-            if (r.checked) { selectedRole = r.value; break; }
-        }
+        const selectedRole = role;
 
         // Allow wild card entries if game is started and player joins as 'player'
         if (roomData.status !== 'lobby' && selectedRole === 'player') {
@@ -435,40 +458,47 @@ export class MultiplayerManager {
     async assignRandomPokemon(targetPlayerId) {
         if (!this.isHost || !this.roomCode) return;
 
-        if (typeof window.Pokemon_NewDataset === 'undefined') {
+        const fullPool = this._getFlattenedPool();
+        if (fullPool.length === 0) {
             this.showNotification('Data loading... Please wait.', 'error');
             return;
         }
 
-        // Read tier from the wildcard queue overlay (during a game) or the lobby selector
-        const wildcardTierEl = document.getElementById('wildcard-tier');
-        const lobbyTierEl = document.getElementById('rng-tier-select');
-        const selectedTier = (wildcardTierEl?.value || lobbyTierEl?.value || 'any');
+        // Read settings from Firebase for multi-tier selection
+        const roomSnap = await get(ref(db, `rooms/${this.roomCode}`));
+        const settings = roomSnap.exists() ? roomSnap.val().settings : null;
+        const selectedTiers = settings?.selectedTiers || ['any'];
+
+        console.log('[MULTIPLAYER] RNG Tiers:', selectedTiers);
 
         // Build filtered pool
-        let pool = Object.keys(window.Pokemon_NewDataset);
-        if (selectedTier !== 'any') {
-            pool = pool.filter(id => window.Pokemon_NewDataset[id].Tier === selectedTier);
+        let pool = fullPool;
+        if (selectedTiers.length > 0 && !selectedTiers.includes('any')) {
+            pool = fullPool.filter(p => selectedTiers.includes(p.tier));
+        }
+
+        if (pool.length === 0) {
+            this.showNotification('No Pokémon found for the selected tiers!', 'error');
+            return;
         }
 
         // Gather already-assigned IDs across /players (prevent duplicates)
         const playersSnap = await get(ref(db, `rooms/${this.roomCode}/players`));
-        const assignedIds = new Set();
+        const assignedIds = [];
         if (playersSnap.exists()) {
-            playersSnap.forEach(child => {
-                if (child.val().assignedPokemonId) assignedIds.add(child.val().assignedPokemonId);
+            playersSnap.forEach(snap => {
+                const p = snap.val();
+                if (p.pokemonId) assignedIds.push(p.pokemonId);
             });
         }
 
-        const availablePool = pool.filter(id => !assignedIds.has(id));
-        if (availablePool.length === 0) {
-            this.showNotification(`No unique Pokémon left in tier: ${selectedTier}`, 'error');
-            return;
-        }
-
-        const randomId = availablePool[Math.floor(Math.random() * availablePool.length)];
-        const pData = window.Pokemon_NewDataset[randomId];
-        const pokemonName = pData.Name || randomId;
+        // Filter out already assigned
+        const availablePool = pool.filter(p => !assignedIds.includes(p.name));
+        const selectionSource = availablePool.length > 0 ? availablePool : pool;
+        
+        const rolled = selectionSource[Math.floor(Math.random() * selectionSource.length)];
+        const pokeId = rolled.name;
+        this.showNotification(`Assigned ${rolled.name}!`, 'success');
 
         // Check if this player is in entryQueue (wildcard mid-game join) or lobby /players
         const queueSnap = await get(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
@@ -477,20 +507,18 @@ export class MultiplayerManager {
             const playerData = queueSnap.val();
             await set(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
                 ...playerData,
-                assignedPokemonId: randomId,
-                assignedPokemonName: pokemonName,
+                assignedPokemonId: pokeId,
+                assignedPokemonName: rolled.name,
                 isReady: true
             });
             await remove(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
         } else {
             // Lobby assignment — just update the player's record in place
             await update(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
-                assignedPokemonId: randomId,
-                assignedPokemonName: pokemonName
+                assignedPokemonId: pokeId,
+                assignedPokemonName: rolled.name
             });
         }
-
-        this.showNotification(`Assigned ${pokemonName}!`, 'success');
     }
 
     /**

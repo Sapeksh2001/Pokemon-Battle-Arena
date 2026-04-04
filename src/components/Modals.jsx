@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react';
+import { authManager } from '../js/api/authManager.js';
+
 /**
  * Modals
  * All modal overlays from the legacy index.html, rendered as hidden divs.
@@ -5,6 +8,81 @@
  * classList.toggle('active') and querySelector('#modal-id') as before.
  */
 export default function Modals() {
+  const [user, setUser] = useState(authManager.currentUser);
+
+  // Room Creation State
+  const [roomName, setRoomName] = useState('');
+  const [maxPlayers, setMaxPlayers] = useState(2);
+  const [battleType, setBattleType] = useState('singles');
+  const [selectedTiers, setSelectedTiers] = useState(['Basic', 'Final']);
+
+  const tierOptions = [
+    { id: 'Basic', label: 'Basic' },
+    { id: 'Mid', label: 'Mid' },
+    { id: 'Final', label: 'Final' },
+    { id: 'Legendary', label: 'Legendary' },
+    { id: 'Mythical', label: 'Mythical' },
+    { id: 'Ultra Beast', label: 'Ultra' },
+    { id: 'Mega', label: 'Mega' },
+    { id: 'G-Max', label: 'G-Max' },
+    { id: 'Alolan', label: 'Alolan' },
+    { id: 'Galarian', label: 'Galar' },
+    { id: 'Hisuian', label: 'Hisui' },
+    { id: 'Paldean', label: 'Paldea' }
+  ];
+
+  const toggleTier = (tierId) => {
+    setSelectedTiers(prev => 
+      prev.includes(tierId) 
+        ? prev.filter(t => t !== tierId) 
+        : [...prev, tierId]
+    );
+  };
+
+  // Join Room State
+  const [roomCode, setRoomCode] = useState('');
+  const [joinRole, setJoinRole] = useState('player');
+
+  useEffect(() => {
+    const unsub = authManager.subscribe(setUser);
+    return unsub;
+  }, []);
+
+  const closeModal = (id) => {
+    const modal = document.getElementById(id);
+    if (modal) {
+      modal.classList.remove('active');
+      modal.classList.remove('visible');
+    }
+  };
+
+  const handleCreateRoom = async () => {
+    if (!window.arena?.multiplayer) {
+        alert('Multiplayer engine not initialized');
+        return;
+    }
+    const name = user?.displayName || 'Anonymous';
+    const settings = {
+        roomName,
+        maxPlayers,
+        battleType,
+        selectedTiers
+    };
+    await window.arena.multiplayer.createRoom(name, settings);
+    closeModal('room-modal');
+  };
+
+  const handleJoinRoom = async () => {
+    if (!window.arena?.multiplayer || !roomCode) {
+        alert('Please enter a room code');
+        return;
+    }
+    const name = user?.displayName || 'Anonymous';
+    
+    await window.arena.multiplayer.joinRoom(roomCode, name, joinRole);
+    closeModal('join-modal');
+  };
+
   return (
     <>
       {/* Team Management Modal */}
@@ -13,7 +91,7 @@ export default function Modals() {
           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent" />
           <div className="flex justify-between items-center mb-4 border-b-2 border-outline-variant pb-2">
             <h2 id="team-modal-title" className="text-xl font-bold text-yellow-400 font-headline uppercase tracking-tighter text-glow">Manage Team</h2>
-            <button id="close-team-modal" className="text-secondary hover:text-white transition-colors">
+            <button onClick={() => closeModal('team-modal')} id="close-team-modal" className="text-secondary hover:text-white transition-colors">
               <span className="material-symbols-outlined text-[24px]">close</span>
             </button>
           </div>
@@ -37,7 +115,7 @@ export default function Modals() {
           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
           <div className="flex justify-between items-center mb-4 border-b-2 border-outline-variant pb-2">
             <h2 id="selection-modal-title" className="text-xl font-bold text-[#699cff] font-headline uppercase tracking-tighter text-glow">Make Selection</h2>
-            <button id="close-selection-modal" className="text-secondary hover:text-white transition-colors">
+            <button onClick={() => closeModal('selection-modal')} id="close-selection-modal" className="text-secondary hover:text-white transition-colors">
               <span className="material-symbols-outlined text-[24px]">close</span>
             </button>
           </div>
@@ -53,7 +131,7 @@ export default function Modals() {
           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-green-500/50 to-transparent" />
           <div className="flex justify-between items-center mb-4 border-b-2 border-outline-variant pb-2">
             <h3 id="hp-edit-title" className="text-xl text-yellow-400 font-headline uppercase tracking-tighter text-glow">Edit HP</h3>
-            <button id="close-hp-edit-modal" className="text-secondary hover:text-white transition-colors">
+            <button onClick={() => closeModal('hp-edit-modal')} id="close-hp-edit-modal" className="text-secondary hover:text-white transition-colors">
               <span className="material-symbols-outlined text-[24px]">close</span>
             </button>
           </div>
@@ -95,7 +173,7 @@ export default function Modals() {
               <button id="confirm-hp-edit" className="bg-tertiary-container hover:bg-[#5bf083] text-[#004a1d] p-4 w-full font-bold text-sm border-2 border-white step-animation uppercase tracking-wider flex justify-center items-center gap-2">
                 <span className="material-symbols-outlined text-[18px]">check</span> CONFIRM
               </button>
-              <button id="cancel-hp-edit" className="bg-surface-variant hover:bg-surface-bright text-secondary p-4 w-full font-bold text-sm border-2 border-secondary step-animation uppercase tracking-wider flex justify-center items-center gap-2">
+              <button onClick={() => closeModal('hp-edit-modal')} id="cancel-hp-edit" className="bg-surface-variant hover:bg-surface-bright text-secondary p-4 w-full font-bold text-sm border-2 border-secondary step-animation uppercase tracking-wider flex justify-center items-center gap-2">
                 <span className="material-symbols-outlined text-[18px]">close</span> CANCEL
               </button>
             </div>
@@ -109,7 +187,7 @@ export default function Modals() {
           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-red-500/50 to-transparent" />
           <div className="flex justify-between items-center mb-4 border-b-2 border-outline-variant pb-2">
             <h3 id="confirm-modal-title" className="text-xl text-[#ff7351] font-headline uppercase tracking-tighter text-glow">Confirm Action</h3>
-            <button id="close-confirm-modal" className="text-secondary hover:text-white transition-colors">
+            <button onClick={() => closeModal('confirm-modal')} id="close-confirm-modal" className="text-secondary hover:text-white transition-colors">
               <span className="material-symbols-outlined text-[24px]">close</span>
             </button>
           </div>
@@ -117,7 +195,7 @@ export default function Modals() {
             <p id="confirm-modal-message" className="text-white text-sm mb-6">Are you sure?</p>
             <div className="flex gap-2 pt-4 border-t-2 border-outline-variant">
               <button id="confirm-modal-yes" className="bg-[#b92902] hover:bg-[#ff7351] text-white p-3 w-full font-bold text-[10px] border-2 border-[#450900] step-animation uppercase tracking-widest">YES</button>
-              <button id="confirm-modal-no" className="bg-surface-variant hover:bg-surface-bright text-secondary p-3 w-full font-bold text-[10px] border-2 border-secondary step-animation uppercase tracking-widest">NO</button>
+              <button onClick={() => closeModal('confirm-modal')} id="confirm-modal-no" className="bg-surface-variant hover:bg-surface-bright text-secondary p-3 w-full font-bold text-[10px] border-2 border-secondary step-animation uppercase tracking-widest">NO</button>
             </div>
           </div>
         </div>
@@ -129,31 +207,64 @@ export default function Modals() {
           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent" />
           <div className="flex justify-between items-center mb-4 border-b-2 border-outline-variant pb-2">
             <h2 className="text-xl font-bold text-yellow-400 font-headline uppercase tracking-tighter text-glow">Create Battle Room</h2>
-            <button id="close-room-modal" className="text-secondary hover:text-white transition-colors">
+            <button onClick={() => closeModal('room-modal')} id="close-room-modal" className="text-secondary hover:text-white transition-colors">
               <span className="material-symbols-outlined text-[24px]">close</span>
             </button>
           </div>
           <div className="space-y-4 font-body">
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Room Name:</label>
-              <input id="room-name-input" type="text" placeholder="Epic Battle Room..."
+              <input 
+                id="room-name-input" type="text" placeholder="Epic Battle Room..."
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
                 className="w-full bg-surface-container-lowest border border-outline-variant p-3 text-sm focus:border-yellow-400 focus:ring-0 text-white placeholder:text-[#6d758c]" />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Max Players:</label>
-              <select id="max-players-select" className="w-full bg-surface-container-lowest border border-outline-variant p-3 text-sm focus:border-yellow-400 focus:ring-0 text-white">
+              <select 
+                id="max-players-select" 
+                value={maxPlayers}
+                onChange={(e) => setMaxPlayers(parseInt(e.target.value))}
+                className="w-full bg-surface-container-lowest border border-outline-variant p-3 text-sm focus:border-yellow-400 focus:ring-0 text-white">
                 {[2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} Players</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Battle Type:</label>
-              <select id="battle-type-select" className="w-full bg-surface-container-lowest border border-outline-variant p-3 text-sm focus:border-yellow-400 focus:ring-0 text-white">
-                <option value="singles">Singles</option>
-                <option value="doubles">Doubles</option>
-                <option value="triples">Triples</option>
-              </select>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Allowed Tiers:</label>
+              <div className="grid grid-cols-3 gap-2 bg-surface-container-low p-3 border border-outline-variant">
+                {tierOptions.map(tier => (
+                  <button
+                    key={tier.id}
+                    onClick={() => toggleTier(tier.id)}
+                    className={`text-[9px] font-bold uppercase tracking-widest p-2 border transition-all ${
+                      selectedTiers.includes(tier.id)
+                        ? 'bg-yellow-400 text-black border-yellow-200 shadow-[0_0_10px_rgba(250,204,21,0.5)]'
+                        : 'bg-surface-container-lowest text-slate-400 border-outline-variant hover:border-yellow-400/50'
+                    }`}
+                  >
+                    {tier.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2 mt-2">
+                <button 
+                  onClick={() => setSelectedTiers(tierOptions.map(t => t.id))}
+                  className="text-[8px] text-yellow-400/70 hover:text-yellow-400 uppercase tracking-tighter"
+                >
+                  Select All
+                </button>
+                <button 
+                  onClick={() => setSelectedTiers([])}
+                  className="text-[8px] text-slate-500 hover:text-slate-300 uppercase tracking-tighter"
+                >
+                  Clear
+                </button>
+              </div>
             </div>
-            <button id="create-room-confirm-btn"
+            <button 
+              id="create-room-confirm-btn"
+              onClick={handleCreateRoom}
               className="w-full bg-tertiary-container hover:bg-[#5bf083] text-[#004a1d] px-6 py-4 border-2 border-white uppercase font-bold tracking-widest step-animation text-[10px] flex justify-center items-center gap-2 mt-4">
               <span className="material-symbols-outlined text-[18px]">check</span> CREATE ROOM
             </button>
@@ -167,14 +278,17 @@ export default function Modals() {
           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
           <div className="flex justify-between items-center mb-4 border-b-2 border-outline-variant pb-2">
             <h2 className="text-xl font-bold text-yellow-400 font-headline uppercase tracking-tighter text-glow">Join Battle Room</h2>
-            <button id="close-join-modal" className="text-secondary hover:text-white transition-colors">
+            <button onClick={() => closeModal('join-modal')} id="close-join-modal" className="text-secondary hover:text-white transition-colors">
               <span className="material-symbols-outlined text-[24px]">close</span>
             </button>
           </div>
           <div className="space-y-4 font-body">
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Enter Room Code:</label>
-              <input id="room-code-input" type="number" placeholder="123456" maxLength="6"
+              <input 
+                id="room-code-input" type="text" placeholder="123456" maxLength="6"
+                value={roomCode}
+                onChange={(e) => setRoomCode(e.target.value)}
                 className="w-full bg-surface-container-lowest border border-outline-variant p-4 text-2xl text-center tracking-widest uppercase focus:border-purple-400 focus:ring-0 text-white placeholder:text-[#6d758c] font-headline font-bold" />
               <div className="text-[10px] text-slate-400 mt-2 uppercase tracking-wide text-center">6-digit code provided by room host</div>
             </div>
@@ -189,16 +303,26 @@ export default function Modals() {
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Join As:</label>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
-                  <input type="radio" name="join-role" value="player" defaultChecked className="accent-purple-500" />
+                  <input 
+                    type="radio" name="join-role" value="player" 
+                    checked={joinRole === 'player'}
+                    onChange={() => setJoinRole('player')}
+                    className="accent-purple-500" />
                   Player
                 </label>
                 <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
-                  <input type="radio" name="join-role" value="spectator" className="accent-purple-500" />
+                  <input 
+                    type="radio" name="join-role" value="spectator" 
+                    checked={joinRole === 'spectator'}
+                    onChange={() => setJoinRole('spectator')}
+                    className="accent-purple-500" />
                   Spectator
                 </label>
               </div>
             </div>
-            <button id="join-room-confirm-btn"
+            <button 
+              id="join-room-confirm-btn"
+              onClick={handleJoinRoom}
               className="w-full bg-[#9333ea] hover:bg-purple-500 text-white px-6 py-4 border-2 border-[#581c87] uppercase font-bold tracking-widest step-animation text-[10px] flex justify-center items-center gap-2 mt-4">
               <span className="material-symbols-outlined text-[18px]">group</span> JOIN ROOM
             </button>
@@ -212,7 +336,7 @@ export default function Modals() {
           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-slate-400/50 to-transparent" />
           <div className="flex justify-between items-center mb-4 border-b-2 border-outline-variant pb-2">
             <h2 className="text-xl font-bold text-yellow-400 font-headline uppercase tracking-tighter text-glow">Settings</h2>
-            <button id="close-settings-modal" className="text-secondary hover:text-white transition-colors">
+            <button onClick={() => closeModal('settings-modal')} id="close-settings-modal" className="text-secondary hover:text-white transition-colors">
               <span className="material-symbols-outlined text-[24px]">close</span>
             </button>
           </div>
@@ -339,7 +463,7 @@ export default function Modals() {
               </div>
             </div>
             <button
-              onClick={() => document.getElementById('load-modal')?.classList.remove('active')}
+              onClick={() => closeModal('load-modal')}
               className="text-secondary hover:text-white transition-colors">
               <span className="material-symbols-outlined text-[28px]">close</span>
             </button>
@@ -358,7 +482,7 @@ export default function Modals() {
               Saves are stored per account on Firebase — each player keeps their own copy
             </p>
             <button
-              onClick={() => document.getElementById('load-modal')?.classList.remove('active')}
+              onClick={() => closeModal('load-modal')}
               className="bg-surface-variant hover:bg-surface-bright text-secondary px-4 py-2 border border-secondary font-bold text-[9px] uppercase tracking-widest step-animation">
               CLOSE
             </button>

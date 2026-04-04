@@ -284,9 +284,9 @@ button, input, select {
 .type-badge { font-family: sans-serif; font-weight: bold; font-size: var(--font-size-xs); color: white; padding: 4px 12px; border-radius: 9999px !important; border: 3px solid white; box-shadow: 0 0 0 1px black; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
 
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 40; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-.modal-overlay.visible { opacity: 1; pointer-events: auto; }
+.modal-overlay.visible, .modal-overlay.active { opacity: 1; pointer-events: auto; }
 .modal-content { background-color: #1e293b; border: 2px solid #475569; padding: 1.5rem; width: 90%; max-width: 900px; transform: scale(0.95); transition: transform 0.3s ease; }
-.modal-overlay.visible .modal-content { transform: scale(1); }
+.modal-overlay.visible .modal-content, .modal-overlay.active .modal-content { transform: scale(1); }
 
 .timer.low-time { color: #ef4444; animation: pulse-red 1s infinite; }
 .stat-paralyzed { color: #facc15; text-shadow: 0 0 5px #facc15; }

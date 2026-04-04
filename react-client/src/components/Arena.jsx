@@ -35,22 +35,35 @@ const STATUS_BTNS = [
 function useTimer(initialSeconds = 120) {
   const [seconds, setSeconds] = useState(initialSeconds);
   const [running, setRunning] = useState(false);
-  const ref = useRef(null);
+  const intervalRef = useRef(null);
+  // Tracks the live countdown value so the interval callback never closes
+  // over a stale `seconds` state value.
+  const countRef = useRef(initialSeconds);
 
   useEffect(() => {
-    if (running && seconds > 0) {
-      ref.current = setInterval(() => setSeconds(s => s - 1), 1000);
-    } else {
-      clearInterval(ref.current);
-      if (seconds === 0) setRunning(false);
+    if (!running) {
+      clearInterval(intervalRef.current);
+      return;
     }
-    return () => clearInterval(ref.current);
-  }, [running, seconds]);
+    intervalRef.current = setInterval(() => {
+      countRef.current -= 1;
+      if (countRef.current <= 0) {
+        countRef.current = 0;
+        clearInterval(intervalRef.current);
+        // Called from an async callback — safe, no cascading render in effect body.
+        setSeconds(0);
+        setRunning(false);
+      } else {
+        setSeconds(countRef.current);
+      }
+    }, 1000);
+    return () => clearInterval(intervalRef.current);
+  }, [running]);
 
   const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   const start = () => setRunning(true);
   const pause = () => setRunning(false);
-  const reset = () => { setRunning(false); setSeconds(initialSeconds); };
+  const reset = () => { countRef.current = initialSeconds; setRunning(false); setSeconds(initialSeconds); };
   return { display: fmt(seconds), start, pause, reset, running };
 }
 
@@ -126,6 +139,9 @@ export default function Arena({ onForfeit }) {
             <h1 className="arena__header-title">POKÉMON BATTLE ARENA</h1>
             <button className="arena__end-round-btn" onClick={handleEndRound}>
               END ROUND {round}
+            </button>
+            <button className="arena__forfeit-btn" onClick={onForfeit}>
+              🏳 FORFEIT
             </button>
           </div>
           <div className="arena__timer-row">

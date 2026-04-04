@@ -1,4 +1,4 @@
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { app } from './firebase-config.js';
 
 const auth = getAuth(app);
@@ -54,6 +54,29 @@ export class AuthManager {
             return { user: result.user, error: null };
         } catch (error) {
             return { user: null, error: error.message };
+        }
+    }
+
+    async loginWithGoogle() {
+        try {
+            const provider = new GoogleAuthProvider();
+            const result = await signInWithPopup(auth, provider);
+            return { user: result.user, error: null };
+        } catch (error) {
+            return { user: null, error: error.message };
+        }
+    }
+
+    async updateTrainerName(newName) {
+        try {
+            if (!auth.currentUser) throw new Error("No user logged in");
+            await updateProfile(auth.currentUser, { displayName: newName });
+            await auth.currentUser.reload();
+            this.currentUser = auth.currentUser;
+            this.onAuthStateChangedCallbacks.forEach(cb => cb(this.currentUser));
+            return { success: true, error: null };
+        } catch (error) {
+            return { success: false, error: error.message };
         }
     }
 

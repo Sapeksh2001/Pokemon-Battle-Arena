@@ -115,7 +115,7 @@ button, input, select {
 #player-grid {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: space-evenly;
     align-items: stretch;
     gap: 1rem;
     width: 100%;

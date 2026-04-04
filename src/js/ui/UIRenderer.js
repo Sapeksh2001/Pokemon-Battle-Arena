@@ -351,9 +351,23 @@ export class UIRenderer {
         const pokemon = player?.team[sid];
         if (!pokemon) return;
 
+        // Safety: ensure data and baseData are linked (important for Quick Play)
+        if (!pokemon.data || !pokemon.baseData) {
+            const r = this._arena.db.find(pokemon.fullName);
+            if (r) {
+                pokemon.data = r.foundNode;
+                pokemon.baseData = r.baseNode;
+            }
+        }
+
         reviveBtn.disabled = !pokemon.isFainted();
         if (!pokemon.isFainted()) {
-            evolveBtn.disabled = !(pokemon.data?.evolutions?.some(e => e?.Name));
+            // Handle both string ["Ivysaur"] and object [{ Name: "Ivysaur" }] formats.
+            const hasEvolutions = pokemon.data?.evolutions?.some(e => {
+                if (typeof e === 'string') return !!e;
+                return !!e?.Name;
+            });
+            evolveBtn.disabled = !hasEvolutions;
             const base = pokemon.baseData || pokemon.data;
             // Form entries in the dataset use lowercase `name` (not `Name`).
             // Check both to correctly detect forms like Diglett-Alola, Meowth-Alola, etc.

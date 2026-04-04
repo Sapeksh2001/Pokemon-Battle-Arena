@@ -61,7 +61,7 @@ export default function ArenaView() {
 
             {/* LEFT: Controls Grid */}
             <div className="flex-1 min-w-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 h-full">
+              <div className="grid lg:grid-cols-5 gap-3 h-full">
 
                 {/* Attack Command */}
                 <div className="bg-surface-container border-2 border-outline-variant p-2 relative overflow-hidden group">
@@ -209,10 +209,15 @@ export default function ArenaView() {
                       </select>
                       <PokemonPicker selectId="management-pokemon-select" />
                     </div>
-                    <div className="grid grid-cols-3 gap-1 mt-2">
-                      <button id="evolve-btn" className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm" disabled>EVO</button>
-                      <button id="change-form-btn" className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm" disabled>FORM</button>
-                      <button id="revive-btn" className="bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm" disabled>REV</button>
+                    <div className="grid grid-cols-2 gap-1 mt-2">
+                      <button id="switch-pokemon-btn" className="col-span-2 bg-secondary-container hover:bg-[#699cff] text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>swap_horiz</span>SWITCH
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1 mt-1">
+                      <button id="evolve-btn" className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">EVO</button>
+                      <button id="change-form-btn" className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">FORM</button>
+                      <button id="revive-btn" className="bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">REV</button>
                     </div>
                   </div>
                 </div>

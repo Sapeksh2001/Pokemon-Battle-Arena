@@ -60,11 +60,20 @@ async function startApp() {
 
 console.log('[App] script.js module execution started.');
 
-if (document.readyState === 'loading') {
-    window.addEventListener('DOMContentLoaded', startApp);
-} else {
-    startApp();
+// Do NOT boot on DOMContentLoaded — at that point React may still be gated
+// on the AuthView (waiting for Google/email OAuth to resolve).
+// Instead, poll for window.__reactReady, which is set by GameRoot's useEffect
+// in App.jsx only after auth resolves and all game DOM elements are mounted.
+function waitForReactAndStart() {
+    if (window.__reactReady) {
+        console.log('[App] React DOM ready — starting game engine.');
+        startApp();
+    } else {
+        setTimeout(waitForReactAndStart, 50);
+    }
 }
+
+waitForReactAndStart();
 
 // Expose globals for onclicks
 window.copyRoomCode = function() {

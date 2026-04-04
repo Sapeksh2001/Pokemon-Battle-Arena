@@ -73,6 +73,13 @@ export class PokemonBattleArena {
         window.handleTeamIconClick = (pid, sid) => this.handleTeamIconClick(pid, sid);
         window.editHP = id => this.editHP(id);
         window.removePlayer = id => this.removePlayer(id);
+        // Expose switch-pokemon for the management section's Switch button.
+        window.switchActivePokemonForMgmt = () => {
+            const val = document.getElementById('management-pokemon-select')?.value;
+            if (!val) { this._announce('Select a Pokémon first.', true); return; }
+            const [pid] = val.split('-').map(Number);
+            this.openTeamManager(pid);
+        };
     }
 
     _setupMultiplayerUI() {
@@ -102,6 +109,7 @@ export class PokemonBattleArena {
             ['hpEdit', 'hp-edit-modal'],
             ['confirm', 'confirm-modal'],
             ['multiplayerLobby', 'multiplayer-lobby-modal'],
+            ['settings', 'settings-modal'],
         ].forEach(([name, id]) => this.modals.register(name, document.getElementById(id)));
     }
 
@@ -1065,6 +1073,7 @@ export class PokemonBattleArena {
             team.forEach((pk, idx) => player.setSlot(idx, pk));
             this.gs.players.push(player);
         });
+        this.renderer.renderAll(); // Ensure UI reflects new players immediately
         setTimeout(() => this._toggleLoading(false), 500);
     }
 
@@ -1361,6 +1370,16 @@ export class PokemonBattleArena {
 
         // Selection modal
         document.getElementById('close-selection-modal')?.addEventListener('click', () => { this.audio.play('click'); this.modals.close('selection'); });
+
+        // Settings modal
+        document.getElementById('close-settings-modal')?.addEventListener('click', () => { this.audio.play('click'); this.modals.close('settings'); });
+        document.getElementById('save-settings-btn')?.addEventListener('click', () => { this.audio.play('confirm'); this.modals.close('settings'); });
+
+        // Management — Switch Pokémon button
+        document.getElementById('switch-pokemon-btn')?.addEventListener('click', () => {
+            this.audio.play('click');
+            window.switchActivePokemonForMgmt?.();
+        });
 
         // RNG
         document.getElementById('generate-number-btn')?.addEventListener('click', () => {

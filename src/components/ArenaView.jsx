@@ -3,12 +3,55 @@
  * Pixel-perfect replica of #arena-view from the legacy index.html.
  * Contains the battle header, player grid, control panel, and battle log.
  * All IDs are preserved for legacy engine compatibility.
+ *
+ * v2: footer buttons wired to dispatch() from ArenaContext.
+ * dispatch() calls the engine method AND fires __arenaNotify() to sync React
+ * state immediately. Zero visual changes.
  */
 import { useState } from 'react';
 import PokemonPicker from './PokemonPicker';
+import { useArena } from '../context/ArenaContext';
 
 export default function ArenaView() {
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const { dispatch, getArena } = useArena() ?? {};
+
+  // Local helpers that wrap dispatch for cleaner JSX
+  const act = (action, ...args) => () => dispatch?.(action, ...args);
+
+  const handleRNG = () => {
+    const arena = getArena?.();
+    if (!arena) return;
+    const num = Math.floor(Math.random() * 100) + 1;
+    const el = document.getElementById('random-number-display');
+    if (el) el.textContent = num;
+    arena.log?.add(`[RNG] Game Master rolled a ${num}`, 'system');
+    arena.audio?.play('click');
+  };
+
+  const handleUndo = () => {
+    const arena = getArena?.();
+    if (!arena) return;
+    if (arena.history?.undo(arena.gs, arena.db)) {
+      arena.audio?.play('click');
+      arena.renderer?.renderAll();
+      arena.log?.add('[UNDO] Action undone', 'system');
+    } else {
+      arena.audio?.play('error');
+    }
+  };
+
+  const handleRedo = () => {
+    const arena = getArena?.();
+    if (!arena) return;
+    if (arena.history?.redo(arena.gs, arena.db)) {
+      arena.audio?.play('click');
+      arena.renderer?.renderAll();
+      arena.log?.add('[REDO] Action redone', 'system');
+    } else {
+      arena.audio?.play('error');
+    }
+  };
   return (
     <div id="arena-view" className="hidden">
       {/* CRT & Pixel Grid */}
@@ -25,6 +68,7 @@ export default function ArenaView() {
               <span className="material-symbols-outlined text-yellow-400" style={{ fontVariationSettings: "'FILL' 1" }}>swords</span>
               <h1 className="text-xl font-bold text-yellow-400 font-headline uppercase tracking-tighter text-glow">POKÉMON BATTLE ARENA</h1>
               <button id="end-round-btn"
+                onClick={act('endRound')}
                 className="bg-[#b92902] text-[#ffd2c8] hover:bg-[#ff7351] px-4 py-2 border-2 border-[#450900] transition-colors font-label text-[8px] uppercase step-animation"
                 style={{ boxShadow: '4px 4px 0px 0px #450900' }}>
                 END ROUND 1
@@ -35,13 +79,13 @@ export default function ArenaView() {
               <div id="timer-display" className="font-label text-xl bg-surface-container-lowest text-yellow-400 px-4 py-2 border-2 border-outline-variant text-glow">
                 02:00
               </div>
-              <button id="timer-start" className="bg-tertiary-container hover:bg-[#5bf083] text-on-tertiary-container px-3 py-2 border-2 border-white step-animation hard-shadow-tertiary">
+              <button id="timer-start" onClick={act('timer.start')} className="bg-tertiary-container hover:bg-[#5bf083] text-on-tertiary-container px-3 py-2 border-2 border-white step-animation hard-shadow-tertiary">
                 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
               </button>
-              <button id="timer-pause" className="bg-primary-container hover:bg-yellow-400 text-on-primary-container px-3 py-2 border-2 border-white step-animation" style={{ boxShadow: '4px 4px 0px 0px #685900' }}>
+              <button id="timer-pause" onClick={act('timer.pause')} className="bg-primary-container hover:bg-yellow-400 text-on-primary-container px-3 py-2 border-2 border-white step-animation" style={{ boxShadow: '4px 4px 0px 0px #685900' }}>
                 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>pause</span>
               </button>
-              <button id="timer-reset" className="bg-surface-variant hover:bg-surface-bright text-[#699cff] px-3 py-2 border-2 border-[#699cff] step-animation">
+              <button id="timer-reset" onClick={act('timer.reset')} className="bg-surface-variant hover:bg-surface-bright text-[#699cff] px-3 py-2 border-2 border-[#699cff] step-animation">
                 <span className="material-symbols-outlined">restart_alt</span>
               </button>
             </div>
@@ -109,8 +153,8 @@ export default function ArenaView() {
                       --
                     </div>
                     <div className="grid grid-cols-2 gap-2 mt-1">
-                      <button id="physical-attack-btn" className="w-full text-[11px] font-bold bg-[#b92902] text-white hover:bg-[#d53d18] border border-[#450900] py-1.5 step-animation transition-colors">PHYSICAL</button>
-                      <button id="special-attack-btn" className="w-full text-[11px] font-bold bg-secondary-container text-white hover:bg-[#699cff] border border-[#003271] py-1.5 step-animation transition-colors">SPECIAL</button>
+                      <button id="physical-attack-btn" onClick={act('handleAttack', 'physical')} className="w-full text-[11px] font-bold bg-[#b92902] text-white hover:bg-[#d53d18] border border-[#450900] py-1.5 step-animation transition-colors">PHYSICAL</button>
+                      <button id="special-attack-btn" onClick={act('handleAttack', 'special')} className="w-full text-[11px] font-bold bg-secondary-container text-white hover:bg-[#699cff] border border-[#003271] py-1.5 step-animation transition-colors">SPECIAL</button>
                     </div>
                   </div>
                 </div>
@@ -165,7 +209,7 @@ export default function ArenaView() {
                           className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-sm text-on-surface placeholder:text-[#40485d] focus:border-yellow-400 focus:ring-0"
                           placeholder="Val" />
                       </div>
-                      <button id="update-stat-btn" className="w-full bg-secondary-container text-white hover:bg-[#004da8] p-2 border border-black font-bold uppercase step-animation transition-colors mt-1">
+                      <button id="update-stat-btn" onClick={act('handleStatUpdate')} className="w-full bg-secondary-container text-white hover:bg-[#004da8] p-2 border border-black font-bold uppercase step-animation transition-colors mt-1">
                         UPDATE
                       </button>
                     </div>
@@ -180,7 +224,7 @@ export default function ArenaView() {
                     <div className="text-center">
                       <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-sm">RNG (1-100)</label>
                       <div id="random-number-display" className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-2xl font-bold text-yellow-400 text-glow tracking-widest">--</div>
-                      <button id="generate-number-btn" className="w-full bg-tertiary-container text-[#004a1d] hover:bg-[#5bf083] p-1 border border-white font-bold uppercase step-animation transition-colors mt-1">ROLL</button>
+                      <button id="generate-number-btn" onClick={handleRNG} className="w-full bg-tertiary-container text-[#004a1d] hover:bg-[#5bf083] p-1 border border-white font-bold uppercase step-animation transition-colors mt-1">ROLL</button>
                     </div>
                     <div className="border-t border-outline-variant pt-2 mt-2">
                       <div className="grid grid-cols-2 gap-2">
@@ -190,7 +234,7 @@ export default function ArenaView() {
                             className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-sm text-on-surface placeholder:text-[#40485d] focus:border-yellow-400 focus:ring-0" />
                         </div>
                         <div className="flex items-end">
-                          <button id="add-player-btn" className="w-full bg-surface-variant text-secondary border border-secondary hover:bg-surface-bright p-2 font-bold uppercase step-animation transition-colors">ADD</button>
+                          <button id="add-player-btn" onClick={act('addPlayer')} className="w-full bg-surface-variant text-secondary border border-secondary hover:bg-surface-bright p-2 font-bold uppercase step-animation transition-colors">ADD</button>
                         </div>
                       </div>
                     </div>
@@ -210,14 +254,16 @@ export default function ArenaView() {
                       <PokemonPicker selectId="management-pokemon-select" />
                     </div>
                     <div className="grid grid-cols-2 gap-1 mt-2">
-                      <button id="switch-pokemon-btn" className="col-span-2 bg-secondary-container hover:bg-[#699cff] text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1">
+                      <button id="switch-pokemon-btn"
+                        onClick={() => { const a = getArena?.(); if (a) { a.audio?.play('click'); window.switchActivePokemonForMgmt?.(); } }}
+                        className="col-span-2 bg-secondary-container hover:bg-[#699cff] text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1">
                         <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>swap_horiz</span>SWITCH
                       </button>
                     </div>
                     <div className="grid grid-cols-3 gap-1 mt-1">
-                      <button id="evolve-btn" className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">EVO</button>
-                      <button id="change-form-btn" className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">FORM</button>
-                      <button id="revive-btn" className="bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">REV</button>
+                      <button id="evolve-btn" onClick={act('handleEvolve')} className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">EVO</button>
+                      <button id="change-form-btn" onClick={act('openFormChangeModal')} className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">FORM</button>
+                      <button id="revive-btn" onClick={act('handleRevive')} className="bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">REV</button>
                     </div>
                   </div>
                 </div>
@@ -228,14 +274,14 @@ export default function ArenaView() {
                   <h4 className="text-yellow-400 font-label text-sm mb-3 uppercase tracking-widest text-glow">Round &amp; History</h4>
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     <button id="undo-btn"
-                      className="bg-surface-variant text-yellow-400 hover:bg-surface-bright p-2 border border-[#40485d] font-bold uppercase step-animation transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled>
+                      onClick={handleUndo}
+                      className="bg-surface-variant text-yellow-400 hover:bg-surface-bright p-2 border border-[#40485d] font-bold uppercase step-animation transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                       <span className="material-symbols-outlined text-[20px] align-middle" style={{ fontVariationSettings: "'FILL' 1" }}>undo</span> UNDO
                       <div className="text-[10px] text-on-surface-variant mt-0.5 tracking-wider">Ctrl+Z</div>
                     </button>
                     <button id="redo-btn"
-                      className="bg-surface-variant text-yellow-400 hover:bg-surface-bright p-2 border border-[#40485d] font-bold uppercase step-animation transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled>
+                      onClick={handleRedo}
+                      className="bg-surface-variant text-yellow-400 hover:bg-surface-bright p-2 border border-[#40485d] font-bold uppercase step-animation transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                       <span className="material-symbols-outlined text-[20px] align-middle" style={{ fontVariationSettings: "'FILL' 1" }}>redo</span> REDO
                       <div className="text-[10px] text-on-surface-variant mt-0.5 tracking-wider">Ctrl+⇧+Z / Ctrl+Y</div>
                     </button>

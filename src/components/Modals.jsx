@@ -51,7 +51,6 @@ export default function Modals() {
   const closeModal = (id) => {
     const modal = document.getElementById(id);
     if (modal) {
-      modal.classList.remove('active');
       modal.classList.remove('visible');
     }
   };

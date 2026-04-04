@@ -98,7 +98,7 @@ export default function LobbyView() {
               <button id="create-room-btn"
                 onClick={() => {
                   const modal = document.getElementById('room-modal');
-                  if (modal) modal.classList.add('active');
+                  if (modal) modal.classList.add('visible');
                 }}
                 className="w-full bg-secondary-container text-on-secondary-container p-4 border-2 border-white flex items-center gap-4 step-animation hover:bg-[#699cff] transition-all hard-shadow-secondary group">
                 <span className="material-symbols-outlined text-2xl">add_box</span>
@@ -113,7 +113,7 @@ export default function LobbyView() {
               <button id="join-room-btn"
                 onClick={() => {
                   const modal = document.getElementById('join-modal');
-                  if (modal) modal.classList.add('active');
+                  if (modal) modal.classList.add('visible');
                 }}
                 className="w-full bg-surface-container text-[#699cff] p-4 border-2 border-[#699cff] flex items-center gap-4 step-animation hover:bg-surface-high transition-all group">
                 <span className="material-symbols-outlined text-2xl">groups</span>
@@ -129,7 +129,7 @@ export default function LobbyView() {
                  <button id="load-game-btn"
                     onClick={() => {
                       const modal = document.getElementById('load-modal');
-                      if (modal) { modal.classList.add('active'); window.arena?.multiplayer?.loadSavedGames(); }
+                      if (modal) { modal.classList.add('visible'); window.arena?.multiplayer?.loadSavedGames(); }
                     }}
                     className="bg-[#1e293b] text-[#5bf083] p-4 border-2 border-[#004a1d] flex flex-col items-start gap-2 step-animation hover:bg-[#004a1d]/30 transition-all group">
                     <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>cloud_download</span>

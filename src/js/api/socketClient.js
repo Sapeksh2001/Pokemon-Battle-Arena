@@ -28,6 +28,47 @@ export class MultiplayerManager {
         this.unsubscribes = [];
     }
 
+    /**
+     * Instantly starts a local battle with 6 prepopulated teams (Ash, Misty, etc.)
+     * This bypasses the multiplayer room creation for testing and quick play.
+     */
+    quickBattle() {
+        console.log('[MULTIPLAYER] Starting Quick Battle...');
+        this.mode = 'offline';
+        
+        // 1. Prepopulate the arena with dummy data
+        if (typeof this.arena._prepopulate === 'function') {
+            this.arena._prepopulate();
+        } else {
+            console.error('[MULTIPLAYER] Error: _prepopulate not found on arena instance.');
+            return;
+        }
+
+        // 2. Switch from Lobby View to Arena View
+        const lobby = document.getElementById('lobby-view');
+        const arenaNode = document.getElementById('arena-view');
+        
+        if (lobby && arenaNode) {
+            lobby.classList.add('hidden');
+            arenaNode.classList.remove('hidden');
+            console.log('[MULTIPLAYER] Transitioned to Arena View');
+        } else {
+            console.warn('[MULTIPLAYER] UI nodes not found for transition');
+        }
+
+        // 3. Initialize the battle and Render (delayed slightly for DOM synchronization)
+        setTimeout(() => {
+            if (this.arena.renderer) {
+                this.arena.renderer.renderAll();
+                console.log('[MULTIPLAYER] Quick Battle initialized and rendered');
+            }
+        }, 100);
+        this.arena.audio.play('confirm');
+        console.log('[MULTIPLAYER] Quick Battle initialized and rendered');
+    }
+
+
+
     connect() {
         console.log('[MULTIPLAYER] Initialized Firebase connection');
         this.isConnected = true;
@@ -620,52 +661,29 @@ export class MultiplayerManager {
              }
          });
 
-         // Also populate the Load Game modal whenever recent rooms update
+         // Also populate the Load Game modal whenever auth is available
          this.loadSavedGames();
     }
 
-    /**
-     * Saves the current game state as a JSON snapshot to Firebase at:
-     * /users/{uid}/saved_games/{roomCode}
-     * Each player in the room gets their own independent save.
-     */
     async saveGameToFirebase() {
         const user = authManager.currentUser;
-        if (!user) {
-            this.showNotification('You must be logged in to save', 'error');
-            return;
-        }
-        if (!this.roomCode || this.mode !== 'playing') {
-            this.showNotification('No active game to save', 'error');
-            return;
-        }
-
+        if (!user) { this.showNotification('You must be logged in to save', 'error'); return; }
+        if (!this.roomCode || this.mode !== 'playing') { this.showNotification('No active game to save', 'error'); return; }
         try {
             const state = this.serializeGameState();
             const gs = this.arena.gs;
-
-            // Build human-readable metadata for the Load modal card
             const playerNames = (gs.players || []).map(p => p.name).filter(Boolean);
-            const pokemonNames = (gs.players || [])
-                .map(p => p.team?.[0]?.name || p.team?.[0]?.species || null)
-                .filter(Boolean);
-
-            const saveData = {
+            const pokemonNames = (gs.players || []).map(p => p.team?.[0]?.name || p.team?.[0]?.species || null).filter(Boolean);
+            await set(ref(db, `users/${user.uid}/saved_games/${this.roomCode}`), {
                 snapshot: state,
                 savedAt: Date.now(),
                 roomCode: this.roomCode,
                 round: gs.round || 1,
                 playerCount: (gs.players || []).length,
-                playerNames: playerNames,
-                pokemonNames: pokemonNames,
+                playerNames,
+                pokemonNames,
                 savedByName: user.displayName || user.email || 'Trainer'
-            };
-
-            await set(
-                ref(db, `users/${user.uid}/saved_games/${this.roomCode}`),
-                saveData
-            );
-
+            });
             this.showNotification('Game saved to cloud!', 'success');
             this.arena.log.add('💾 Game state saved to cloud.', 'system');
         } catch (err) {
@@ -674,39 +692,26 @@ export class MultiplayerManager {
         }
     }
 
-    /**
-     * Listens to /users/{uid}/saved_games (last 20), sorted by savedAt desc.
-     * Renders cards into #load-game-list inside the Load modal.
-     */
     loadSavedGames() {
         const user = authManager.currentUser;
         if (!user) return;
-
         const savedQuery = query(ref(db, `users/${user.uid}/saved_games`), limitToLast(20));
         onValue(savedQuery, (snapshot) => {
             const list = document.getElementById('load-game-list');
             if (!list) return;
-
             if (!snapshot.exists()) {
                 list.innerHTML = '<div class="text-center text-[10px] text-slate-400 py-8 col-span-2">No saved games found</div>';
                 return;
             }
-
             const saves = [];
-            snapshot.forEach(child => {
-                saves.push({ key: child.key, ...child.val() });
-            });
+            snapshot.forEach(child => saves.push({ key: child.key, ...child.val() }));
             saves.sort((a, b) => b.savedAt - a.savedAt);
-
             list.innerHTML = saves.map(s => {
-                const date = new Date(s.savedAt).toLocaleString(undefined, {
-                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                });
+                const date = new Date(s.savedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                 const pokemon = (s.pokemonNames || []).slice(0, 4).join(', ') || 'Unknown team';
                 const players = (s.playerNames || []).join(' vs ') || 'Unknown players';
                 return `
-                    <button
-                        onclick="window.arena?.multiplayer?.loadAndResume('${s.roomCode}')"
+                    <button onclick="window.arena?.multiplayer?.loadAndResume('${s.roomCode}')"
                         class="load-save-card w-full text-left bg-surface-container-low hover:bg-surface-variant border border-outline-variant p-4 step-animation transition-colors group">
                         <div class="flex justify-between items-start mb-2">
                             <div class="font-headline text-[#5bf083] text-xl tracking-widest">${s.roomCode}</div>
@@ -718,76 +723,45 @@ export class MultiplayerManager {
                             <div class="text-[9px] text-slate-500 uppercase tracking-wider">${date}</div>
                             <div class="text-[9px] text-[#5bf083] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">RESUME →</div>
                         </div>
-                    </button>
-                `;
+                    </button>`;
             }).join('');
         });
     }
 
-    /**
-     * Fetches a saved game snapshot from Firebase, re-joins the room,
-     * pushes the snapshot back as live state, and transitions to ArenaView.
-     * @param {string} roomCode
-     */
     async loadAndResume(roomCode) {
         const user = authManager.currentUser;
-        if (!user) {
-            this.showNotification('You must be logged in to load', 'error');
-            return;
-        }
-
+        if (!user) { this.showNotification('You must be logged in to load', 'error'); return; }
         const name = this.playerName || user.displayName || user.email || 'Trainer';
-
         try {
-            // 1. Fetch this user's saved snapshot
             const saveSnap = await get(ref(db, `users/${user.uid}/saved_games/${roomCode}`));
-            if (!saveSnap.exists()) {
-                this.showNotification('Save data not found', 'error');
-                return;
-            }
-            const saveData = saveSnap.val();
-            const snapshot = saveData.snapshot;
-
-            // 2. Check whether the live room still exists in Firebase
+            if (!saveSnap.exists()) { this.showNotification('Save data not found', 'error'); return; }
+            const snapshot = saveSnap.val().snapshot;
             const roomSnap = await get(ref(db, `rooms/${roomCode}`));
-
             if (roomSnap.exists() && roomSnap.val().status === 'playing') {
-                // Room is live – join and overwrite with our saved snapshot
                 this.showNotification('Reconnecting to live room...', 'info');
                 await this.joinRoom(roomCode, name);
-                // Give _onGameStarted a moment to run, then push saved state
                 setTimeout(async () => {
                     try {
                         this.deserializeGameState(snapshot);
-                        await set(ref(db, `rooms/${roomCode}/state`), {
-                            ...snapshot,
-                            _sender: this.playerId
-                        });
+                        await set(ref(db, `rooms/${roomCode}/state`), { ...snapshot, _sender: this.playerId });
                         this.arena.renderer.renderAll();
                         this.showNotification('Save loaded — continued from Round ' + (snapshot.round || 1), 'success');
                         this.arena.log.add(`💾 Resumed from save (Round ${snapshot.round || 1}).`, 'system');
-                    } catch (e) {
-                        console.error('[MULTIPLAYER] Error pushing saved state:', e);
-                    }
+                    } catch (e) { console.error('[MULTIPLAYER] Error pushing saved state:', e); }
                 }, 2000);
             } else {
-                // Room is closed/offline — restore locally and switch to arena immediately
                 this.showNotification('Room offline. Restoring last save locally...', 'info');
                 this.mode = 'playing';
                 this.roomCode = roomCode;
-
-                // Close load modal and switch views
                 document.getElementById('load-modal')?.classList.remove('active');
                 const lobbyView = document.getElementById('lobby-view');
                 const arenaView = document.getElementById('arena-view');
                 const loadingScreen = document.getElementById('loading-screen');
                 if (loadingScreen) loadingScreen.classList.remove('hidden');
-
                 setTimeout(() => {
                     if (lobbyView) lobbyView.classList.add('hidden');
                     if (arenaView) arenaView.classList.remove('hidden');
                     if (loadingScreen) loadingScreen.classList.add('hidden');
-
                     this.deserializeGameState(snapshot);
                     this.arena.renderer.renderAll();
                     this.arena.log.add(`💾 Loaded offline save from room ${roomCode} (Round ${snapshot.round || 1}).`, 'system');
@@ -799,66 +773,5 @@ export class MultiplayerManager {
             this.showNotification('Load failed — see console', 'error');
         }
     }
-
-    /**
-     * Downloads the current game state as a JSON session snapshot.
-     */
-    exportSnapshot() {
-        if (!this.arena.gs) return;
-        try {
-            const state = this.serializeGameState();
-            const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = Object.assign(document.createElement('a'), {
-                href: url,
-                download: `arena-snapshot-${this.roomCode || 'local'}-${new Date().toISOString().slice(0, 10)}.json`
-            });
-            a.click();
-            URL.revokeObjectURL(url);
-            this.arena.log.add('📂 Local snapshot exported as JSON.', 'system');
-            this.showNotification('Snapshot downloaded!', 'success');
-        } catch (err) {
-            console.error('[MULTIPLAYER] Export failed:', err);
-            this.showNotification('Export failed', 'error');
-        }
-    }
-
-    /**
-     * Resumes a game session from a selected JSON file.
-     * @param {File} file
-     */
-    async importSnapshot(file) {
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const snapshot = JSON.parse(e.target.result);
-                
-                // Switch to Arena View
-                this.mode = 'playing';
-                this.roomCode = snapshot.roomCode || 'imported';
-                
-                // UI transition logic
-                const lobbyView = document.getElementById('lobby-view');
-                const arenaView = document.getElementById('arena-view');
-                const loadingScreen = document.getElementById('loading-screen');
-                if (loadingScreen) loadingScreen.classList.remove('hidden');
-
-                setTimeout(() => {
-                    if (lobbyView) lobbyView.classList.add('hidden');
-                    if (arenaView) arenaView.classList.remove('hidden');
-                    if (loadingScreen) loadingScreen.classList.add('hidden');
-
-                    this.deserializeGameState(snapshot);
-                    this.arena.renderer.renderAll();
-                    this.arena.log.add('📂 Session resumed from local JSON snapshot.', 'system');
-                    this.showNotification('Session imported!', 'success');
-                }, 1500);
-            } catch (err) {
-                console.error('[MULTIPLAYER] Import failed:', err);
-                this.showNotification('Invalid snapshot file', 'error');
-            }
-        };
-        reader.readAsText(file);
-    }
 }
+

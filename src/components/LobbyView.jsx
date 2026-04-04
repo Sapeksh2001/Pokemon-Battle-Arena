@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { authManager } from '../../js/api/authManager.js';
+import { authManager } from '../js/api/authManager.js';
 
 /**
  * LobbyView
@@ -83,7 +83,9 @@ export default function LobbyView() {
             <div className="space-y-4">
               {/* Quick Battle */}
               <button id="quick-battle-btn"
+                onClick={() => window.arena?.multiplayer?.quickBattle()}
                 className="w-full bg-tertiary-container text-on-tertiary-container p-4 border-2 border-white flex items-center gap-4 step-animation hover:bg-[#5bf083] transition-all hard-shadow-tertiary group">
+
                 <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
                 <div className="text-left">
                   <span className="block font-label text-xs">QUICK BATTLE</span>

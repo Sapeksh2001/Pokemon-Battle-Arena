@@ -97,6 +97,7 @@ html, body {
 body { 
     font-family: 'Press Start 2P', cursive; /* The global pixel font. */
     background-color: #0f172a; /* Dark blue background. */
+    color: #ffffff; /* Global font color: White for readability on dark background */
     /* These properties disable font anti-aliasing to achieve a sharp, pixelated look. */
     -webkit-font-smoothing: none;
     -moz-osx-font-smoothing: grayscale;
@@ -107,6 +108,7 @@ body {
 /* Ensure form elements also use the pixel font for consistency. */
 button, input, select {
     font-family: 'Press Start 2P', cursive; 
+    color: inherit; /* Ensure form elements inherit the white color from body */
 }
 
 /* --- ADAPTIVE PLAYER GRID --- */

@@ -12,7 +12,6 @@ export class UIRenderer {
     constructor(gameState, arena) {
         this._gs = gameState;
         this._arena = arena;
-        this._playerGrid = document.getElementById('player-grid');
         this.settings = {
             damageNumbers: true,
             animationSpeed: '0.5s'
@@ -60,8 +59,11 @@ export class UIRenderer {
     // ── Player cards ─────────────────────────────────────────────────
 
     _renderPlayerCards() {
-        this._playerGrid.innerHTML = '';
-        this._gs.players.forEach(p => this._playerGrid.appendChild(this._createPlayerCard(p)));
+        const grid = document.getElementById('player-grid');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+        this._gs.players.forEach(p => grid.appendChild(this._createPlayerCard(p)));
         // Commented out to satisfy dynamic scaling logic (Task 6)
         // for (let i = this._gs.players.length; i < 6; i++) {
         //     this._playerGrid.appendChild(this._createEmptyCard());

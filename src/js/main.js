@@ -56,7 +56,7 @@ export class PokemonBattleArena {
         this.log.linkGameState(this.gs);
 
         this._registerModals();
-        this._prepopulate();
+        // this._prepopulate(); // Moved to MultiplayerManager.quickBattle()
         this._populateMoveTypeSelector();
         this._setupEventListeners();
         this._setupKeyboardShortcuts();
@@ -1031,6 +1031,7 @@ export class PokemonBattleArena {
     // ── Prepopulate ───────────────────────────────────────────────────────
 
     _prepopulate() {
+        this.gs.players = []; // Clear current players to avoid duplicates
         this._toggleLoading(true, 'Loading Pokémon teams...');
         const names = ['Ash', 'Misty', 'Brock', 'Gary', 'Jessie', 'James'];
         const pool = [...this.db.filteredNames].sort(() => 0.5 - Math.random());

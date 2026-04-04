@@ -1,11 +1,18 @@
 import { useState } from 'react';
-import { authManager } from '../../js/api/authManager.js';
+import { authManager } from '../js/api/authManager.js';
 
 export default function AuthView({ onAuthSuccess }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = async (e) => {
+    // Debug: Trace the event to see what triggered this click
+    console.log('[AuthView] Google Login triggered', {
+      type: e?.type,
+      isTrusted: e?.isTrusted,
+      timeStamp: e?.timeStamp
+    });
+
     setError(null);
     setLoading(true);
     const result = await authManager.loginWithGoogle();

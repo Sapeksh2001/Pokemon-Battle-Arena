@@ -17,7 +17,7 @@ import LobbyView from './components/LobbyView';
 import ArenaView from './components/ArenaView';
 import Modals from './components/Modals';
 import AuthView from './components/AuthView';
-import { authManager } from '../js/api/authManager.js';
+import { authManager } from './js/api/authManager.js';
 
 function GameRoot() {
   const { loadState } = useArena();

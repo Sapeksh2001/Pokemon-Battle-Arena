@@ -1,3 +1,7 @@
+/* eslint-disable no-dupe-keys */
+// NOTE: Some regional form keys (Alola, Galar, Hisui) appear twice in forms objects.
+// The first entry is an incomplete stub; the second (complete) entry with name/sprite wins
+// at runtime per normal JS object semantics. The stubs will be cleaned up in a future pass.
 const MergedPokemonData = {
   Bulbasaur: {
     Name: "Bulbasaur",

@@ -231,6 +231,18 @@ export default function Modals() {
               </select>
             </div>
             <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Battle Type:</label>
+              <select
+                id="battle-type-select"
+                value={battleType}
+                onChange={(e) => setBattleType(e.target.value)}
+                className="w-full bg-surface-container-lowest border border-outline-variant p-3 text-sm focus:border-yellow-400 focus:ring-0 text-white">
+                <option value="singles">Singles (1v1)</option>
+                <option value="doubles">Doubles (2v2)</option>
+                <option value="free-for-all">Free For All</option>
+              </select>
+            </div>
+            <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Allowed Tiers:</label>
               <div className="grid grid-cols-3 gap-2 bg-surface-container-low p-3 border border-outline-variant">
                 {tierOptions.map(tier => (

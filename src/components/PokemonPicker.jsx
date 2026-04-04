@@ -5,12 +5,12 @@
  * Only renders the active Pokémon's sprite for each player.
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useArena } from '../context/ArenaContext';
 
 // ─── Single card (Sprite Only) ───────────────────────────────────────────────
 
-function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
+function PokemonCard({ pokemon, isSelected, isFainted, onClick }) {
   return (
     <button
       type="button"
@@ -55,11 +55,15 @@ function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
 
 export default function PokemonPicker({ selectId }) {
   const { tick, getArena } = useArena();
-  const [selected, setSelected] = useState('');
-  const [entries, setEntries] = useState([]);
+  // Track the last value clicked so we can highlight it immediately on
+  // click, before the next tick-driven re-render propagates the change.
+  const [clickedValue, setClickedValue] = useState('');
 
-  // Build entry list from arena game state (Active Pokémon ONLY)
-  const buildEntries = useCallback(() => {
+  // Build entry list from arena game state (Active Pokémon ONLY).
+  // `tick` is included in the dep array as an explicit refresh signal:
+  // getArena() returns a stable ref whose *contents* mutate in-place, so
+  // without tick the memo would never recalculate on arena state changes.
+  const entries = useMemo(() => {
     const arena = getArena();
     if (!arena?.gs?.players) return [];
 
@@ -83,16 +87,22 @@ export default function PokemonPicker({ selectId }) {
         isFainted: pk.isFainted?.() || (pk.currentHP <= 0),
       }];
     });
-  }, [getArena, selectId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick, getArena, selectId]);
 
-  useEffect(() => {
-    setEntries(buildEntries());
-    const sel = document.getElementById(selectId);
-    if (sel) setSelected(sel.value);
-  }, [tick, selectId, buildEntries]);
+  // Derive the currently-selected value from the hidden <select> DOM element
+  // on every render. The hidden <select> elements are rendered by ArenaView
+  // (same render tree), so they exist in the DOM before this component reads
+  // them. The component re-renders on every tick so this stays in sync with
+  // changes the legacy engine makes to the select value without needing a
+  // separate useEffect → setState cycle (which would trigger a second render).
+  const domSelected = document.getElementById(selectId)?.value ?? '';
+  // Prefer the locally-clicked value so the highlight updates immediately;
+  // fall back to the DOM value once the legacy engine acknowledges the change.
+  const selected = entries.some(e => e.value === clickedValue) ? clickedValue : domSelected;
 
   const handleClick = useCallback((value) => {
-    setSelected(value);
+    setClickedValue(value);
     const sel = document.getElementById(selectId);
     if (!sel) return;
     sel.value = value;
@@ -107,7 +117,6 @@ export default function PokemonPicker({ selectId }) {
         <PokemonCard
           key={value}
           pokemon={pokemon}
-          value={value}
           isSelected={selected === value}
           isFainted={isFainted}
           onClick={() => handleClick(value)}

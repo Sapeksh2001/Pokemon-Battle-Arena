@@ -8,10 +8,6 @@ import { authManager } from './authManager.js';
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-function generateRoomCode() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
 function generatePlayerId() {
     return Math.random().toString(36).substring(2, 9);
 }

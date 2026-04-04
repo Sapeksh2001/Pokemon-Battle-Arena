@@ -14,7 +14,9 @@ export default function LobbyView() {
   useEffect(() => {
     const unsub = authManager.subscribe((curr) => {
       setUser(curr);
-      if (curr?.displayName && !newName) setNewName(curr.displayName);
+      // Only pre-fill when the field is still empty so we don't clobber
+      // text the user has already typed into the trainer-name input.
+      if (curr?.displayName) setNewName(prev => prev || curr.displayName);
     });
     return unsub;
   }, []);

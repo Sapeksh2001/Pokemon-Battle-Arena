@@ -56,6 +56,7 @@ export default function AuthView({ onAuthSuccess }) {
             onClick={handleGoogleLogin}
             disabled={loading}
             className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-[#1f1f1f] border-2 border-[#dadce0] font-bold py-3 px-4 text-sm uppercase tracking-wider step-animation hard-shadow-primary disabled:opacity-50"
+            style={{ color: '#1f1f1f' }}
           >
             <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -67,9 +68,9 @@ export default function AuthView({ onAuthSuccess }) {
           </button>
 
           <div className="flex items-center gap-4 py-2">
-            <div className="flex-1 h-[1px] bg-outline-variant opacity-30"></div>
-            <span className="text-on-surface-variant text-[10px] uppercase font-bold text-slate-500">OR</span>
-            <div className="flex-1 h-[1px] bg-outline-variant opacity-30"></div>
+            <div className="flex-1 h-[1px] bg-slate-700/50"></div>
+            <span className="text-[10px] uppercase font-bold text-slate-500">OR</span>
+            <div className="flex-1 h-[1px] bg-slate-700/50"></div>
           </div>
 
           <button

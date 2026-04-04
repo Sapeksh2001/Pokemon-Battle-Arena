@@ -89,7 +89,7 @@ export default function App() {
   }
 
   if (user === null) {
-      return <AuthView />;
+      return <AuthView onAuthSuccess={() => console.log('Auth Success')} />;
   }
 
   return (

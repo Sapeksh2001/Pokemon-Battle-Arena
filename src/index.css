@@ -108,7 +108,6 @@ body {
 /* Ensure form elements also use the pixel font for consistency. */
 button, input, select {
     font-family: 'Press Start 2P', cursive; 
-    color: inherit; /* Ensure form elements inherit the white color from body */
 }
 
 /* --- ADAPTIVE PLAYER GRID --- */

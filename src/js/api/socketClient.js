@@ -110,7 +110,8 @@ export class MultiplayerManager {
         this.isHost = true;
         this.trainerName = trainerName;
         this.playerId = Math.random().toString(36).substring(2, 10);
-        const playerRef = ref(db, `rooms/${code}/players/${this.playerId}`);
+        const roomRef = ref(db, `rooms/${roomCode}`);
+        const playerRef = ref(db, `rooms/${roomCode}/players/${this.playerId}`);
         
         await set(roomRef, {
             createdAt: Date.now(),
@@ -125,7 +126,7 @@ export class MultiplayerManager {
         });
 
         await set(playerRef, {
-            name: playerName,
+            name: trainerName,
             isHost: true,
             isReady: false
         });
@@ -133,8 +134,8 @@ export class MultiplayerManager {
         onDisconnect(playerRef).remove();
         onDisconnect(roomRef).update({ hostDisconnected: true });
 
-        this.showNotification(`Room created: ${code}`, 'success');
-        this.saveRecentRoom(code, 'host');
+        this.showNotification(`Room created: ${roomCode}`, 'success');
+        this.saveRecentRoom(roomCode, 'host');
         this.showRoomLobby();
         this._listenToLobby();
     }

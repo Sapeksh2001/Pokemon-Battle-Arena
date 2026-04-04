@@ -51,14 +51,14 @@ export default function LobbyView() {
             <span className="material-symbols-outlined text-yellow-400" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
           </div>
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3 bg-surface-container-lowest/50 border border-outline-variant p-2 md:px-4 step-animation">
+            <div className="flex items-center gap-3 bg-slate-800/50 border border-slate-700 p-2 md:px-4 step-animation">
               {user?.photoURL ? (
                 <img src={user.photoURL} alt="Profile" className="w-8 h-8 border-2 border-yellow-400 pixelated" />
               ) : (
-                <span className="material-symbols-outlined text-on-surface-variant">account_circle</span>
+                <span className="material-symbols-outlined text-slate-400">account_circle</span>
               )}
               <div className="hidden md:block">
-                <p className="font-label text-[8px] text-yellow-400 uppercase tracking-widest">{user?.isAnonymous ? 'GUEST TRAINER' : 'ELITE TRAINER'}</p>
+                <p className="font-label text-[8px] text-yellow-500 uppercase tracking-widest">{user?.isAnonymous ? 'GUEST TRAINER' : 'ELITE TRAINER'}</p>
                 <p className="font-body text-[10px] text-white font-bold truncate max-w-[120px]">{user?.displayName || 'Anonymous'}</p>
               </div>
             </div>
@@ -96,6 +96,10 @@ export default function LobbyView() {
 
               {/* Create Room */}
               <button id="create-room-btn"
+                onClick={() => {
+                  const modal = document.getElementById('room-modal');
+                  if (modal) modal.classList.add('active');
+                }}
                 className="w-full bg-secondary-container text-on-secondary-container p-4 border-2 border-white flex items-center gap-4 step-animation hover:bg-[#699cff] transition-all hard-shadow-secondary group">
                 <span className="material-symbols-outlined text-2xl">add_box</span>
                 <div className="text-left">
@@ -107,6 +111,10 @@ export default function LobbyView() {
 
               {/* Join Room */}
               <button id="join-room-btn"
+                onClick={() => {
+                  const modal = document.getElementById('join-modal');
+                  if (modal) modal.classList.add('active');
+                }}
                 className="w-full bg-surface-container text-[#699cff] p-4 border-2 border-[#699cff] flex items-center gap-4 step-animation hover:bg-surface-high transition-all group">
                 <span className="material-symbols-outlined text-2xl">groups</span>
                 <div className="text-left">

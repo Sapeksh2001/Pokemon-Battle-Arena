@@ -464,42 +464,57 @@ export class PokemonBattleArena {
         for (let i = 0; i < 6; i++) {
             const pokemon = player.team[i];
             const slot = document.createElement('div');
-            slot.className = 'bg-slate-700 p-2 text-center cursor-pointer hover:bg-slate-600 relative';
+            slot.className = 'bg-slate-700 p-2 text-center cursor-pointer hover:bg-slate-600 relative overflow-hidden h-full flex flex-col items-center justify-between min-h-[120px] border border-outline-variant';
             slot.dataset.slotId = i;
 
             if (pokemon) {
                 slot.innerHTML = `
                     ${player.activePokemonIndex === i
-                        ? '<div class="absolute top-1 left-1 text-yellow-400"><i data-lucide="star" class="w-4 h-4 fill-current"></i></div>'
+                        ? '<div class="absolute top-1 left-1 text-yellow-400 z-10 animate-pulse"><i data-lucide="star" class="w-4 h-4 fill-current"></i></div>'
                         : ''}
-                    <img src="${pokemon.sprite}" alt="${escapeHTML(pokemon.fullName)}" class="mx-auto h-16">
-                    <p class="font-bold text-xs mt-1">${escapeHTML(pokemon.fullName)}</p>
-                    <div class="flex justify-center gap-1 mt-1">
-                        <button class="edit-pokemon-btn text-xs bg-yellow-600 hover:bg-yellow-700 p-1">
-                            <i data-lucide="pencil" class="w-3 h-3"></i>
+                    <div class="sprite-container flex-grow flex items-center justify-center p-2">
+                        <img src="${pokemon.sprite}" alt="${escapeHTML(pokemon.fullName)}" class="h-16 w-auto object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
+                    </div>
+                    <div class="name-tag w-full bg-black/40 py-1 px-1 mb-1">
+                        <p class="font-bold text-[10px] uppercase truncate text-white">${escapeHTML(pokemon.fullName)}</p>
+                    </div>
+                    <div class="action-buttons flex justify-center gap-1 w-full mt-auto">
+                        <button class="edit-pokemon-btn flex-1 bg-yellow-600 hover:bg-yellow-700 p-1 flex justify-center items-center h-7" title="Edit">
+                            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                         </button>
-                        <button class="remove-pokemon-btn text-xs bg-red-600 hover:bg-red-700 p-1">
-                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                        <button class="remove-pokemon-btn flex-1 bg-red-600 hover:bg-red-700 p-1 flex justify-center items-center h-7" title="Remove">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                         </button>
                     </div>`;
             } else {
-                slot.classList.add('flex', 'items-center', 'justify-center', 'border-2', 'border-dashed', 'border-slate-600', 'min-h-[110px]');
-                slot.innerHTML = `<button class="add-pokemon-btn text-slate-400 hover:text-white"><i data-lucide="plus-circle" class="w-8 h-8"></i></button>`;
+                slot.classList.add('flex', 'items-center', 'justify-center', 'border-2', 'border-dashed', 'border-slate-600');
+                slot.innerHTML = `<button class="add-pokemon-btn text-slate-400 hover:text-white flex flex-col items-center gap-1">
+                    <i data-lucide="plus-circle" class="w-8 h-8"></i>
+                    <span class="text-[9px] uppercase font-bold">Add</span>
+                </button>`;
             }
             container.appendChild(slot);
         }
         lucide.createIcons();
 
-        // Attach slot event listeners.
+        // Attach slot event listeners with improved delegation
         container.querySelectorAll('div[data-slot-id]').forEach(slot => {
             slot.addEventListener('click', e => {
-                this.audio.play('click');
                 const btn = e.target.closest('button');
                 const slotId = parseInt(slot.dataset.slotId);
-                if (btn?.classList.contains('edit-pokemon-btn')) this._openPokemonEditor(slotId);
-                else if (btn?.classList.contains('remove-pokemon-btn')) this._removePokemonSlot(slotId);
-                else if (btn?.classList.contains('add-pokemon-btn')) this._openPokemonEditor(slotId);
-                else if (player.team[slotId]) {
+                
+                if (btn?.classList.contains('edit-pokemon-btn')) {
+                    this.audio.play('click');
+                    this._openPokemonEditor(slotId);
+                } else if (btn?.classList.contains('remove-pokemon-btn')) {
+                    this.audio.play('click');
+                    this._removePokemonSlot(slotId);
+                } else if (btn?.classList.contains('add-pokemon-btn')) {
+                    this.audio.play('click');
+                    this._openPokemonEditor(slotId);
+                } else if (player.team[slotId]) {
+                    // Clicked the slot itself - switch active
+                    this.audio.play('click');
                     player.activePokemonIndex = slotId;
                     this._renderTeamEditorGrid();
                 }
@@ -1442,55 +1457,6 @@ export class PokemonBattleArena {
     }
 
 
-    // ── MULTIPLAYER UI SETUP ──────────────────────────────────────────────
-
-    _setupMultiplayerUI() {
-        // Connect to existing CREATE ROOM and JOIN ROOM buttons (NO duplicate buttons!)
-        const createRoomBtn = document.getElementById('create-room-btn');
-        const joinRoomBtn = document.getElementById('join-room-btn');
-        const trainerNameInput = document.getElementById('trainer-name-input');
-
-        if (createRoomBtn) {
-            createRoomBtn.addEventListener('click', () => {
-                const playerName = trainerNameInput?.value.trim() || 'Trainer';
-                if (!playerName) {
-                    this._announce('Please enter your trainer name first!', true);
-                    return;
-                }
-                // Connect to multiplayer server
-                this.multiplayer.connect();
-                // Wait a moment for connection, then create room
-                setTimeout(() => {
-                    this.multiplayer.createRoom(playerName);
-                }, 500);
-                this.audio.play('click');
-            });
-        }
-
-        if (joinRoomBtn) {
-            joinRoomBtn.addEventListener('click', () => {
-                const playerName = trainerNameInput?.value.trim() || 'Trainer';
-                if (!playerName) {
-                    this._announce('Please enter your trainer name first!', true);
-                    return;
-                }
-                // Prompt for room code
-                const roomCode = prompt('Enter 6-digit room code:');
-                if (roomCode && roomCode.length === 6) {
-                    // Connect to multiplayer server
-                    this.multiplayer.connect();
-                    // Wait a moment for connection, then join room
-                    setTimeout(() => {
-                        this.multiplayer.joinRoom(roomCode.toUpperCase(), playerName);
-                    }, 500);
-                }
-                this.audio.play('click');
-            });
-        }
-
-        // Expose arena globally for onclick handlers in HTML
-        window.arena = this;
-    }
 }
 
 

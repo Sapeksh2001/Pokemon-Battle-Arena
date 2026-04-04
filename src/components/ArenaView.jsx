@@ -4,9 +4,11 @@
  * Contains the battle header, player grid, control panel, and battle log.
  * All IDs are preserved for legacy engine compatibility.
  */
+import { useState } from 'react';
 import PokemonPicker from './PokemonPicker';
 
 export default function ArenaView() {
+  const [showShortcuts, setShowShortcuts] = useState(false);
   return (
     <div id="arena-view" className="hidden">
       {/* CRT & Pixel Grid */}
@@ -235,21 +237,24 @@ export default function ArenaView() {
                   </div>
                   <div className="border-t-2 border-outline-variant pt-2">
                     <button id="toggle-shortcuts"
+                      onClick={() => setShowShortcuts(!showShortcuts)}
                       className="w-full text-left text-sm text-on-surface-variant hover:text-white transition-colors flex justify-between items-center uppercase tracking-wider font-bold">
                       <span><span className="material-symbols-outlined text-[18px] align-middle">keyboard</span> Shortcuts</span>
-                      <span className="material-symbols-outlined text-[18px] transition-transform" id="shortcuts-chevron">expand_more</span>
+                      <span className={`material-symbols-outlined text-[18px] transition-transform ${showShortcuts ? 'rotate-180' : ''}`} id="shortcuts-chevron">expand_more</span>
                     </button>
-                    <div id="shortcuts-list" className="hidden text-[10px] font-body text-slate-400 space-y-1 pl-2 border-l-2 border-yellow-600 mt-2">
-                      <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">1-6</kbd> Select Player</div>
-                      <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Space</kbd> End Round</div>
-                      <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">P</kbd> Physical Atk</div>
-                      <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">S</kbd> Special Atk</div>
-                      <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">E</kbd> Evolve</div>
-                      <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">F</kbd> Form Change</div>
-                      <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">R</kbd> Random #</div>
-                      <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">T</kbd> Toggle Timer</div>
-                      <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Shift+T</kbd> Reset Timer</div>
-                      <div><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Esc</kbd> Close Modal</div>
+                    <div id="shortcuts-list" className={`${showShortcuts ? 'block' : 'hidden'} text-[10px] font-body text-slate-400 space-y-1 pl-2 border-l-2 border-yellow-600 mt-2`}>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">1-6</kbd> Select Player</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Space</kbd> End Round</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">P</kbd> Physical Atk</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">S</kbd> Special Atk</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">E</kbd> Evolve</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">F</kbd> Form Change</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">R</kbd> Random #</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">T</kbd> Toggle Timer</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Shift+T</kbd> Reset Timer</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Ctrl+Z</kbd> Undo</span></div>
+                      <div className="flex justify-between text-yellow-500/80"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Ctrl+Y</kbd> Redo</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Esc</kbd> Close Modal</span></div>
                     </div>
                   </div>
                 </div>
@@ -266,6 +271,16 @@ export default function ArenaView() {
                     <span className="font-label text-sm text-yellow-400 uppercase tracking-widest text-glow">Battle Log</span>
                   </div>
                   <div className="flex gap-1">
+                    <button id="save-game-btn" onClick={() => window.arena?.multiplayer?.saveGameToFirebase()}
+                      title="Save game to cloud"
+                      className="text-xs bg-tertiary-container hover:bg-[#5bf083] text-[#004a1d] px-2 py-1 border border-white transition-colors step-animation flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[16px]">cloud_upload</span>
+                    </button>
+                    <button id="export-snapshot-btn" onClick={() => window.arena?.multiplayer?.exportSnapshot()}
+                      title="Download game snapshot (JSON)"
+                      className="text-xs bg-secondary-container hover:bg-[#5bf083] text-white px-2 py-1 border border-white transition-colors step-animation flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[16px]">save_alt</span>
+                    </button>
                     <button id="clear-log-btn" className="text-xs bg-[#dc2626] hover:bg-red-500 text-white px-2 py-1 border border-[#450900] transition-colors step-animation flex items-center justify-center">
                       <span className="material-symbols-outlined text-[16px]">delete</span>
                     </button>

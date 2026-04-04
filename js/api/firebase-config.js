@@ -1,3 +1,5 @@
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+
 // Firebase Configuration for Pokémon Battle Arena
 // Keys provided by the user for the "pokemon-1248" project.
 
@@ -12,8 +14,5 @@ export const firebaseConfig = {
   measurementId: "G-G07TP1ENV6"
 };
 
-/**
- * Note: Firebase is initialized in the services that need it (like socketClient.js) 
- * using the configuration exported above. This ensures compatibility with the 
- * browser's native ES module loading system without requiring a bundler.
- */
+// Initialize Firebase App globally to avoid double initialization
+export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();

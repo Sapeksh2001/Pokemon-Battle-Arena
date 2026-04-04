@@ -1,40 +1,31 @@
-- `[x]` Project Documentation
-    - `[x]` PRD (Project/PRD.md)
-    - `[x]` README (Project/README.md)
-    - `[x]` AppFlow (Project/APP_FLOW.md)
-    - `[x]` TechStack (Project/TECH_STACK.md)
-- `[x]` Technical Documentation
-    - `[x]` Architecture Overview (Technical/Architecture_Overview.md)
-    - `[x]` Database Schema (Technical/Database_Schema.md)
-    - `[x]` API Endpoints (Technical/API_Endpoints.md)
-    - `[x]` Security Considerations (Technical/Security_Considerations.md)
-    - `[x]` Error Handling (Technical/Error_Handling.md)
-    - `[x]` Performance Guidelines (Technical/Performance_Guidelines.md)
-    - `[x]` Backup & Recovery (Technical/Backup_Recovery.md)
-- `[x]` Design System Documentation
-    - `[x]` Design Principles (Design_System/Design_Principles.md)
-    - `[x]` Layout System (Design_System/Layout_System.md)
-    - `[x]` Component Library (Design_System/Component_Library.md)
-    - `[x]` Accessibility Guidelines (Design_System/Accessibility_Guidelines.md)
-    - `[x]` Animation Guidelines (Design_System/Animation_Guidelines.md)
-    - `[x]` Icon System (Design_System/Icon_System.md)
-    - `[x]` State Indicators (Design_System/State_Indicators.md)
-    - `[x]` Responsive Design (Design_System/Responsive_Design.md)
-- `[x]` Data Management Documentation
-    - `[x]` Data Validation Rules (Data_Management/Validation_Rules.md)
-    - `[x]` Caching Strategy (Data_Management/Caching_Strategy.md)
-    - `[x]` Database Migrations (Data_Management/Database_Migrations.md)
-- `[x]` Governance Documentation
-    - `[x]` Version Upgrade Policy (Governance/Version_Upgrade_Policy.md)
-    - `[x]` API Versioning (Governance/API_Versioning.md)
-- `[x]` Project Phases
-    - `[x]` Phase 1: Foundation (Phases/Phase1_Foundation.md)
-    - `[x]` Phase 2: Design System (Phases/Phase2_DesignSystem.md)
-    - `[x]` Phase 3: Authentication (Phases/Phase3_Auth.md)
-    - `[x]` Phase 4: Core Features (Phases/Phase4_Features.md)
-    - `[x]` Phase 5: Testing (Phases/Phase5_Testing.md)
-    - `[x]` Phase 6: Deployment (Phases/Phase6_Deployment.md)
-- `[x]` Deployment Execution
-    - `[x]` GitHub Push
-    - `[x]` Firebase Deploy
-    - `[x]` Vercel Deploy
+# Phase 2 Development Checklist
+
+- `[x]` **1. Authentication Core**
+  - `[x]` Add Firebase Auth CDN scripts to `index.html`/`firebase-config.js`.
+  - `[x]` Create `js/api/authManager.js` to wrap login/registration/guest services.
+  - `[x]` Update `App.jsx` to block access until Firebase `onAuthStateChanged` resolves (Will be done in App integration).
+- `[x]` **2. AuthView Implementation**
+  - `[x]` Build `src/components/AuthView.jsx` UI.
+  - `[x]` Connect form inputs to `authManager` methods.
+- `[x]` **3. Persistent Recent Rooms**
+  - `[x]` Update `socketClient.js` to save join history to `/users/{uid}/recent_rooms`.
+  - `[x]` Wire the "Load Game" modal in `Modals.jsx` to query this Firebase node.
+- `[x]` **4. Spectator Mechanics**
+  - `[x]` Add `Role: [Player | Spectator]` radio buttons to Join Modal.
+  - `[x]` Update `socketClient.js` to route `joinAsSpectator` to `/rooms/{code}/spectators`.
+  - `[x]` Apply `pointer-events-none` or UI locks in vanilla UI if `this.isSpectator`.
+- `[x]` **5. GameMaster Lobby**
+  - `[x]` Retrieve Tier Selector state from the Lobby UI.
+  - `[x]` Filter Pokemon dataset based on selected tier (`Any`, `OU`, `UU`, `Ubers`, etc.).
+  - `[x]` Prevent duplicate allocations by tracking assigned IDs.
+  - `[x]` Implement the manual Host override method to assign a specific Pokemon ID to a specific player ID.
+- `[x]` **6. Dynamic Arena UI**
+  - `[x]` Refactor `#player-grid` to use `flex` instead of strict `grid-template-columns`.
+  - `[x]` Conditionally skip rendering empty player slots in `UIRenderer.js`.
+  - `[x]` Validate responsive alignment and max-width scaling for 2-player layouts.
+- `[x]` **7. Wild Card Entry**
+  - `[x]` Remove the hard block on joining `playing` rooms in `socketClient.js`.
+  - `[x]` Push newcomers to a temporary `entryQueue` block.
+  - `[x]` Build a GM notification allowing the Host to RNG/Assign newcomers mid-battle.
+- `[x]` **8. QA & Validation**
+  - `[x]` Run test cases for mid-game joins and duplicate RNG prevention.

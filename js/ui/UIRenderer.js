@@ -62,9 +62,10 @@ export class UIRenderer {
     _renderPlayerCards() {
         this._playerGrid.innerHTML = '';
         this._gs.players.forEach(p => this._playerGrid.appendChild(this._createPlayerCard(p)));
-        for (let i = this._gs.players.length; i < 6; i++) {
-            this._playerGrid.appendChild(this._createEmptyCard());
-        }
+        // Commented out to satisfy dynamic scaling logic (Task 6)
+        // for (let i = this._gs.players.length; i < 6; i++) {
+        //     this._playerGrid.appendChild(this._createEmptyCard());
+        // }
         lucide.createIcons();
     }
 

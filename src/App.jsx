@@ -10,12 +10,14 @@
  *     classList on #lobby-view / #arena-view.
  *   - Modals are permanently in the DOM so the engine can show/hide them.
  */
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ArenaProvider, useArena } from './context/ArenaContext';
 import LoadingOverlay from './components/LoadingOverlay';
 import LobbyView from './components/LobbyView';
 import ArenaView from './components/ArenaView';
 import Modals from './components/Modals';
+import AuthView from './components/AuthView';
+import { authManager } from '../js/api/authManager.js';
 
 function GameRoot() {
   const { loadState } = useArena();
@@ -73,6 +75,23 @@ function GameRoot() {
 }
 
 export default function App() {
+  const [user, setUser] = useState(undefined);
+
+  useEffect(() => {
+    const unsubscribe = authManager.subscribe((authUser) => {
+      setUser(authUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (user === undefined) {
+      return <LoadingOverlay progress={100} label="Authenticating..." />;
+  }
+
+  if (user === null) {
+      return <AuthView />;
+  }
+
   return (
     <ArenaProvider>
       <GameRoot />

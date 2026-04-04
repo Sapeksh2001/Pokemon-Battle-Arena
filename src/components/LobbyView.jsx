@@ -84,6 +84,45 @@ export default function LobbyView() {
                 <span className="material-symbols-outlined ml-auto group-hover:translate-x-1 transition-transform">chevron_right</span>
               </button>
 
+              {/* Load Game */}
+              <button id="load-game-btn"
+                onClick={() => {
+                  const modal = document.getElementById('load-modal');
+                  if (modal) { modal.classList.add('active'); window.arena?.multiplayer?.loadSavedGames(); }
+                }}
+                className="w-full bg-[#1e293b] text-[#5bf083] p-4 border-2 border-[#004a1d] flex items-center gap-4 step-animation hover:bg-[#004a1d]/30 transition-all group">
+                <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>cloud_download</span>
+                <div className="text-left">
+                  <span className="block font-label text-xs">LOAD GAME</span>
+                  <span className="text-[10px] font-body font-bold opacity-70 uppercase tracking-widest">Continue a saved session</span>
+                </div>
+                <span className="material-symbols-outlined ml-auto group-hover:translate-x-1 transition-transform">chevron_right</span>
+              </button>
+
+              {/* Import Snapshot */}
+              <div className="relative group">
+                <input 
+                  type="file" 
+                  accept=".json" 
+                  id="snapshot-upload" 
+                  className="hidden" 
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) window.arena?.multiplayer?.importSnapshot(file);
+                  }}
+                />
+                <button 
+                  onClick={() => document.getElementById('snapshot-upload').click()}
+                  className="w-full bg-[#1e293b] text-yellow-400 p-4 border-2 border-yellow-900/50 flex items-center gap-4 step-animation hover:bg-yellow-900/20 transition-all group">
+                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>file_open</span>
+                  <div className="text-left">
+                    <span className="block font-label text-xs">RESUME FROM FILE</span>
+                    <span className="text-[10px] font-body font-bold opacity-70 uppercase tracking-widest">Import .json snapshot</span>
+                  </div>
+                  <span className="material-symbols-outlined ml-auto group-hover:translate-x-1 transition-transform">upload</span>
+                </button>
+              </div>
+
               {/* Settings */}
               <button id="settings-btn"
                 className="w-full bg-surface-container-lowest text-[#6d758c] p-4 border-2 border-outline-variant flex items-center gap-4 step-animation hover:bg-surface-container transition-all group">

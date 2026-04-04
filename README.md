@@ -21,6 +21,27 @@ A high-performance, documentation-first Pokémon battle simulator built with Rea
 - **Dynamic Terrain System**: 20% power boost for matching move types and primary stats.
 - **Premium SFX/Music**: High-fidelity audio integration via Tone.js.
 
+![Arena Gameplay Screen](Documentation/Assets/arena_ui_shortcuts.png)
+
+---
+
+## Keyboard Shortcuts
+
+The Arena features a global keyboard shortcut system for fast battle control.
+
+| Action | Shortcut |
+|--------|----------|
+| **End Round** | `Space` |
+| **Physical Attack** | `P` |
+| **Special Attack** | `S` |
+| **Evolve** | `E` |
+| **Form Change** | `F` |
+| **Toggle Timer** | `T` |
+| **Reset Timer** | `Shift + T` |
+| **Undo / Redo** | `Ctrl + Z` / `Ctrl + Y` |
+
+*Note: View the full list or keyboard hints by toggling the "Shortcuts" guide in the Arena sidebar.*
+
 ---
 
 ## Tech Stack

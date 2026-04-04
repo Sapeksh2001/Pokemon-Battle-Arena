@@ -180,16 +180,22 @@ export default function Modals() {
             </div>
             <div className="text-sm">
               <p className="mb-2 text-xs font-bold text-slate-300 uppercase tracking-wider">Recent Rooms:</p>
-              <div className="space-y-2">
-                {[{ code: '123456', host: 'Gary', slots: '4/6' }, { code: '654321', host: 'Ash', slots: '2/6' }].map(r => (
-                  <button key={r.code} className="room-option w-full bg-surface-container-low hover:bg-surface-variant p-3 text-left border border-outline-variant transition-colors step-animation flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-[#5bf083] font-headline tracking-widest text-lg">{r.code}</div>
-                      <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">Hosted by {r.host}</div>
-                    </div>
-                    <div className="text-[10px] text-secondary border border-secondary px-2 py-1">{r.slots}</div>
-                  </button>
-                ))}
+              <div id="recent-rooms-list" className="space-y-2">
+                {/* Dynamically populated by JS */}
+                <div className="text-center text-[10px] text-slate-400 py-2">Loading recent rooms...</div>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Join As:</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                  <input type="radio" name="join-role" value="player" defaultChecked className="accent-purple-500" />
+                  Player
+                </label>
+                <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                  <input type="radio" name="join-role" value="spectator" className="accent-purple-500" />
+                  Spectator
+                </label>
               </div>
             </div>
             <button id="join-room-confirm-btn"
@@ -287,8 +293,14 @@ export default function Modals() {
             {/* Right Column */}
             <div className="flex-1 mt-6 md:mt-0 flex flex-col">
               <div className="players-section bg-surface-container border-2 border-outline-variant flex-1 flex flex-col">
-                <div className="bg-surface-container-high px-4 py-2 border-b-2 border-outline-variant">
+                <div className="bg-surface-container-high px-4 py-2 border-b-2 border-outline-variant flex justify-between items-center">
                   <h3 className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Players in Room</h3>
+                  <select id="rng-tier-select" className="bg-surface-container-lowest text-[8px] text-yellow-400 border border-outline-variant p-1 uppercase tracking-widest outline-none focus:border-yellow-400" style={{ display: 'none' }}>
+                    <option value="any">Any Tier</option>
+                    <option value="OU">OU (Overused)</option>
+                    <option value="UU">UU (Underused)</option>
+                    <option value="Uber">Uber</option>
+                  </select>
                 </div>
                 <div id="room-player-list" className="p-3 space-y-2 overflow-y-auto flex-1 max-h-[250px] font-body">
                   <div className="flex justify-between items-center bg-surface-container-lowest p-3 border border-outline-variant">
@@ -311,6 +323,45 @@ export default function Modals() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+      {/* Load Game Modal */}
+      <div id="load-modal" className="modal-overlay">
+        <div className="modal-content max-w-2xl relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#5bf083]/50 to-transparent" />
+          <div className="flex justify-between items-center mb-6 border-b-2 border-outline-variant pb-3">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-[#5bf083] text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>cloud_download</span>
+              <div>
+                <h2 className="text-2xl font-bold text-yellow-400 font-headline uppercase tracking-tighter text-glow">Load Game</h2>
+                <p className="text-[9px] text-slate-400 uppercase tracking-widest mt-0.5">Your last 20 cloud saves — click any to resume</p>
+              </div>
+            </div>
+            <button
+              onClick={() => document.getElementById('load-modal')?.classList.remove('active')}
+              className="text-secondary hover:text-white transition-colors">
+              <span className="material-symbols-outlined text-[28px]">close</span>
+            </button>
+          </div>
+
+          {/* Save cards grid */}
+          <div
+            id="load-game-list"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1 font-body">
+            {/* Populated by loadSavedGames() inside socketClient.js */}
+            <div className="text-center text-[10px] text-slate-400 py-8 col-span-2">Loading saves…</div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t-2 border-outline-variant flex justify-between items-center">
+            <p className="text-[9px] text-slate-500 uppercase tracking-wider">
+              Saves are stored per account on Firebase — each player keeps their own copy
+            </p>
+            <button
+              onClick={() => document.getElementById('load-modal')?.classList.remove('active')}
+              className="bg-surface-variant hover:bg-surface-bright text-secondary px-4 py-2 border border-secondary font-bold text-[9px] uppercase tracking-widest step-animation">
+              CLOSE
+            </button>
           </div>
         </div>
       </div>

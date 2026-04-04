@@ -9,4 +9,17 @@
 - **Screen Readers**: Interactive elements include `aria-label` attributes (e.g., "Attack: Thunderbolt, Type: Electric").
 
 ## 3. Motion
-- **Prefer Reduced Motion**: All heavy animations (Screen Shake, Sprite Flash) check the `@media (prefers-reduced-motion)` query to toggle off jarring effects.
+## 4. Keyboard Shortcuts
+
+A global event listener in `js/main.js` provides comprehensive keyboard access to the Battle Arena:
+
+- **Battle Management**: `Space` (End Round), `P` (Physical), `S` (Special), `E` (Evolve), `F` (Form Change), `R` (Roll RNG).
+- **Navigation**: `1-6` keys directly select player slots as the active attacker.
+- **State Control**: `Ctrl+Z` (Undo), `Ctrl+Y` / `Ctrl+Shift+Z` (Redo), `Esc` (Close All Modals).
+- **Timer**: `T` (Toggle Play/Pause), `Shift+T` (Reset).
+
+### Focus Safety Feature
+Shortcuts are context-aware. If a user is typing in a text field (e.g., editing HP, changing a player name), shortcuts are **automatically disabled** unless a modifier key (like `Ctrl`) is held. This prevents accidental move triggers while managing metadata.
+
+---
+**Last Updated**: 2026-04-03

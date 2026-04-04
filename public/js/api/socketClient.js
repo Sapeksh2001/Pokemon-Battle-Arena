@@ -1,7 +1,9 @@
 import { Player } from '../models/Player.js';
+import { Pokemon } from '../models/Pokemon.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getDatabase, ref, set, onValue, push, onDisconnect, remove, update, get, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getDatabase, ref, set, onValue, push, onDisconnect, remove, update, get, onChildAdded, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { firebaseConfig } from './firebase-config.js';
+import { authManager } from './authManager.js';
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
@@ -29,6 +31,7 @@ export class MultiplayerManager {
     connect() {
         console.log('[MULTIPLAYER] Initialized Firebase connection');
         this.isConnected = true;
+        this.listenToRecentRooms();
     }
 
     disconnect() {
@@ -61,6 +64,7 @@ export class MultiplayerManager {
         onDisconnect(roomRef).update({ hostDisconnected: true });
 
         this.showNotification(`Room created: ${code}`, 'success');
+        this.saveRecentRoom(code, 'host');
         this.showRoomLobby();
         this._listenToLobby();
     }
@@ -76,40 +80,77 @@ export class MultiplayerManager {
         }
 
         const roomData = snapshot.val();
-        if (roomData.status !== 'lobby') {
-            this.showNotification('Game already started', 'error');
-            return;
+        
+        // Determine role from radio button in UI (if available)
+        const roleRadios = document.getElementsByName('join-role');
+        let selectedRole = 'player';
+        for (let r of roleRadios) {
+            if (r.checked) { selectedRole = r.value; break; }
+        }
+
+        // Allow wild card entries if game is started and player joins as 'player'
+        if (roomData.status !== 'lobby' && selectedRole === 'player') {
+            this.showNotification('Joining ongoing game...', 'info');
         }
 
         this.roomCode = roomCode;
         this.isHost = false;
         this.mode = 'joining';
+        this.isSpectator = (selectedRole === 'spectator');
 
-        const playerRef = ref(db, `rooms/${roomCode}/players/${this.playerId}`);
+        // If the game is already running and the player is joining as a wildcard,
+        // write them to /entryQueue instead of /players to avoid polluting live state.
+        const isWildcard = (roomData.status === 'playing' && selectedRole === 'player');
+        let path;
+        if (this.isSpectator) {
+            path = 'spectators';
+        } else if (isWildcard) {
+            path = 'entryQueue';
+        } else {
+            path = 'players';
+        }
+
+        this._entryPath = path; // remember for leaveRoom cleanup
+        const playerRef = ref(db, `rooms/${roomCode}/${path}/${this.playerId}`);
         await set(playerRef, {
             name: playerName,
             isHost: false,
-            isReady: false
+            isReady: false,
+            joinedAt: Date.now()
         });
 
         onDisconnect(playerRef).remove();
 
-        this.showNotification('Joined room successfully', 'success');
-        this.showRoomLobby();
-        this._listenToLobby();
+        this.showNotification(`Joined room securely as ${selectedRole}`, 'success');
+        this.saveRecentRoom(roomCode, selectedRole);
+
+        if (roomData.status === 'playing') {
+             this._listenToLobby();
+             this._onGameStarted();
+        } else {
+             this.showRoomLobby();
+             this._listenToLobby();
+        }
     }
 
     leaveRoom() {
         if (this.roomCode) {
-            const playerRef = ref(db, `rooms/${this.roomCode}/players/${this.playerId}`);
+            // Clean up from whichever path we joined under
+            const path = this._entryPath || (this.isSpectator ? 'spectators' : 'players');
+            const playerRef = ref(db, `rooms/${this.roomCode}/${path}/${this.playerId}`);
             remove(playerRef);
-            
+
             this.unsubscribes.forEach(unsub => unsub());
             this.unsubscribes = [];
         }
         this.roomCode = null;
         this.isHost = false;
         this.mode = 'offline';
+        this.isSpectator = false;
+        this._entryPath = null;
+        // Dismiss lingering wildcard queue overlay if present
+        const queueEl = document.getElementById('wildcard-queue');
+        if (queueEl) queueEl.remove();
         this.arena.modals.close('multiplayerLobby');
     }
 
@@ -129,6 +170,25 @@ export class MultiplayerManager {
             this.showNotification('Only the host can start the game', 'error');
             return;
         }
+
+        // Fetch all players from Lobby and populate gs.players first
+        const playersRef = ref(db, `rooms/${this.roomCode}/players`);
+        const snapshot = await get(playersRef);
+        if (snapshot.exists()) {
+            const players = [];
+            snapshot.forEach(child => {
+                const data = child.val();
+                const p = new Player(child.key, data.name);
+                if (data.assignedPokemonId && typeof window.Pokemon_NewDataset !== 'undefined') {
+                    const result = this.arena.db.find(data.assignedPokemonId);
+                    if (result) {
+                        p.team[0] = new Pokemon(result.foundNode, result.baseNode);
+                    }
+                }
+                players.push(p);
+            });
+            this.arena.gs.players = players;
+        }
         
         const stateRef = ref(db, `rooms/${this.roomCode}/state`);
         await set(stateRef, this.serializeGameState());
@@ -142,16 +202,38 @@ export class MultiplayerManager {
         const unsubPlayers = onValue(playersRef, (snapshot) => {
             const players = [];
             snapshot.forEach(child => {
-                players.push({
-                    id: child.key,
-                    ...child.val()
-                });
+                players.push({ id: child.key, ...child.val() });
             });
-            this.updateRoomUI({ players });
-            
-            if (players.length > 0 && !players.find(p => p.isHost)) {
-                this.showNotification('Host closed the room', 'error');
-                this.leaveRoom();
+
+            if (this.mode === 'playing' && this.isHost) {
+                // Detect newly-promoted players (moved from entryQueue → players by assignRandomPokemon)
+                let stateUpdated = false;
+                players.forEach(p => {
+                    if (p.assignedPokemonId) {
+                        const exists = this.arena.gs.players.find(sp => sp.id === p.id);
+                        if (!exists) {
+                            const newPlayer = new Player(p.id, p.name);
+                            const result = this.arena.db.find(p.assignedPokemonId);
+                            if (result) {
+                                newPlayer.team[0] = new Pokemon(result.foundNode, result.baseNode);
+                            }
+                            this.arena.gs.players.push(newPlayer);
+                            stateUpdated = true;
+                            this.arena.log.add(`⚡ Wildcard ${p.name} entered the battle!`, 'system');
+                        }
+                    }
+                });
+                if (stateUpdated) {
+                    this.sendGameState();
+                    this.arena.renderer.renderAll();
+                }
+            } else if (this.mode !== 'playing') {
+                this.updateRoomUI({ players });
+                // Host disconnected check (lobby phase only)
+                if (players.length > 0 && !players.find(p => p.isHost)) {
+                    this.showNotification('Host closed the room', 'error');
+                    this.leaveRoom();
+                }
             }
         });
 
@@ -163,6 +245,20 @@ export class MultiplayerManager {
         });
 
         this.unsubscribes.push(unsubPlayers, unsubStatus);
+    }
+
+    /** Host-only: listens to /entryQueue and renders the wildcard assignment panel. */
+    _listenToEntryQueue() {
+        if (!this.isHost || !this.roomCode) return;
+        const queueRef = ref(db, `rooms/${this.roomCode}/entryQueue`);
+        const unsubQueue = onValue(queueRef, (snapshot) => {
+            const waiting = [];
+            snapshot.forEach(child => {
+                waiting.push({ id: child.key, ...child.val() });
+            });
+            this.renderWildcardQueue(waiting);
+        });
+        this.unsubscribes.push(unsubQueue);
     }
 
     _onGameStarted() {
@@ -187,7 +283,13 @@ export class MultiplayerManager {
             this.arena.renderer.renderAll();
             this.showNotification('Game started! Battle begins!', 'success');
             
+            if (this.isSpectator) {
+                 const controls = document.getElementById('battle-controls');
+                 if (controls) controls.classList.add('pointer-events-none', 'opacity-50');
+            }
+
             this._listenToGameState();
+            this._listenToEntryQueue(); // host watches for wildcard joiners
         }, 1500);
     }
 
@@ -289,21 +391,346 @@ export class MultiplayerManager {
         if (codeDisplay) codeDisplay.textContent = this.roomCode;
     }
 
+    async assignRandomPokemon(targetPlayerId) {
+        if (!this.isHost || !this.roomCode) return;
+
+        if (typeof window.Pokemon_NewDataset === 'undefined') {
+            this.showNotification('Data loading... Please wait.', 'error');
+            return;
+        }
+
+        // Read tier from the wildcard queue overlay (during a game) or the lobby selector
+        const wildcardTierEl = document.getElementById('wildcard-tier');
+        const lobbyTierEl = document.getElementById('rng-tier-select');
+        const selectedTier = (wildcardTierEl?.value || lobbyTierEl?.value || 'any');
+
+        // Build filtered pool
+        let pool = Object.keys(window.Pokemon_NewDataset);
+        if (selectedTier !== 'any') {
+            pool = pool.filter(id => window.Pokemon_NewDataset[id].Tier === selectedTier);
+        }
+
+        // Gather already-assigned IDs across /players (prevent duplicates)
+        const playersSnap = await get(ref(db, `rooms/${this.roomCode}/players`));
+        const assignedIds = new Set();
+        if (playersSnap.exists()) {
+            playersSnap.forEach(child => {
+                if (child.val().assignedPokemonId) assignedIds.add(child.val().assignedPokemonId);
+            });
+        }
+
+        const availablePool = pool.filter(id => !assignedIds.has(id));
+        if (availablePool.length === 0) {
+            this.showNotification(`No unique Pokémon left in tier: ${selectedTier}`, 'error');
+            return;
+        }
+
+        const randomId = availablePool[Math.floor(Math.random() * availablePool.length)];
+        const pData = window.Pokemon_NewDataset[randomId];
+        const pokemonName = pData.Name || randomId;
+
+        // Check if this player is in entryQueue (wildcard mid-game join) or lobby /players
+        const queueSnap = await get(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
+        if (queueSnap.exists()) {
+            // Promote: move from entryQueue → players so _listenToLobby picks them up
+            const playerData = queueSnap.val();
+            await set(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
+                ...playerData,
+                assignedPokemonId: randomId,
+                assignedPokemonName: pokemonName,
+                isReady: true
+            });
+            await remove(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
+        } else {
+            // Lobby assignment — just update the player's record in place
+            await update(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
+                assignedPokemonId: randomId,
+                assignedPokemonName: pokemonName
+            });
+        }
+
+        this.showNotification(`Assigned ${pokemonName}!`, 'success');
+    }
+
+    /**
+     * Renders the GM's floating wildcard queue panel.
+     * @param {Array} waitingPlayers - entries from /entryQueue, each has { id, name, … }
+     */
+    renderWildcardQueue(waitingPlayers) {
+        let queueContainer = document.getElementById('wildcard-queue');
+
+        if (waitingPlayers.length === 0) {
+            if (queueContainer) queueContainer.remove();
+            return;
+        }
+
+        if (!queueContainer) {
+            queueContainer = document.createElement('div');
+            queueContainer.id = 'wildcard-queue';
+            queueContainer.className = 'fixed top-20 right-4 z-50 p-4 shadow-xl';
+            queueContainer.style.cssText = 'background:#0f172a;border:1px solid #5bf083;border-radius:8px;min-width:240px;';
+            document.body.appendChild(queueContainer);
+        }
+
+        const savedTier = this.selectedWildcardTier || 'any';
+
+        queueContainer.innerHTML = `
+            <div style="color:#5bf083;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;">⚡ Wildcard Queue</div>
+            <div style="margin-bottom:8px;font-size:10px;color:#94a3b8;">
+                Tier:
+                <select id="wildcard-tier"
+                    style="background:#020617;border:1px solid #334155;color:#fff;padding:1px 4px;font-size:10px;"
+                    onchange="window.arena.multiplayer.selectedWildcardTier=this.value;">
+                    <option value="any"  ${savedTier==='any'?'selected':''}>Any</option>
+                    <option value="OU"   ${savedTier==='OU'?'selected':''}>OU</option>
+                    <option value="UU"   ${savedTier==='UU'?'selected':''}>UU</option>
+                    <option value="Uber" ${savedTier==='Uber'?'selected':''}>Uber</option>
+                </select>
+            </div>
+            ${waitingPlayers.map(p => `
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid #1e293b;">
+                    <span style="color:#fff;font-size:12px;">${p.name}</span>
+                    <button
+                        style="background:#1e293b;border:1px solid #5bf083;color:#5bf083;font-size:9px;font-weight:700;letter-spacing:.08em;padding:3px 8px;cursor:pointer;text-transform:uppercase;"
+                        onmouseover="this.style.background='#5bf083';this.style.color='#020617';"
+                        onmouseout="this.style.background='#1e293b';this.style.color='#5bf083';"
+                        onclick="window.arena?.multiplayer?.assignRandomPokemon('${p.id}')">
+                        RNG
+                    </button>
+                </div>
+            `).join('')}
+        `;
+    }
+
     updateRoomUI(data) {
         const playerList = document.getElementById('room-player-list');
         if (!playerList || !data.players) return;
+        
+        // Also show tier selector if host
+        const tierSelect = document.getElementById('rng-tier-select');
+        if (tierSelect) {
+            tierSelect.style.display = this.isHost ? 'block' : 'none';
+        }
+
         playerList.innerHTML = data.players.map(p => `
-            <div class="player-item ${p.isHost ? 'host' : ''}">
-                <span class="player-name">${p.name}</span>
-                ${p.isHost ? '<span class="host-badge">HOST</span>' : ''}
-                ${p.isReady ? '<span class="ready-badge">READY</span>' : ''}
+            <div class="flex justify-between items-center bg-surface-container-lowest p-3 border border-outline-variant ${p.isHost ? 'host' : ''}">
+                <div>
+                   <span class="text-white text-sm font-bold">${p.name}</span>
+                   ${p.isHost ? '<span class="text-yellow-400 text-[8px] ml-2 border border-yellow-400 px-1">HOST</span>' : ''}
+                   <div class="text-[10px] text-slate-400 mt-1">${p.assignedPokemonName || 'Unassigned'}</div>
+                </div>
+                ${this.isHost ? `
+                <div class="flex gap-2">
+                    <button class="bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary" onclick="window.arena?.multiplayer?.assignRandomPokemon('${p.id}')">RNG</button>
+                    ${p.isReady ? '<span class="text-[#5bf083] text-[10px] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-1 flex items-center">READY</span>' : ''}
+                </div>
+                ` : `
+                   ${p.isReady ? '<span class="text-[#5bf083] text-[10px] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-1">READY</span>' : ''}
+                `}
             </div>
         `).join('');
+        
         const startBtn = document.getElementById('start-game-btn');
-        if (startBtn) startBtn.style.display = this.isHost ? 'block' : 'none';
+        if (startBtn) {
+            startBtn.style.display = this.isHost ? 'block' : 'none';
+            // Start gating: Need >= 2 players, and everyone must have a Pokemon assigned
+            const hasPokemon = data.players.every(p => p.assignedPokemonId);
+            const minPlayers = data.players.length >= 2;
+            if (!minPlayers || !hasPokemon) {
+                startBtn.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                startBtn.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
     }
 
     showNotification(message, type = 'info') {
         this.arena._announce(message, type === 'error');
     }
+
+    async saveRecentRoom(roomCode, role = 'player') {
+        const user = authManager.currentUser;
+        if (!user) return;
+        try {
+            const recentRef = ref(db, `users/${user.uid}/recent_rooms/${roomCode}`);
+            const roomSnap = await get(ref(db, `rooms/${roomCode}`));
+            let hostName = 'Unknown';
+            if (roomSnap.exists()) {
+                const roomData = roomSnap.val();
+                if (roomData.players && roomData.hostId && roomData.players[roomData.hostId]) {
+                    hostName = roomData.players[roomData.hostId].name;
+                }
+            }
+            await set(recentRef, {
+                joinedAt: Date.now(),
+                role: role,
+                hostName: hostName
+            });
+            this.enforceRecentRoomsLimit(user.uid);
+        } catch (e) {
+            console.error('[MULTIPLAYER] Error saving recent room:', e);
+        }
+    }
+
+    async enforceRecentRoomsLimit(uid) {
+        // Keep only last 20
+        const recentRef = ref(db, `users/${uid}/recent_rooms`);
+        const snapshot = await get(recentRef);
+        if (snapshot.exists()) {
+            const rooms = [];
+            snapshot.forEach(child => {
+                rooms.push({ key: child.key, ...child.val() });
+            });
+            if (rooms.length > 20) {
+                rooms.sort((a, b) => b.joinedAt - a.joinedAt);
+                for (let i = 20; i < rooms.length; i++) {
+                    remove(ref(db, `users/${uid}/recent_rooms/${rooms[i].key}`));
+                }
+            }
+        }
+    }
+
+    listenToRecentRooms() {
+         const user = authManager.currentUser;
+         if (!user) return;
+         
+         const recentRoomsQuery = query(ref(db, `users/${user.uid}/recent_rooms`), limitToLast(20));
+         onValue(recentRoomsQuery, (snapshot) => {
+             const list = document.getElementById('recent-rooms-list');
+             if (!list) return;
+
+             if (snapshot.exists()) {
+                 const rooms = [];
+                 snapshot.forEach(child => {
+                     rooms.push({ code: child.key, ...child.val() });
+                 });
+                 rooms.sort((a, b) => b.joinedAt - a.joinedAt);
+
+                 list.innerHTML = rooms.map(r => `
+                  <button onclick="document.getElementById('room-code-input').value = '${r.code}'" class="room-option w-full bg-surface-container-low hover:bg-surface-variant p-3 text-left border border-outline-variant transition-colors step-animation flex justify-between items-center">
+                    <div>
+                      <div class="font-bold text-[#5bf083] font-headline tracking-widest text-lg">${r.code}</div>
+                      <div class="text-[10px] text-slate-400 uppercase tracking-wider mt-1">Hosted by ${r.hostName || 'Unknown'}</div>
+                    </div>
+                    <div class="text-[10px] text-secondary border border-secondary px-2 py-1 uppercase">${r.role || 'Player'}</div>
+                  </button>
+                 `).join('');
+             } else {
+                 list.innerHTML = '<div class="text-center text-[10px] text-slate-400 py-4">No recent rooms</div>';
+             }
+         });
+
+         // Also populate the Load Game modal whenever auth is available
+         this.loadSavedGames();
+    }
+
+    async saveGameToFirebase() {
+        const user = authManager.currentUser;
+        if (!user) { this.showNotification('You must be logged in to save', 'error'); return; }
+        if (!this.roomCode || this.mode !== 'playing') { this.showNotification('No active game to save', 'error'); return; }
+        try {
+            const state = this.serializeGameState();
+            const gs = this.arena.gs;
+            const playerNames = (gs.players || []).map(p => p.name).filter(Boolean);
+            const pokemonNames = (gs.players || []).map(p => p.team?.[0]?.name || p.team?.[0]?.species || null).filter(Boolean);
+            await set(ref(db, `users/${user.uid}/saved_games/${this.roomCode}`), {
+                snapshot: state,
+                savedAt: Date.now(),
+                roomCode: this.roomCode,
+                round: gs.round || 1,
+                playerCount: (gs.players || []).length,
+                playerNames,
+                pokemonNames,
+                savedByName: user.displayName || user.email || 'Trainer'
+            });
+            this.showNotification('Game saved to cloud!', 'success');
+            this.arena.log.add('💾 Game state saved to cloud.', 'system');
+        } catch (err) {
+            console.error('[MULTIPLAYER] Error saving game to Firebase:', err);
+            this.showNotification('Save failed — see console', 'error');
+        }
+    }
+
+    loadSavedGames() {
+        const user = authManager.currentUser;
+        if (!user) return;
+        const savedQuery = query(ref(db, `users/${user.uid}/saved_games`), limitToLast(20));
+        onValue(savedQuery, (snapshot) => {
+            const list = document.getElementById('load-game-list');
+            if (!list) return;
+            if (!snapshot.exists()) {
+                list.innerHTML = '<div class="text-center text-[10px] text-slate-400 py-8 col-span-2">No saved games found</div>';
+                return;
+            }
+            const saves = [];
+            snapshot.forEach(child => saves.push({ key: child.key, ...child.val() }));
+            saves.sort((a, b) => b.savedAt - a.savedAt);
+            list.innerHTML = saves.map(s => {
+                const date = new Date(s.savedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const pokemon = (s.pokemonNames || []).slice(0, 4).join(', ') || 'Unknown team';
+                const players = (s.playerNames || []).join(' vs ') || 'Unknown players';
+                return `
+                    <button onclick="window.arena?.multiplayer?.loadAndResume('${s.roomCode}')"
+                        class="load-save-card w-full text-left bg-surface-container-low hover:bg-surface-variant border border-outline-variant p-4 step-animation transition-colors group">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="font-headline text-[#5bf083] text-xl tracking-widest">${s.roomCode}</div>
+                            <div class="text-[9px] text-slate-500 uppercase tracking-wider border border-outline-variant px-2 py-1">Round ${s.round || 1}</div>
+                        </div>
+                        <div class="text-[11px] font-bold text-white mb-1">${players}</div>
+                        <div class="text-[10px] text-slate-400 mb-2">${pokemon}</div>
+                        <div class="flex justify-between items-center">
+                            <div class="text-[9px] text-slate-500 uppercase tracking-wider">${date}</div>
+                            <div class="text-[9px] text-[#5bf083] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">RESUME →</div>
+                        </div>
+                    </button>`;
+            }).join('');
+        });
+    }
+
+    async loadAndResume(roomCode) {
+        const user = authManager.currentUser;
+        if (!user) { this.showNotification('You must be logged in to load', 'error'); return; }
+        const name = this.playerName || user.displayName || user.email || 'Trainer';
+        try {
+            const saveSnap = await get(ref(db, `users/${user.uid}/saved_games/${roomCode}`));
+            if (!saveSnap.exists()) { this.showNotification('Save data not found', 'error'); return; }
+            const snapshot = saveSnap.val().snapshot;
+            const roomSnap = await get(ref(db, `rooms/${roomCode}`));
+            if (roomSnap.exists() && roomSnap.val().status === 'playing') {
+                this.showNotification('Reconnecting to live room...', 'info');
+                await this.joinRoom(roomCode, name);
+                setTimeout(async () => {
+                    try {
+                        this.deserializeGameState(snapshot);
+                        await set(ref(db, `rooms/${roomCode}/state`), { ...snapshot, _sender: this.playerId });
+                        this.arena.renderer.renderAll();
+                        this.showNotification('Save loaded — continued from Round ' + (snapshot.round || 1), 'success');
+                        this.arena.log.add(`💾 Resumed from save (Round ${snapshot.round || 1}).`, 'system');
+                    } catch (e) { console.error('[MULTIPLAYER] Error pushing saved state:', e); }
+                }, 2000);
+            } else {
+                this.showNotification('Room offline. Restoring last save locally...', 'info');
+                this.mode = 'playing';
+                this.roomCode = roomCode;
+                document.getElementById('load-modal')?.classList.remove('active');
+                const lobbyView = document.getElementById('lobby-view');
+                const arenaView = document.getElementById('arena-view');
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) loadingScreen.classList.remove('hidden');
+                setTimeout(() => {
+                    if (lobbyView) lobbyView.classList.add('hidden');
+                    if (arenaView) arenaView.classList.remove('hidden');
+                    if (loadingScreen) loadingScreen.classList.add('hidden');
+                    this.deserializeGameState(snapshot);
+                    this.arena.renderer.renderAll();
+                    this.arena.log.add(`💾 Loaded offline save from room ${roomCode} (Round ${snapshot.round || 1}).`, 'system');
+                    this.showNotification('Save loaded (offline mode)!', 'success');
+                }, 1500);
+            }
+        } catch (err) {
+            console.error('[MULTIPLAYER] Error in loadAndResume:', err);
+            this.showNotification('Load failed — see console', 'error');
+        }
+    }
 }
+

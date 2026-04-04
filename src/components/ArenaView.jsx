@@ -25,6 +25,7 @@ export default function ArenaView() {
               <span className="material-symbols-outlined text-yellow-400" style={{ fontVariationSettings: "'FILL' 1" }}>swords</span>
               <h1 className="text-xl font-bold text-yellow-400 font-headline uppercase tracking-tighter text-glow">POKÉMON BATTLE ARENA</h1>
               <button id="end-round-btn"
+                onClick={() => { window.arena?.audio.play('confirm'); window.arena?.endRound(); }}
                 className="bg-[#b92902] text-[#ffd2c8] hover:bg-[#ff7351] px-4 py-2 border-2 border-[#450900] transition-colors font-label text-[8px] uppercase step-animation"
                 style={{ boxShadow: '4px 4px 0px 0px #450900' }}>
                 END ROUND 1
@@ -35,13 +36,13 @@ export default function ArenaView() {
               <div id="timer-display" className="font-label text-xl bg-surface-container-lowest text-yellow-400 px-4 py-2 border-2 border-outline-variant text-glow">
                 02:00
               </div>
-              <button id="timer-start" className="bg-tertiary-container hover:bg-[#5bf083] text-on-tertiary-container px-3 py-2 border-2 border-white step-animation hard-shadow-tertiary">
+              <button id="timer-start" onClick={() => { window.arena?.audio.play('click'); window.arena?.timer.start(); }} className="bg-tertiary-container hover:bg-[#5bf083] text-on-tertiary-container px-3 py-2 border-2 border-white step-animation hard-shadow-tertiary">
                 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
               </button>
-              <button id="timer-pause" className="bg-primary-container hover:bg-yellow-400 text-on-primary-container px-3 py-2 border-2 border-white step-animation" style={{ boxShadow: '4px 4px 0px 0px #685900' }}>
+              <button id="timer-pause" onClick={() => { window.arena?.audio.play('click'); window.arena?.timer.pause(); }} className="bg-primary-container hover:bg-yellow-400 text-on-primary-container px-3 py-2 border-2 border-white step-animation" style={{ boxShadow: '4px 4px 0px 0px #685900' }}>
                 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>pause</span>
               </button>
-              <button id="timer-reset" className="bg-surface-variant hover:bg-surface-bright text-[#699cff] px-3 py-2 border-2 border-[#699cff] step-animation">
+              <button id="timer-reset" onClick={() => { window.arena?.audio.play('click'); window.arena?.timer.reset(); }} className="bg-surface-variant hover:bg-surface-bright text-[#699cff] px-3 py-2 border-2 border-[#699cff] step-animation">
                 <span className="material-symbols-outlined">restart_alt</span>
               </button>
             </div>
@@ -61,7 +62,7 @@ export default function ArenaView() {
 
             {/* LEFT: Controls Grid */}
             <div className="flex-1 min-w-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 h-full">
+              <div className="flex-grow gap-3 h-full">
 
                 {/* Attack Command */}
                 <div className="bg-surface-container border-2 border-outline-variant p-2 relative overflow-hidden group">
@@ -71,14 +72,37 @@ export default function ArenaView() {
 
                     {/* Attacker Picker */}
                     <label className="text-on-surface-variant uppercase tracking-wider text-[10px] block">ATTACKER</label>
-                    <select id="attacker-select" className="sr-only" aria-label="Select Attacker">
+                    <select id="attacker-select" className="sr-only" aria-label="Select Attacker" onChange={(e) => {
+                      if (!window.arena) return;
+                      const gs = window.arena.gs;
+                      gs.activeTurnPlayerId = e.target.value ? parseInt(e.target.value) : null;
+                      window.arena.updateAttackPreview();
+                      if (gs.activeTurnPlayerId) {
+                        const p = gs.players.find(p => p.id === gs.activeTurnPlayerId);
+                        const pk = p?.getActivePokemon();
+                        if (pk) {
+                          window.arena._setArena(pk.types[0]);
+                          window.arena._populateMoveSelector(pk.fullName);
+                        }
+                      } else {
+                        window.arena._populateMoveSelector(null);
+                      }
+                      window.arena.renderer.renderAll();
+                      document.getElementById('announcement-banner')?.classList.add('hidden');
+                    }}>
                       <option value="">Select Attacker</option>
                     </select>
                     <PokemonPicker selectId="attacker-select" />
 
                     {/* Target Picker */}
                     <label className="text-on-surface-variant uppercase tracking-wider text-[10px] block mt-1">TARGET</label>
-                    <select id="attack-target-select" className="sr-only" aria-label="Select Target">
+                    <select id="attack-target-select" className="sr-only" aria-label="Select Target" onChange={(e) => {
+                      if (!window.arena) return;
+                      window.arena.gs.selectedAttackTargetId = e.target.value ? parseInt(e.target.value) : null;
+                      window.arena.updateAttackPreview();
+                      window.arena.renderer.renderAll();
+                      document.getElementById('announcement-banner')?.classList.add('hidden');
+                    }}>
                       <option value="">Select Target</option>
                     </select>
                     <PokemonPicker selectId="attack-target-select" />
@@ -87,7 +111,25 @@ export default function ArenaView() {
                       <label className="text-on-surface-variant uppercase tracking-wider text-[10px]">MOVE</label>
                     </div>
                     <div>
-                      <select id="move-name-select" className="w-full bg-surface-container-lowest border border-outline-variant p-1 text-[11px] text-on-surface focus:border-yellow-400 focus:ring-0">
+                      <select id="move-name-select" className="w-full bg-surface-container-lowest border border-outline-variant p-1 text-[11px] text-on-surface focus:border-yellow-400 focus:ring-0" onChange={(e) => {
+                        const moveName = e.target.value;
+                        if (!moveName || !window.arena) return;
+                        const moveData = window.MovesData ? window.MovesData[moveName] : null;
+                        if (moveData) {
+                          const powerInput = document.getElementById('move-power-input');
+                          const typeSelect = document.getElementById('move-type-select');
+                          if (powerInput && moveData.power && moveData.power > 0) {
+                            powerInput.value = moveData.power;
+                          } else if (powerInput) {
+                            powerInput.value = '';
+                          }
+                          if (typeSelect && moveData.type) {
+                            const opt = [...typeSelect.options].find(o => o.value.toLowerCase() === moveData.type.toLowerCase());
+                            if (opt) typeSelect.value = opt.value;
+                          }
+                          window.arena.updateAttackPreview();
+                        }
+                      }}>
                         <option value="">-- Select Move --</option>
                       </select>
                     </div>
@@ -97,10 +139,14 @@ export default function ArenaView() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <input id="move-power-input" type="number"
+                        onChange={() => document.getElementById('announcement-banner')?.classList.add('hidden')}
                         className="w-full bg-surface-container-lowest border border-outline-variant p-1 text-[11px] text-on-surface placeholder:text-[#40485d] focus:border-yellow-400 focus:ring-0"
                         placeholder="e.g., 80" min="1" max="1000"
                         title="Enter move power between 1 and 1000" />
-                      <select id="move-type-select" className="w-full bg-surface-container-lowest border border-outline-variant p-1 text-[11px] text-on-surface focus:border-yellow-400 focus:ring-0">
+                      <select id="move-type-select" className="w-full bg-surface-container-lowest border border-outline-variant p-1 text-[11px] text-on-surface focus:border-yellow-400 focus:ring-0" onChange={() => {
+                        window.arena?.updateAttackPreview();
+                        document.getElementById('announcement-banner')?.classList.add('hidden');
+                      }}>
                         <option value="">Move Type</option>
                       </select>
                     </div>
@@ -109,8 +155,8 @@ export default function ArenaView() {
                       --
                     </div>
                     <div className="grid grid-cols-2 gap-2 mt-1">
-                      <button id="physical-attack-btn" className="w-full text-[11px] font-bold bg-[#b92902] text-white hover:bg-[#d53d18] border border-[#450900] py-1.5 step-animation transition-colors">PHYSICAL</button>
-                      <button id="special-attack-btn" className="w-full text-[11px] font-bold bg-secondary-container text-white hover:bg-[#699cff] border border-[#003271] py-1.5 step-animation transition-colors">SPECIAL</button>
+                      <button id="physical-attack-btn" onClick={() => window.arena?.handleAttack('physical')} className="w-full text-[11px] font-bold bg-[#b92902] text-white hover:bg-[#d53d18] border border-[#450900] py-1.5 step-animation transition-colors">PHYSICAL</button>
+                      <button id="special-attack-btn" onClick={() => window.arena?.handleAttack('special')} className="w-full text-[11px] font-bold bg-secondary-container text-white hover:bg-[#699cff] border border-[#003271] py-1.5 step-animation transition-colors">SPECIAL</button>
                     </div>
                   </div>
                 </div>
@@ -121,18 +167,23 @@ export default function ArenaView() {
                   <h4 className="text-yellow-400 font-label text-sm mb-3 uppercase tracking-widest text-glow">Status &amp; Stats</h4>
                   <div className="space-y-2 text-sm font-body">
                     <div className="grid grid-cols-3 gap-1">
-                      <button id="curse-btn" data-status="curse" className="status-btn bg-[#6e5f00] hover:bg-yellow-600 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">CRS</button>
-                      <button id="poison-btn" data-status="poison" className="status-btn bg-[#9333ea] hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">PSN</button>
-                      <button id="paralyze-btn" data-status="paralyze" className="status-btn bg-[#eab308] hover:bg-yellow-400 text-[#342c00] p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">PAR</button>
+                      <button id="curse-btn" data-status="curse" onClick={(e) => window.arena?.toggleStatus(e)} className="status-btn bg-[#6e5f00] hover:bg-yellow-600 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">CRS</button>
+                      <button id="poison-btn" data-status="poison" onClick={(e) => window.arena?.toggleStatus(e)} className="status-btn bg-[#9333ea] hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">PSN</button>
+                      <button id="paralyze-btn" data-status="paralyze" onClick={(e) => window.arena?.toggleStatus(e)} className="status-btn bg-[#eab308] hover:bg-yellow-400 text-[#342c00] p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">PAR</button>
                     </div>
                     <div className="grid grid-cols-3 gap-1">
-                      <button id="weather-btn" className="bg-[#2563eb] hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">WTH</button>
-                      <button id="burn-btn" data-status="burn" className="status-btn bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">BRN</button>
-                      <button id="toxic-btn" data-status="bad_poison" className="status-btn bg-[#581c87] hover:bg-purple-800 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">TOX</button>
+                      <button id="weather-btn" onClick={() => window.arena?.cycleWeather()} className="bg-[#2563eb] hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">WTH</button>
+                      <button id="burn-btn" data-status="burn" onClick={(e) => window.arena?.toggleStatus(e)} className="status-btn bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">BRN</button>
+                      <button id="toxic-btn" data-status="bad_poison" onClick={(e) => window.arena?.toggleStatus(e)} className="status-btn bg-[#581c87] hover:bg-purple-800 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">TOX</button>
                     </div>
                     <div>
                       <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-sm">TARGET</label>
-                      <select id="status-target-select" className="sr-only" aria-label="Select Status Target">
+                      <select id="status-target-select" className="sr-only" aria-label="Select Status Target" onChange={(e) => {
+                        if (!window.arena) return;
+                        window.arena.gs.selectedStatusTargetId = e.target.value ? parseInt(e.target.value) : null;
+                        window.arena.renderer._updateStatusButtonStyles();
+                        window.arena.renderer.renderAll();
+                      }}>
                         <option value="">Select Target</option>
                       </select>
                       <PokemonPicker selectId="status-target-select" />
@@ -165,7 +216,7 @@ export default function ArenaView() {
                           className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-sm text-on-surface placeholder:text-[#40485d] focus:border-yellow-400 focus:ring-0"
                           placeholder="Val" />
                       </div>
-                      <button id="update-stat-btn" className="w-full bg-secondary-container text-white hover:bg-[#004da8] p-2 border border-black font-bold uppercase step-animation transition-colors mt-1">
+                      <button id="update-stat-btn" onClick={() => window.arena?.handleStatUpdate()} className="w-full bg-secondary-container text-white hover:bg-[#004da8] p-2 border border-black font-bold uppercase step-animation transition-colors mt-1">
                         UPDATE
                       </button>
                     </div>
@@ -180,7 +231,11 @@ export default function ArenaView() {
                     <div className="text-center">
                       <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-sm">RNG (1-100)</label>
                       <div id="random-number-display" className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-2xl font-bold text-yellow-400 text-glow tracking-widest">--</div>
-                      <button id="generate-number-btn" className="w-full bg-tertiary-container text-[#004a1d] hover:bg-[#5bf083] p-1 border border-white font-bold uppercase step-animation transition-colors mt-1">ROLL</button>
+                      <button id="generate-number-btn" onClick={() => {
+                        window.arena?.audio.play('click');
+                        const el = document.getElementById('random-number-display');
+                        if (el) el.textContent = Math.floor(Math.random() * 100) + 1;
+                      }} className="w-full bg-tertiary-container text-[#004a1d] hover:bg-[#5bf083] p-1 border border-white font-bold uppercase step-animation transition-colors mt-1">ROLL</button>
                     </div>
                     <div className="border-t border-outline-variant pt-2 mt-2">
                       <div className="grid grid-cols-2 gap-2">
@@ -190,7 +245,7 @@ export default function ArenaView() {
                             className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-sm text-on-surface placeholder:text-[#40485d] focus:border-yellow-400 focus:ring-0" />
                         </div>
                         <div className="flex items-end">
-                          <button id="add-player-btn" className="w-full bg-surface-variant text-secondary border border-secondary hover:bg-surface-bright p-2 font-bold uppercase step-animation transition-colors">ADD</button>
+                          <button id="add-player-btn" onClick={() => { window.arena?.audio.play('click'); window.arena?.addPlayer(); }} className="w-full bg-surface-variant text-secondary border border-secondary hover:bg-surface-bright p-2 font-bold uppercase step-animation transition-colors">ADD</button>
                         </div>
                       </div>
                     </div>
@@ -204,15 +259,20 @@ export default function ArenaView() {
                   <div className="space-y-2 text-sm font-body">
                     <div>
                       <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-sm">POKÉMON</label>
-                      <select id="management-pokemon-select" className="sr-only" aria-label="Select Pokémon for Management">
+                      <select id="management-pokemon-select" className="sr-only" aria-label="Select Pokémon for Management" onChange={() => window.arena?.renderer._updateManagementButtons()}>
                         <option value="">Select</option>
                       </select>
                       <PokemonPicker selectId="management-pokemon-select" />
                     </div>
-                    <div className="grid grid-cols-3 gap-1 mt-2">
-                      <button id="evolve-btn" className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm" disabled>EVO</button>
-                      <button id="change-form-btn" className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm" disabled>FORM</button>
-                      <button id="revive-btn" className="bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm" disabled>REV</button>
+                    <div className="grid grid-cols-2 gap-1 mt-2">
+                      <button id="switch-pokemon-btn" onClick={() => window.switchActivePokemonForMgmt?.()} className="col-span-2 bg-secondary-container hover:bg-[#699cff] text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>swap_horiz</span>SWITCH
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1 mt-1">
+                      <button id="evolve-btn" onClick={() => window.arena?.handleEvolve()} className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">EVO</button>
+                      <button id="change-form-btn" onClick={() => window.arena?.openFormChangeModal?.()} className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">FORM</button>
+                      <button id="revive-btn" onClick={() => window.arena?.handleRevive()} className="bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">REV</button>
                     </div>
                   </div>
                 </div>
@@ -222,13 +282,13 @@ export default function ArenaView() {
                   <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent" />
                   <h4 className="text-yellow-400 font-label text-sm mb-3 uppercase tracking-widest text-glow">Round &amp; History</h4>
                   <div className="grid grid-cols-2 gap-2 mb-2">
-                    <button id="undo-btn"
+                    <button id="undo-btn" onClick={() => window.arena?.history.undo()}
                       className="bg-surface-variant text-yellow-400 hover:bg-surface-bright p-2 border border-[#40485d] font-bold uppercase step-animation transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled>
                       <span className="material-symbols-outlined text-[20px] align-middle" style={{ fontVariationSettings: "'FILL' 1" }}>undo</span> UNDO
                       <div className="text-[10px] text-on-surface-variant mt-0.5 tracking-wider">Ctrl+Z</div>
                     </button>
-                    <button id="redo-btn"
+                    <button id="redo-btn" onClick={() => window.arena?.history.redo()}
                       className="bg-surface-variant text-yellow-400 hover:bg-surface-bright p-2 border border-[#40485d] font-bold uppercase step-animation transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled>
                       <span className="material-symbols-outlined text-[20px] align-middle" style={{ fontVariationSettings: "'FILL' 1" }}>redo</span> REDO

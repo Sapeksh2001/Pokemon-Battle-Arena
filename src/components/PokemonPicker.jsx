@@ -5,12 +5,12 @@
  * Only renders the active Pokémon's sprite for each player.
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useArena } from '../context/ArenaContext';
 
 // ─── Single card (Sprite Only) ───────────────────────────────────────────────
 
-function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
+function PokemonCard({ pokemon, isSelected, isFainted, onClick }) {
   return (
     <button
       type="button"
@@ -55,44 +55,38 @@ function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
 
 export default function PokemonPicker({ selectId }) {
   const { tick, getArena } = useArena();
-  const [selected, setSelected] = useState('');
-  const [entries, setEntries] = useState([]);
 
-  // Build entry list from arena game state (Active Pokémon ONLY)
-  const buildEntries = useCallback(() => {
+  // Compute entries from arena game state. Recomputes on every tick so the
+  // picker stays in sync with the external arena engine without needing state.
+  const entries = useMemo(() => {
+    // Reference tick so the linter knows this memo intentionally re-runs on each arena update.
+    void tick;
     const arena = getArena();
     if (!arena?.gs?.players) return [];
 
     return arena.gs.players.flatMap(player => {
-      // Always get the active Pokémon
       const pk = player.getActivePokemon?.();
       if (!pk) return [];
 
-      // Determine value for the select
-      // Management select value is playerIdx-pkIdx
-      let val;
-      if (selectId === 'management-pokemon-select') {
-        val = `${player.id}-${player.activePokemonIndex}`;
-      } else {
-        val = player.id.toString();
-      }
+      // Management select uses "playerId-pokemonIndex"; others use plain playerId.
+      const val = selectId === 'management-pokemon-select'
+        ? `${player.id}-${player.activePokemonIndex}`
+        : player.id.toString();
 
-      return [{
-        value: val,
-        pokemon: pk,
-        isFainted: pk.isFainted?.() || (pk.currentHP <= 0),
-      }];
+      return [{ value: val, pokemon: pk, isFainted: pk.isFainted?.() || (pk.currentHP <= 0) }];
     });
-  }, [getArena, selectId]);
+  }, [tick, getArena, selectId]);
 
-  useEffect(() => {
-    setEntries(buildEntries());
-    const sel = document.getElementById(selectId);
-    if (sel) setSelected(sel.value);
-  }, [tick, selectId, buildEntries]);
+  // Read the current selection directly from the DOM element on each render.
+  // This avoids a setState-in-effect while still staying in sync with the
+  // arena engine, which may change the select's value programmatically.
+  const selected = useMemo(() => {
+    // Reference tick so the linter knows this memo intentionally re-runs on each arena update.
+    void tick;
+    return document.getElementById(selectId)?.value || '';
+  }, [tick, selectId]);
 
   const handleClick = useCallback((value) => {
-    setSelected(value);
     const sel = document.getElementById(selectId);
     if (!sel) return;
     sel.value = value;
@@ -107,7 +101,6 @@ export default function PokemonPicker({ selectId }) {
         <PokemonCard
           key={value}
           pokemon={pokemon}
-          value={value}
           isSelected={selected === value}
           isFainted={isFainted}
           onClick={() => handleClick(value)}
@@ -116,5 +109,4 @@ export default function PokemonPicker({ selectId }) {
     </div>
   );
 }
-
 

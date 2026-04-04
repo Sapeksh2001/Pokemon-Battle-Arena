@@ -13,7 +13,7 @@ export default function Modals() {
   // Room Creation State
   const [roomName, setRoomName] = useState('');
   const [maxPlayers, setMaxPlayers] = useState(2);
-  const [battleType, setBattleType] = useState('singles');
+  const [battleType, _setBattleType] = useState('singles');
   const [selectedTiers, setSelectedTiers] = useState(['Basic', 'Final']);
 
   const tierOptions = [

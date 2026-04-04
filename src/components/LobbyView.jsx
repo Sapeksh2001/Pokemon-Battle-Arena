@@ -17,6 +17,8 @@ export default function LobbyView() {
       if (curr?.displayName && !newName) setNewName(curr.displayName);
     });
     return unsub;
+  // newName is intentionally excluded: we only want to set it on first load, not on every keystroke
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleUpdateName = async () => {

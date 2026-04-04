@@ -107,6 +107,7 @@ export function ArenaProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useArena() {
   return useContext(ArenaContext);
 }

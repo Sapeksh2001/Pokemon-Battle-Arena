@@ -54,7 +54,7 @@ function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
 // ─── Unified Picker ─────────────────────────────────────────────────────────
 
 export default function PokemonPicker({ selectId }) {
-  const { tick, getArena } = useArena();
+  const { gameState, getArena } = useArena();
   const [selected, setSelected] = useState('');
   const [entries, setEntries] = useState([]);
 
@@ -89,7 +89,7 @@ export default function PokemonPicker({ selectId }) {
     setEntries(buildEntries());
     const sel = document.getElementById(selectId);
     if (sel) setSelected(sel.value);
-  }, [tick, selectId, buildEntries]);
+  }, [gameState, selectId, buildEntries]);
 
   const handleClick = useCallback((value) => {
     setSelected(value);

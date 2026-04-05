@@ -1,14 +1,14 @@
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { app } from './firebase-config.js';
-
-let auth;
-try {
-    auth = getAuth(app);
-} catch (e) {
-    console.error("Firebase Auth initialization failed:", e);
-    // Create a mock auth object to prevent crashing later, although the app won't function correctly.
-    auth = { onAuthStateChanged: () => {} };
-}
+import { 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    signInAnonymously, 
+    signOut, 
+    onAuthStateChanged, 
+    updateProfile, 
+    GoogleAuthProvider, 
+    signInWithPopup 
+} from "firebase/auth";
+import { auth } from '../../firebase.js';
 
 
 export class AuthManager {

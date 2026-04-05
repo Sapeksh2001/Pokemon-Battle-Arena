@@ -1,12 +1,11 @@
 import { Player } from '../models/Player.js';
 import { Pokemon } from '../models/Pokemon.js';
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getDatabase, ref, set, onValue, push, onDisconnect, remove, update, get, onChildAdded, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-import { firebaseConfig } from './firebase-config.js';
+import { 
+    ref, set, get, onValue, off, push, update, remove, 
+    serverTimestamp, onDisconnect, query, limitToLast, onChildAdded 
+} from "firebase/database";
+import { db } from '../../firebase.js';
 import { authManager } from './authManager.js';
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
 
 function generateRoomCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -26,6 +25,19 @@ export class MultiplayerManager {
         this.isConnected = true; 
         this.mode = 'offline'; 
         this.unsubscribes = [];
+
+        // UI Helpers called via global scope from React components
+        window.copyRoomCode = () => {
+            if (!this.roomCode) return;
+            navigator.clipboard.writeText(this.roomCode);
+            this.showNotification('Room code copied!', 'success');
+        };
+        window.shareRoomLink = () => {
+            if (!this.roomCode) return;
+            const link = `${window.location.origin}?room=${this.roomCode}`;
+            navigator.clipboard.writeText(link);
+            this.showNotification('Share link copied!', 'success');
+        };
     }
 
     /**

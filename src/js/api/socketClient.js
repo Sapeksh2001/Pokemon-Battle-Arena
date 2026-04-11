@@ -96,9 +96,10 @@ export class MultiplayerManager {
         const flat = [];
         
         const recurse = (obj) => {
-            if (obj.name) {
-                // Ensure we don't add the same Pokemon multiple times if referenced twice
-                if (!flat.some(p => p.name === obj.name)) {
+            // Data uses 'Name' (capital N)
+            const name = obj.Name || obj.name;
+            if (name) {
+                if (!flat.some(p => (p.Name || p.name) === name)) {
                     flat.push(obj);
                 }
             }
@@ -111,13 +112,14 @@ export class MultiplayerManager {
         };
 
         Object.values(window.MergedPokemonData).forEach(recurse);
+        console.log('[Multiplayer] Pool size:', flat.length);
         return flat;
     }
 
     async createRoom(trainerName, settings = {}) {
         if (!trainerName) return;
         
-        const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const roomCode = Math.floor(100000 + Math.random() * 900000).toString();
         this.roomCode = roomCode;
         this.isHost = true;
         this.trainerName = trainerName;
@@ -257,7 +259,7 @@ export class MultiplayerManager {
             snapshot.forEach(child => {
                 const data = child.val();
                 const p = new Player(child.key, data.name);
-                if (data.assignedPokemonId && typeof window.Pokemon_NewDataset !== 'undefined') {
+                if (data.assignedPokemonId && window.MergedPokemonData) {
                     const result = this.arena.db.find(data.assignedPokemonId);
                     if (result) {
                         p.team[0] = new Pokemon(result.foundNode, result.baseNode);
@@ -467,13 +469,28 @@ export class MultiplayerManager {
         this.arena.modals.open('multiplayerLobby');
         const codeDisplay = document.getElementById('room-code-display');
         if (codeDisplay) codeDisplay.textContent = this.roomCode;
+
+        // Expose assignment methods globally so inline onclick survives React re-renders
+        window._mpRng = (pid) => {
+            console.log('[Multiplayer] RNG clicked', pid);
+            this.assignRandomPokemon(pid).catch(err => alert('RNG Error: ' + err.message));
+        };
+        window._mpPick = (pid) => {
+            console.log('[Multiplayer] PICK clicked', pid);
+            this.assignSpecificPokemon(pid).catch(err => alert('PICK Error: ' + err.message));
+        };
     }
 
     async assignRandomPokemon(targetPlayerId) {
-        if (!this.isHost || !this.roomCode) return;
+        console.log('[Multiplayer] assignRandomPokemon triggered', targetPlayerId, 'isHost:', this.isHost, 'room:', this.roomCode);
+        if (!this.isHost || !this.roomCode) {
+            console.log('[Multiplayer] Aborting RNG - Not host or no roomcode');
+            return;
+        }
 
         const fullPool = this._getFlattenedPool();
         if (fullPool.length === 0) {
+            console.log('[Multiplayer] fullPool is empty');
             this.showNotification('Data loading... Please wait.', 'error');
             return;
         }
@@ -511,8 +528,8 @@ export class MultiplayerManager {
         const selectionSource = availablePool.length > 0 ? availablePool : pool;
         
         const rolled = selectionSource[Math.floor(Math.random() * selectionSource.length)];
-        const pokeId = rolled.name;
-        this.showNotification(`Assigned ${rolled.name}!`, 'success');
+        const pokeId = rolled.Name || rolled.name;
+        this.showNotification(`Assigned ${pokeId}!`, 'success');
 
         // Check if this player is in entryQueue (wildcard mid-game join) or lobby /players
         const queueSnap = await get(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
@@ -530,7 +547,52 @@ export class MultiplayerManager {
             // Lobby assignment — just update the player's record in place
             await update(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
                 assignedPokemonId: pokeId,
-                assignedPokemonName: rolled.name
+                assignedPokemonName: rolled.Name || rolled.name
+            });
+        }
+    }
+
+    async assignSpecificPokemon(targetPlayerId) {
+        console.log('[Multiplayer] assignSpecificPokemon triggered', targetPlayerId, 'isHost:', this.isHost, 'room:', this.roomCode);
+        if (!this.isHost || !this.roomCode) {
+            console.log('[Multiplayer] Aborting PICK - Not host or no roomcode');
+            return;
+        }
+        
+        const rawInput = prompt('Enter specific Pok\u00e9mon name (e.g. Charizard):');
+        if (!rawInput) return;
+        const name = rawInput.trim().toLowerCase();
+        
+        // MergedPokemonData is an object keyed by name, not an array
+        const mergedData = window.MergedPokemonData;
+        if (!mergedData) {
+            this.showNotification('Data not loaded yet', 'error');
+            return;
+        }
+        const pokemon = Object.values(mergedData).find(p => (p.Name || p.name || '').toLowerCase() === name);
+        if (!pokemon) {
+            this.showNotification(`Could not find Pokémon: ${rawInput}`, 'error');
+            return;
+        }
+
+        const pokeName = pokemon.Name || pokemon.name;
+        const pokeId = pokeName;
+        this.showNotification(`Assigned ${pokeName}!`, 'success');
+
+        const queueSnap = await get(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
+        if (queueSnap.exists()) {
+            const playerData = queueSnap.val();
+            await set(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
+                ...playerData,
+                assignedPokemonId: pokeId,
+                assignedPokemonName: pokeName,
+                isReady: true
+            });
+            await remove(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
+        } else {
+            await update(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
+                assignedPokemonId: pokeId,
+                assignedPokemonName: pokeName
             });
         }
     }
@@ -577,12 +639,21 @@ export class MultiplayerManager {
                         style="background:#1e293b;border:1px solid #5bf083;color:#5bf083;font-size:9px;font-weight:700;letter-spacing:.08em;padding:3px 8px;cursor:pointer;text-transform:uppercase;"
                         onmouseover="this.style.background='#5bf083';this.style.color='#020617';"
                         onmouseout="this.style.background='#1e293b';this.style.color='#5bf083';"
-                        onclick="window.arena?.multiplayer?.assignRandomPokemon('${p.id}')">
+                        onclick="window._mpRng('${p.id}')">
                         RNG
+                    </button>
+                    <button
+                        style="background:#1e293b;border:1px solid #5bf083;color:#5bf083;font-size:9px;font-weight:700;letter-spacing:.08em;padding:3px 8px;cursor:pointer;text-transform:uppercase;margin-left:4px;"
+                        onmouseover="this.style.background='#5bf083';this.style.color='#020617';"
+                        onmouseout="this.style.background='#1e293b';this.style.color='#5bf083';"
+                        onclick="window._mpPick('${p.id}')">
+                        PICK
                     </button>
                 </div>
             `).join('')}
         `;
+
+        queueContainer.onclick = null;
     }
 
     updateRoomUI(data) {
@@ -604,7 +675,8 @@ export class MultiplayerManager {
                 </div>
                 ${this.isHost ? `
                 <div class="flex gap-2">
-                    <button class="bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary" onclick="window.arena?.multiplayer?.assignRandomPokemon('${p.id}')">RNG</button>
+                    <button class="bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary" onclick="window._mpRng('${p.id}')">RNG</button>
+                    <button class="bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary" onclick="window._mpPick('${p.id}')">PICK</button>
                     ${p.isReady ? '<span class="text-[#5bf083] text-[10px] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-1 flex items-center">READY</span>' : ''}
                 </div>
                 ` : `
@@ -612,6 +684,8 @@ export class MultiplayerManager {
                 `}
             </div>
         `).join('');
+
+        playerList.onclick = null;
         
         const startBtn = document.getElementById('start-game-btn');
         if (startBtn) {

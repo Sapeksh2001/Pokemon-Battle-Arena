@@ -97,7 +97,7 @@ export class UIRenderer {
                 <div class="flex flex-col items-center justify-center h-full text-center font-body">
                     <h3 class="font-bold text-2xl text-secondary font-headline">${escapeHTML(player.name)}</h3>
                     <p class="text-xs uppercase tracking-wider text-on-surface-variant mt-4">No active Pokémon.</p>
-                    <button onclick="window.openTeamManager(${player.id})"
+                    <button onclick="window.openTeamManager('${player.id}')"
                             class="w-full mt-4 bg-secondary-container hover:bg-[#699cff] text-white font-bold py-3 px-4 text-xs uppercase tracking-widest border border-[#003271] step-animation">
                         Manage Team
                     </button>
@@ -128,11 +128,11 @@ export class UIRenderer {
                 <div class="w-full flex justify-between items-start gap-2 min-w-0">
                     <h2 class="font-bold card-trainer-name" title="${escapeHTML(player.name)}">${escapeHTML(player.name)}</h2>
                     <div class="flex gap-2">
-                        <button onclick="window.removePlayer(${player.id})"
+                        <button onclick="window.removePlayer('${player.id}')"
                                 class="text-[#ff7351] hover:text-white transition-colors" title="Remove Player">
                             <span class="material-symbols-outlined text-[18px]">person_remove</span>
                         </button>
-                        <button onclick="window.openTeamManager(${player.id})"
+                        <button onclick="window.openTeamManager('${player.id}')"
                                 class="text-secondary hover:text-white transition-colors" title="Manage Team">
                             <span class="material-symbols-outlined text-[20px]">settings</span>
                         </button>
@@ -172,7 +172,7 @@ export class UIRenderer {
                 ${this._renderStatHeaders(pokemon)}
                 ${this._renderStatValues(pokemon)}
             </div>
-            <div class="grid grid-cols-6 gap-1 w-full flex-shrink-0 card-team-row">
+            <div class="flex justify-evenly items-center w-full flex-shrink-0 card-team-row">
                 ${this._renderTeamIcons(player)}
             </div>`;
 
@@ -241,7 +241,7 @@ export class UIRenderer {
             const border = isActive ? 'border-2 border-yellow-400' : 'border-2 border-outline-variant';
             return `<img src="${src}" title="${p ? escapeHTML(p.fullName) : 'Empty'}"
                          class="w-16 h-16 team-pokeball bg-surface-container-low p-1 ${border} ${isFainted ? 'grayscale' : ''}"
-                         onclick="window.handleTeamIconClick(${player.id}, ${i})">`;
+                         onclick="window.handleTeamIconClick('${player.id}', ${i})">`;
         }).join('');
     }
 
@@ -292,7 +292,7 @@ export class UIRenderer {
 
         // Management: includes fainted Pokémon for revive.
         this.populateDropdown(mgmtSel, allActive,
-            p => `${p.id}-${p.activePokemonIndex}`,
+            p => `${p.id}|${p.activePokemonIndex}`,
             p => {
                 const pk = p.getActivePokemon();
                 return `${p.name} - ${pk.fullName}${pk.isFainted() ? ' (FNT)' : ''}`;
@@ -345,8 +345,10 @@ export class UIRenderer {
         formBtn.disabled = true;
         reviveBtn.disabled = true;
 
-        if (!sel.value) return;
-        const [pid, sid] = sel.value.split('-').map(Number);
+        const rawVal = sel.dataset.value || sel.value;
+        if (!rawVal) return;
+        const [pid, sidStr] = rawVal.split('|');
+        const sid = parseInt(sidStr);
         const player = this._gs.players.find(p => p.id === pid);
         const pokemon = player?.team[sid];
         if (!pokemon) return;

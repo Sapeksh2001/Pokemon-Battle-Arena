@@ -72,7 +72,7 @@ export default function PokemonPicker({ selectId }) {
       // Management select value is playerIdx-pkIdx
       let val;
       if (selectId === 'management-pokemon-select') {
-        val = `${player.id}-${player.activePokemonIndex}`;
+        val = `${player.id}|${player.activePokemonIndex}`;
       } else {
         val = player.id.toString();
       }
@@ -95,6 +95,7 @@ export default function PokemonPicker({ selectId }) {
     setSelected(value);
     const sel = document.getElementById(selectId);
     if (!sel) return;
+    sel.setAttribute('data-value', value);
     sel.value = value;
     sel.dispatchEvent(new Event('change', { bubbles: true }));
   }, [selectId]);

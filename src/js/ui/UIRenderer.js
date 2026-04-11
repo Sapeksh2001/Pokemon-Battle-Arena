@@ -153,9 +153,7 @@ export class UIRenderer {
                     ${pokemon.isFainted()
                 ? '<div class="absolute inset-0 flex items-center justify-center"><span class="text-red-500 text-2xl font-bold -rotate-12 bg-black/50 px-2">FAINTED</span></div>'
                 : ''}
-                    <div class="absolute top-0 right-0 flex gap-1 bg-black/20 p-1 rounded-bl">
-                        ${this._renderStatusIcons(pokemon)}
-                    </div>
+                    
                 </div>
                 <!-- Dynamic Floating Text Container inserted locally in later features -->
                 <div class="hp-gauge-container">
@@ -166,6 +164,10 @@ export class UIRenderer {
                         <div class="current-hp">${pokemon.currentHP}</div>
                         <div class="max-hp">${pokemon.maxHp}</div>
                     </div>
+                </div>
+                <!-- Status Icons Row: Moved here to avoid sprite overlap -->
+                <div class="flex justify-evenly items-center w-full py-1 min-h-[24px]">
+                    ${this._renderStatusIcons(pokemon)}
                 </div>
             </div>
             <div class="grid grid-cols-5 grid-rows-2 text-center w-full card-stat-grid flex-shrink-0">
@@ -189,7 +191,7 @@ export class UIRenderer {
     /** DRY: Renders status condition icons from the Pokemon's statuses object. */
     _renderStatusIcons(pokemon) {
         const iconMap = {
-            poison: { icon: 'skull', color: 'text-purple-400' },
+            poison: { icon: 'science', color: 'text-purple-400' },
             bad_poison: { icon: 'skull', color: 'text-purple-400' },
             burn: { icon: 'local_fire_department', color: 'text-orange-400' },
             paralyze: { icon: 'bolt', color: 'text-yellow-400' },

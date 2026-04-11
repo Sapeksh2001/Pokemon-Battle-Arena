@@ -265,10 +265,10 @@ export default function ArenaView() {
                       </button>
                     </div>
                     <div className="grid grid-cols-2 gap-1 mt-1">
-                      <button id="evolve-btn" onClick={act('handleEvolve')} className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">EVO</button>
-                      <button id="devolve-btn" onClick={act('handleDevolve')} className="bg-[#4338ca] hover:bg-indigo-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">DEVO</button>
-                      <button id="change-form-btn" onClick={act('openFormChangeModal')} className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">FORM</button>
-                      <button id="revive-btn" onClick={act('handleRevive')} className="bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">REV</button>
+                      <button id="evolve-btn" onClick={act('handleEvolve')} className="step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed">EVO</button>
+                      <button id="devolve-btn" onClick={act('handleDevolve')} className="step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed">DEVO</button>
+                      <button id="change-form-btn" onClick={act('openFormChangeModal')} className="step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed">FORM</button>
+                      <button id="revive-btn" onClick={act('handleRevive')} className="step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed">REV</button>
                     </div>
                   </div>
                 </div>

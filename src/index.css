@@ -365,14 +365,15 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 
 /* --- BUTTON STYLES --- */
 /* Custom styles for the main action buttons in the control panel. */
-#physical-attack-btn, #special-attack-btn, #evolve-btn, #change-form-btn, #revive-btn { font-family: sans-serif; font-weight: bold; color: white; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; border: 3px solid black; border-radius: 9999px !important; padding: 0.5rem; transition: transform 0.1s ease-out; cursor: pointer; }
-#physical-attack-btn:active, #special-attack-btn:active, #evolve-btn:active, #change-form-btn:active, #revive-btn:active { transform: scale(0.95); }
+#physical-attack-btn, #special-attack-btn, #evolve-btn, #devolve-btn, #change-form-btn, #revive-btn { font-family: sans-serif; font-weight: bold; color: white; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; border: 3px solid black; border-radius: 9999px !important; padding: 0.5rem; transition: transform 0.1s ease-out; cursor: pointer; }
+#physical-attack-btn:active, #special-attack-btn:active, #evolve-btn:active, #devolve-btn:active, #change-form-btn:active, #revive-btn:active { transform: scale(0.95); }
 #physical-attack-btn { background-image: linear-gradient(to bottom, #fca5a5, #ef4444); }
 #special-attack-btn { background-image: linear-gradient(to bottom, #93c5fd, #3b82f6); }
 #evolve-btn { background-image: linear-gradient(to bottom, #a5b4fc, #6366f1); }
+#devolve-btn { background-image: linear-gradient(to bottom, #818cf8, #4f46e5); }
 #change-form-btn { background-image: linear-gradient(to bottom, #c084fc, #a855f7); }
 #revive-btn { background-image: linear-gradient(to bottom, #fde047, #f59e0b); }
-#evolve-btn:disabled, #change-form-btn:disabled, #revive-btn:disabled { background-image: linear-gradient(to bottom, #6b7280, #4b5563); cursor: not-allowed; opacity: 0.6; }
+#evolve-btn:disabled, #devolve-btn:disabled, #change-form-btn:disabled, #revive-btn:disabled { background-image: linear-gradient(to bottom, #6b7280, #4b5563); cursor: not-allowed; opacity: 0.6; }
 
 
 /* --- ANIMATION KEYFRAMES --- */

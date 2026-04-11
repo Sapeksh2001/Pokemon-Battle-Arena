@@ -139,8 +139,9 @@ export class PokemonBattleArena {
         const clamped = Math.max(0, Math.min(pokemon.maxHp, newHP));
         const delta = clamped - pokemon.currentHP;
         pokemon.currentHP = clamped;
+        this.renderer.renderAll(); // Immediate sync
 
-        if (delta === 0) { this.renderer.renderAll(); return; }
+        if (delta === 0) return;
 
         const isHeal = delta > 0;
         const isFaint = clamped === 0 && delta < 0;
@@ -289,20 +290,23 @@ export class PokemonBattleArena {
         const newHP = target.currentHP - damage;
         target.currentHP = Math.max(0, newHP);
 
+        // Immediate visual sync for health bars/gauges
+        this.renderer.renderAll();
+        if (this.multiplayer && this.multiplayer.mode === 'playing') {
+            this.multiplayer.sendGameState();
+        }
+
         const onDone = () => {
             if (target.isFainted()) {
                 this.audio.playCry(target);
                 this._announce(`${target.fullName} fainted!`);
                 this._animateSprite(targetId, 'faint', () => this.renderer.renderAll());
             } else {
+                // Secondary render catch-all
                 this.renderer.renderAll();
             }
-
-            // Sync game state in multiplayer
-            if (this.multiplayer && this.multiplayer.mode === 'playing') {
-                this.multiplayer.sendGameState();
-            }
         };
+
         damage > 0
             ? this._animateSprite(targetId, 'damage', onDone)
             : onDone();

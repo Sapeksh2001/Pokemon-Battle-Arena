@@ -162,7 +162,7 @@ export class UIRenderer {
                     <div class="hp-gauge-segments-container">${this._buildGaugeHTML(pct)}</div>
                     <div class="hp-gauge-pivot"></div>
                     <div class="hp-gauge-needle" style="transform:rotate(${needleAngle}deg);"></div>
-                    <div class="hp-gauge-center" onclick="window.editHP(${player.id})">
+                    <div class="hp-gauge-center" onclick="window.editHP('${player.id}')">
                         <div class="current-hp">${pokemon.currentHP}</div>
                         <div class="max-hp">${pokemon.maxHp}</div>
                     </div>

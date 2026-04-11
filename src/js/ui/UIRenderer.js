@@ -153,7 +153,7 @@ export class UIRenderer {
                     ${pokemon.isFainted()
                 ? '<div class="absolute inset-0 flex items-center justify-center"><span class="text-red-500 text-2xl font-bold -rotate-12 bg-black/50 px-2">FAINTED</span></div>'
                 : ''}
-                    <div class="absolute top-0 right-0 flex flex-col gap-1">
+                    <div class="absolute top-0 right-0 flex gap-1 bg-black/20 p-1 rounded-bl">
                         ${this._renderStatusIcons(pokemon)}
                     </div>
                 </div>
@@ -193,7 +193,7 @@ export class UIRenderer {
             bad_poison: { icon: 'skull', color: 'text-purple-400' },
             burn: { icon: 'local_fire_department', color: 'text-orange-400' },
             paralyze: { icon: 'bolt', color: 'text-yellow-400' },
-            curse: { icon: 'cruelty', color: 'text-indigo-400' },
+            curse: { icon: 'psychiatry', color: 'text-indigo-400' },
         };
         return Object.keys(pokemon.statuses)
             .filter(s => iconMap[s])

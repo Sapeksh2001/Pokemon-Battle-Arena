@@ -165,8 +165,8 @@ export class UIRenderer {
                         <div class="max-hp">${pokemon.maxHp}</div>
                     </div>
                 </div>
-                <!-- Status Icons Row: Moved here to avoid sprite overlap -->
-                <div class="flex justify-evenly items-center w-full py-1 min-h-[24px]">
+                <!-- Status Icons Row: Fixed height to prevent layout shifts -->
+                <div class="flex justify-evenly items-center w-full h-[28px] flex-shrink-0">
                     ${this._renderStatusIcons(pokemon)}
                 </div>
             </div>

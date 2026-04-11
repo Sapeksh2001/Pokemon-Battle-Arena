@@ -575,6 +575,14 @@ export class PokemonBattleArena {
                 </select>
                 <div id="ability-description" class="text-xs text-slate-400 mt-1 italic"></div>
             </div>
+            <div class="mb-2">
+                <label for="custom-sprite-url" class="text-xs text-slate-300 uppercase tracking-wider block mb-1">Custom Sprite URL (Override)</label>
+                <input type="text" id="custom-sprite-url"
+                       class="w-full bg-slate-900 border border-slate-600 p-2 mt-1 text-xs focus:border-yellow-400 outline-none text-white placeholder:text-slate-500"
+                       placeholder="https://example.com/sprite.gif"
+                       value="${pokemon?.customSprite || ''}">
+                <div class="text-[9px] text-slate-500 mt-1 italic uppercase tracking-tighter">Fix broken GIFs or use PNGs from the web</div>
+            </div>
             <div class="flex gap-2 mt-4">
                 <button id="confirm-pokemon-edit" class="bg-green-600 hover:bg-green-700 p-2 text-xs w-full font-bold uppercase tracking-wider border border-green-400">Confirm</button>
                 <button id="cancel-pokemon-edit"  class="bg-gray-600  hover:bg-gray-700  p-2 text-xs w-full font-bold uppercase tracking-wider border border-gray-500">Cancel</button>
@@ -744,6 +752,11 @@ export class PokemonBattleArena {
             return;
         }
         const pokemon = new Pokemon(result.foundNode, result.baseNode);
+        const customSprite = document.getElementById('custom-sprite-url')?.value.trim();
+        if (customSprite) {
+            pokemon.customSprite = customSprite;
+            pokemon.sprite = customSprite;
+        }
         player.setSlot(slotId, pokemon);
         if (player.team.filter(p => p).length === 1) player.activePokemonIndex = slotId;
         this._renderTeamEditorGrid();

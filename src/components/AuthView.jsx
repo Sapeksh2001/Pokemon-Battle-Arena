@@ -38,9 +38,19 @@ export default function AuthView({ onAuthSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#060e20] bg-opacity-95 backdrop-blur-sm pixel-grid pointer-events-auto">
-      <div className="bg-surface-container border-4 border-[#6d758c] p-8 max-w-sm w-full relative overflow-hidden step-animation hard-shadow-primary mx-4">
-        <h2 className="text-2xl font-bold text-yellow-400 font-headline uppercase tracking-widest text-glow text-center mb-8">
+    <>
+      {/* Animated Arena Backgrounds */}
+      <div className="fixed inset-0 z-0 bg-arena-animated" />
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none opacity-40">
+        <div className="bg-cyber-grid" />
+        <div className="bg-energy-glow" />
+      </div>
+
+      <div className="fixed inset-0 z-[1] pointer-events-none pixel-grid opacity-50" />
+
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#060e20]/60 backdrop-blur-sm pointer-events-auto">
+        <div className="bg-surface-container border-4 border-[#6d758c] p-8 max-w-sm w-full relative overflow-hidden step-animation hard-shadow-primary mx-4">
+          <h2 className="text-2xl font-bold text-yellow-400 font-headline uppercase tracking-widest text-glow text-center mb-8">
           <span className="material-symbols-outlined align-middle mr-2 mt-[-4px]" style={{ fontVariationSettings: "'FILL' 1" }}>shield_locked</span>
           ARENA ACCESS
         </h2>
@@ -88,5 +98,6 @@ export default function AuthView({ onAuthSuccess }) {
         </p>
       </div>
     </div>
+    </>
   );
 }

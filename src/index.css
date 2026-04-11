@@ -190,7 +190,10 @@ button, input, select {
 /* --- PLAYER CARD STYLES --- */
 .player-card {
     background-color: rgba(15, 23, 42, 0.8); /* Semi-transparent background */
-    border: 4px solid #475569;
+    border: 4px solid transparent;
+    border-image-source: var(--card-border-gradient, none);
+    border-image-slice: 1;
+    box-shadow: var(--card-glow, none);
     transition: all 0.3s ease;
     position: relative; /* For positioning child elements like holo effects and turn indicators. */
     overflow: hidden;
@@ -201,20 +204,30 @@ button, input, select {
     height: 100%;
 }
 
-/* --- TIER BORDER STYLES --- */
-/* Classes to change the border color based on the Pokémon's tier. */
-.tier-border-basic { border-color: var(--tier-color-basic); }
-.tier-border-mid { border-color: var(--tier-color-mid); }
-.tier-border-final { border-color: var(--tier-color-final); }
-/* Higher tiers get an additional box-shadow to make them 'glow'. */
-.tier-border-mega, .tier-border-gmax { 
-    border-color: var(--tier-color-mega);
-    box-shadow: 0 0 5px var(--tier-color-mega);
+/* --- GLITTER EFFECTS --- */
+.card-glitter {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    background-image: 
+       radial-gradient(circle, white 1px, transparent 1px),
+       radial-gradient(circle, white 1.5px, transparent 1.5px);
+    background-size: 20px 20px, 35px 35px;
+    background-position: 0 0, 10px 10px;
+    animation: glitter-twinkle 1.5s infinite alternate;
+    opacity: 0.5;
 }
-.tier-border-legendary, .tier-border-mythical, .tier-border-ultra-beast {
-    border-color: var(--tier-color-legendary);
-    box-shadow: 0 0 20px var(--tier-color-legendary);
+.card-glitter.gold-glitter {
+    background-image: 
+       radial-gradient(circle, #fbbf24 1px, transparent 1px),
+       radial-gradient(circle, #f59e0b 1.5px, transparent 1.5px);
 }
+@keyframes glitter-twinkle {
+    0% { opacity: 0.2; transform: scale(1); }
+    100% { opacity: 0.7; transform: scale(1.05); }
+}
+
 
 
 /* --- HOLOGRAPHIC CARD STYLES --- */
@@ -312,9 +325,9 @@ button, input, select {
 }
 
 /* Dynamic classes added by JavaScript to indicate game state. */
-.player-card.active-turn { border-color: #f59e0b !important; box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); animation: pulse-yellow 1.5s infinite; }
-.player-card.selected-target { border-color: #ef4444 !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
-.player-card.selected-status-target { border-color: #a855f7 !important; box-shadow: 0 0 20px rgba(168, 85, 247, 0.5); }
+.player-card.active-turn { border-image-source: linear-gradient(#f59e0b, #f59e0b) !important; box-shadow: 0 0 20px rgba(245, 158, 11, 0.5) !important; animation: pulse-yellow 1.5s infinite; }
+.player-card.selected-target { border-image-source: linear-gradient(#ef4444, #ef4444) !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5) !important; }
+.player-card.selected-status-target { border-image-source: linear-gradient(#a855f7, #a855f7) !important; box-shadow: 0 0 20px rgba(168, 85, 247, 0.5) !important; }
 
 .pokemon-sprite { 
     image-rendering: pixelated; /* Ensures the sprites look sharp and not blurry. */

@@ -106,20 +106,51 @@ export class UIRenderer {
         }
 
         const tier = (pokemon.tier || '').toLowerCase();
-        if (tier.includes('legendary') || tier.includes('mythical') ||
-            tier.includes('ultra beast') || tier.includes('mega') || tier.includes('gmax')) {
+        
+        let glowValue = '';
+        let hasGlitters = false;
+        let isGold = false;
+
+        const silverTiers = ['final', 'legendary', 'mythical', 'ultra beast', 'mega'];
+        const goldTiers = ['max', 'gmax'];
+
+        if (goldTiers.some(t => tier.includes(t))) {
+            glowValue = '0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 215, 0, 0.5)';
             card.classList.add('holo-gold');
-        } else if (tier === 'final') {
+            hasGlitters = true;
+            isGold = true;
+        } else if (silverTiers.some(t => tier.includes(t))) {
+            glowValue = '0 0 20px rgba(220, 220, 255, 0.8), inset 0 0 10px rgba(220, 220, 255, 0.5)';
             card.classList.add('holo-silver');
+            hasGlitters = true;
         }
-        card.classList.add(`tier-border-${tier.replace(/ /g, '-')}`);
+
+        const types = pokemon.types;
+        const color1 = `var(--type-${types[0].toLowerCase()})`;
+        const color2 = types.length > 1 ? `var(--type-${types[1].toLowerCase()})` : color1;
+
+        // Alternating stripes (creates a solid border if color1 == color2)
+        const borderGradient = `repeating-linear-gradient(45deg, ${color1}, ${color1} 15px, ${color2} 15px, ${color2} 30px)`;
+        card.style.setProperty('--card-border-gradient', borderGradient);
+
+        if (!hasGlitters) {
+            // Type based glow
+            glowValue = types.length > 1 
+                ? `-8px -8px 15px ${color1}, 8px 8px 15px ${color2}`
+                : `0 0 15px ${color1}`;
+        }
+        card.style.setProperty('--card-glow', glowValue);
+
         if (pokemon.isFainted()) card.classList.add('opacity-50', 'bg-red-900/30');
 
         const pct = pokemon.getHPPercent();
         const span = 270, startAngle = -135;
         const needleAngle = Math.max(startAngle, Math.min(startAngle + span, startAngle + pct * span));
 
+        const glitterHTML = hasGlitters ? `<div class="card-glitter ${isGold ? 'gold-glitter' : ''}"></div>` : '';
+
         card.innerHTML = `
+            ${glitterHTML}
             <div class="entry-animation-container"></div>
             ${player.id === this._gs.activeTurnPlayerId
                 ? '<div class="turn-indicator-arrow"><span class="material-symbols-outlined text-3xl">keyboard_double_arrow_down</span></div>'

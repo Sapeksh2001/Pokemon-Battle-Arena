@@ -134,12 +134,14 @@ export class UIRenderer {
         card.style.setProperty('--card-border-gradient', borderGradient);
 
         if (!hasGlitters) {
-            // Type based glow
-            glowValue = types.length > 1 
-                ? `-8px -8px 15px ${color1}, 8px 8px 15px ${color2}`
-                : `0 0 15px ${color1}`;
+            // Type based gradient glow
+            const glowGradient = `linear-gradient(135deg, ${color1}, ${color2})`;
+            card.style.setProperty('--card-glow-gradient', glowGradient);
+            card.style.boxShadow = 'none';
+        } else {
+            card.style.setProperty('--card-glow-gradient', 'transparent');
+            card.style.boxShadow = glowValue;
         }
-        card.style.setProperty('--card-glow', glowValue);
 
         if (pokemon.isFainted()) card.classList.add('opacity-50', 'bg-red-900/30');
 

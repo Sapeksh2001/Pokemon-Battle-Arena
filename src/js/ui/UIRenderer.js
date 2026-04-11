@@ -106,20 +106,53 @@ export class UIRenderer {
         }
 
         const tier = (pokemon.tier || '').toLowerCase();
-        if (tier.includes('legendary') || tier.includes('mythical') ||
-            tier.includes('ultra beast') || tier.includes('mega') || tier.includes('gmax')) {
+        
+        let glowValue = '';
+        let hasGlitters = false;
+        let isGold = false;
+
+        const silverTiers = ['final', 'legendary', 'mythical', 'ultra beast', 'mega'];
+        const goldTiers = ['max', 'gmax'];
+
+        if (goldTiers.some(t => tier.includes(t))) {
+            glowValue = '0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 215, 0, 0.5)';
             card.classList.add('holo-gold');
-        } else if (tier === 'final') {
+            hasGlitters = true;
+            isGold = true;
+        } else if (silverTiers.some(t => tier.includes(t))) {
+            glowValue = '0 0 20px rgba(220, 220, 255, 0.8), inset 0 0 10px rgba(220, 220, 255, 0.5)';
             card.classList.add('holo-silver');
+            hasGlitters = true;
         }
-        card.classList.add(`tier-border-${tier.replace(/ /g, '-')}`);
+
+        const types = pokemon.types;
+        const color1 = `var(--type-${types[0].toLowerCase()})`;
+        const color2 = types.length > 1 ? `var(--type-${types[1].toLowerCase()})` : color1;
+
+        // Alternating stripes (creates a solid border if color1 == color2)
+        const borderGradient = `repeating-linear-gradient(45deg, ${color1}, ${color1} 15px, ${color2} 15px, ${color2} 30px)`;
+        card.style.setProperty('--card-border-gradient', borderGradient);
+
+        if (!hasGlitters) {
+            // Type based gradient glow
+            const glowGradient = `linear-gradient(135deg, ${color1}, ${color2})`;
+            card.style.setProperty('--card-glow-gradient', glowGradient);
+            card.style.boxShadow = 'none';
+        } else {
+            card.style.setProperty('--card-glow-gradient', 'transparent');
+            card.style.boxShadow = glowValue;
+        }
+
         if (pokemon.isFainted()) card.classList.add('opacity-50', 'bg-red-900/30');
 
         const pct = pokemon.getHPPercent();
         const span = 270, startAngle = -135;
         const needleAngle = Math.max(startAngle, Math.min(startAngle + span, startAngle + pct * span));
 
+        const glitterHTML = hasGlitters ? `<div class="card-glitter ${isGold ? 'gold-glitter' : ''}"></div>` : '';
+
         card.innerHTML = `
+            ${glitterHTML}
             <div class="entry-animation-container"></div>
             ${player.id === this._gs.activeTurnPlayerId
                 ? '<div class="turn-indicator-arrow"><span class="material-symbols-outlined text-3xl">keyboard_double_arrow_down</span></div>'
@@ -153,9 +186,7 @@ export class UIRenderer {
                     ${pokemon.isFainted()
                 ? '<div class="absolute inset-0 flex items-center justify-center"><span class="text-red-500 text-2xl font-bold -rotate-12 bg-black/50 px-2">FAINTED</span></div>'
                 : ''}
-                    <div class="absolute top-0 right-0 flex gap-1 bg-black/20 p-1 rounded-bl">
-                        ${this._renderStatusIcons(pokemon)}
-                    </div>
+                    
                 </div>
                 <!-- Dynamic Floating Text Container inserted locally in later features -->
                 <div class="hp-gauge-container">
@@ -166,6 +197,10 @@ export class UIRenderer {
                         <div class="current-hp">${pokemon.currentHP}</div>
                         <div class="max-hp">${pokemon.maxHp}</div>
                     </div>
+                </div>
+                <!-- Status Icons Row: Fixed height to prevent layout shifts -->
+                <div class="flex justify-evenly items-center w-full h-[28px] flex-shrink-0">
+                    ${this._renderStatusIcons(pokemon)}
                 </div>
             </div>
             <div class="grid grid-cols-5 grid-rows-2 text-center w-full card-stat-grid flex-shrink-0">
@@ -189,7 +224,7 @@ export class UIRenderer {
     /** DRY: Renders status condition icons from the Pokemon's statuses object. */
     _renderStatusIcons(pokemon) {
         const iconMap = {
-            poison: { icon: 'skull', color: 'text-purple-400' },
+            poison: { icon: 'science', color: 'text-purple-400' },
             bad_poison: { icon: 'skull', color: 'text-purple-400' },
             burn: { icon: 'local_fire_department', color: 'text-orange-400' },
             paralyze: { icon: 'bolt', color: 'text-yellow-400' },
@@ -337,11 +372,13 @@ export class UIRenderer {
     _updateManagementButtons() {
         const sel = document.getElementById('management-pokemon-select');
         const evolveBtn = document.getElementById('evolve-btn');
+        const devolveBtn = document.getElementById('devolve-btn');
         const formBtn = document.getElementById('change-form-btn');
         const reviveBtn = document.getElementById('revive-btn');
-        if (!sel || !evolveBtn || !formBtn || !reviveBtn) return;
+        if (!sel || !evolveBtn || !devolveBtn || !formBtn || !reviveBtn) return;
 
         evolveBtn.disabled = true;
+        devolveBtn.disabled = true;
         formBtn.disabled = true;
         reviveBtn.disabled = true;
 
@@ -364,12 +401,17 @@ export class UIRenderer {
 
         reviveBtn.disabled = !pokemon.isFainted();
         if (!pokemon.isFainted()) {
-            // Handle both string ["Ivysaur"] and object [{ Name: "Ivysaur" }] formats.
+            // Check Evolutions
             const hasEvolutions = pokemon.data?.evolutions?.some(e => {
                 if (typeof e === 'string') return !!e;
                 return !!e?.Name;
             });
             evolveBtn.disabled = !hasEvolutions;
+
+            // Check Devolutions
+            const preEvos = this._gs._arena.db.getPreEvolutions(pokemon.fullName);
+            devolveBtn.disabled = preEvos.length === 0;
+
             const base = pokemon.baseData || pokemon.data;
             // Form entries in the dataset use lowercase `name` (not `Name`).
             // Check both to correctly detect forms like Diglett-Alola, Meowth-Alola, etc.

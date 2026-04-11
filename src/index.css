@@ -190,10 +190,11 @@ button, input, select {
 /* --- PLAYER CARD STYLES --- */
 .player-card {
     background-color: rgba(15, 23, 42, 0.8); /* Semi-transparent background */
-    border: 4px solid #475569;
+    border: 4px solid transparent;
+    border-image-source: var(--card-border-gradient, none);
+    border-image-slice: 1;
     transition: all 0.3s ease;
     position: relative; /* For positioning child elements like holo effects and turn indicators. */
-    overflow: hidden;
     display: flex; /* Use flexbox to structure the content vertically. */
     flex-direction: column;
     justify-content: space-between;
@@ -201,20 +202,43 @@ button, input, select {
     height: 100%;
 }
 
-/* --- TIER BORDER STYLES --- */
-/* Classes to change the border color based on the Pokémon's tier. */
-.tier-border-basic { border-color: var(--tier-color-basic); }
-.tier-border-mid { border-color: var(--tier-color-mid); }
-.tier-border-final { border-color: var(--tier-color-final); }
-/* Higher tiers get an additional box-shadow to make them 'glow'. */
-.tier-border-mega, .tier-border-gmax { 
-    border-color: var(--tier-color-mega);
-    box-shadow: 0 0 5px var(--tier-color-mega);
+/* Gradient glow for the card */
+.player-card::after {
+    content: '';
+    position: absolute;
+    inset: -4px; /* Matches the 4px border */
+    background: var(--card-glow-gradient, transparent);
+    filter: blur(15px);
+    z-index: -1;
+    opacity: 0.6;
+    pointer-events: none;
+    transition: all 0.3s ease;
 }
-.tier-border-legendary, .tier-border-mythical, .tier-border-ultra-beast {
-    border-color: var(--tier-color-legendary);
-    box-shadow: 0 0 20px var(--tier-color-legendary);
+
+/* --- GLITTER EFFECTS --- */
+.card-glitter {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    background-image: 
+       radial-gradient(circle, white 1px, transparent 1px),
+       radial-gradient(circle, white 1.5px, transparent 1.5px);
+    background-size: 20px 20px, 35px 35px;
+    background-position: 0 0, 10px 10px;
+    animation: glitter-twinkle 1.5s infinite alternate;
+    opacity: 0.5;
 }
+.card-glitter.gold-glitter {
+    background-image: 
+       radial-gradient(circle, #fbbf24 1px, transparent 1px),
+       radial-gradient(circle, #f59e0b 1.5px, transparent 1.5px);
+}
+@keyframes glitter-twinkle {
+    0% { opacity: 0.2; transform: scale(1); }
+    100% { opacity: 0.7; transform: scale(1.05); }
+}
+
 
 
 /* --- HOLOGRAPHIC CARD STYLES --- */
@@ -312,9 +336,9 @@ button, input, select {
 }
 
 /* Dynamic classes added by JavaScript to indicate game state. */
-.player-card.active-turn { border-color: #f59e0b !important; box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); animation: pulse-yellow 1.5s infinite; }
-.player-card.selected-target { border-color: #ef4444 !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
-.player-card.selected-status-target { border-color: #a855f7 !important; box-shadow: 0 0 20px rgba(168, 85, 247, 0.5); }
+.player-card.active-turn { --card-glow-gradient: transparent !important; border-image-source: linear-gradient(#f59e0b, #f59e0b) !important; box-shadow: 0 0 20px rgba(245, 158, 11, 0.5) !important; animation: pulse-yellow 1.5s infinite; }
+.player-card.selected-target { --card-glow-gradient: transparent !important; border-image-source: linear-gradient(#ef4444, #ef4444) !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5) !important; }
+.player-card.selected-status-target { --card-glow-gradient: transparent !important; border-image-source: linear-gradient(#a855f7, #a855f7) !important; box-shadow: 0 0 20px rgba(168, 85, 247, 0.5) !important; }
 
 .pokemon-sprite { 
     image-rendering: pixelated; /* Ensures the sprites look sharp and not blurry. */
@@ -365,14 +389,15 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 
 /* --- BUTTON STYLES --- */
 /* Custom styles for the main action buttons in the control panel. */
-#physical-attack-btn, #special-attack-btn, #evolve-btn, #change-form-btn, #revive-btn { font-family: sans-serif; font-weight: bold; color: white; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; border: 3px solid black; border-radius: 9999px !important; padding: 0.5rem; transition: transform 0.1s ease-out; cursor: pointer; }
-#physical-attack-btn:active, #special-attack-btn:active, #evolve-btn:active, #change-form-btn:active, #revive-btn:active { transform: scale(0.95); }
+#physical-attack-btn, #special-attack-btn, #evolve-btn, #devolve-btn, #change-form-btn, #revive-btn { font-family: sans-serif; font-weight: bold; color: white; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; border: 3px solid black; border-radius: 9999px !important; padding: 0.5rem; transition: transform 0.1s ease-out; cursor: pointer; }
+#physical-attack-btn:active, #special-attack-btn:active, #evolve-btn:active, #devolve-btn:active, #change-form-btn:active, #revive-btn:active { transform: scale(0.95); }
 #physical-attack-btn { background-image: linear-gradient(to bottom, #fca5a5, #ef4444); }
 #special-attack-btn { background-image: linear-gradient(to bottom, #93c5fd, #3b82f6); }
 #evolve-btn { background-image: linear-gradient(to bottom, #a5b4fc, #6366f1); }
+#devolve-btn { background-image: linear-gradient(to bottom, #818cf8, #4f46e5); }
 #change-form-btn { background-image: linear-gradient(to bottom, #c084fc, #a855f7); }
 #revive-btn { background-image: linear-gradient(to bottom, #fde047, #f59e0b); }
-#evolve-btn:disabled, #change-form-btn:disabled, #revive-btn:disabled { background-image: linear-gradient(to bottom, #6b7280, #4b5563); cursor: not-allowed; opacity: 0.6; }
+#evolve-btn:disabled, #devolve-btn:disabled, #change-form-btn:disabled, #revive-btn:disabled { background-image: linear-gradient(to bottom, #6b7280, #4b5563); cursor: not-allowed; opacity: 0.6; }
 
 
 /* --- ANIMATION KEYFRAMES --- */

@@ -17,6 +17,7 @@ export class PokemonDatabase {
         // Tier-filtered names are cached for quick team generation.
         this.allNames = [];
         this.filteredNames = [];
+        this._preEvoMap = new Map(); // evolutionKey -> Set(parentNames)
     }
 
     /** Build all lookup structures. Call once at startup. O(n). */
@@ -42,7 +43,17 @@ export class PokemonDatabase {
             }
             // Recurse into evolutions.
             if (node.evolutions) {
-                for (const evo of node.evolutions) traverse(evo, evo);
+                for (const evo of node.evolutions) {
+                    const evoName = evo?.Name || evo?.name;
+                    if (evoName) {
+                        const evoKey = evoName.toLowerCase();
+                        if (!this._preEvoMap.has(evoKey)) {
+                            this._preEvoMap.set(evoKey, new Set());
+                        }
+                        this._preEvoMap.get(evoKey).add(nodeName);
+                    }
+                    traverse(evo, evo);
+                }
             }
         };
 
@@ -79,14 +90,33 @@ export class PokemonDatabase {
         return pokemon;
     }
 
-    /**
-     * O(k + m) prefix search using the Trie.
-     * @param {string} prefix
-     * @param {number} limit
-     * @returns {string[]}
-     */
-    search(prefix, limit = 5) {
-        return this._trie.search(prefix, limit);
+    search(query, limit = 5) {
+        if (!query) return [];
+        const q = query.toLowerCase();
+        
+        // Find all names that contain the query
+        const matches = this.allNames.filter(name => 
+            name.toLowerCase().includes(q)
+        );
+
+        // Prioritize: 1. Exact match, 2. Starts with, 3. Contains
+        matches.sort((a, b) => {
+            const aL = a.toLowerCase();
+            const bL = b.toLowerCase();
+            
+            if (aL === q) return -1;
+            if (bL === q) return 1;
+            
+            const aStarts = aL.startsWith(q);
+            const bStarts = bL.startsWith(q);
+            
+            if (aStarts && !bStarts) return -1;
+            if (!aStarts && bStarts) return 1;
+            
+            return aL.localeCompare(bL);
+        });
+
+        return matches.slice(0, limit);
     }
 
     /** Build the tier-filtered name list used for team generation. */
@@ -125,5 +155,16 @@ export class PokemonDatabase {
         const formsObj = result.baseNode.forms || {};
         // Dataset uses lowercase `name` for form entries; fall back to f.name if f.Name missing
         return Object.values(formsObj).map(f => f && (f.Name || f.name)).filter(Boolean);
+    }
+
+    /**
+     * Get the list of pre-evolution names for a given Pokémon name.
+     * @param {string} name 
+     * @returns {string[]} Array of parent species names
+     */
+    getPreEvolutions(name) {
+        const key = name?.toLowerCase();
+        const parents = this._preEvoMap.get(key);
+        return parents ? Array.from(parents) : [];
     }
 }

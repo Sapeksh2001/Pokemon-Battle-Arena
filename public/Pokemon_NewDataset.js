@@ -27797,7 +27797,7 @@ var MergedPokemonData = {
       "Poison",
       "Ghost"
     ],
-    "sprite": "https://play.pokemonshowdown.com/sprites/ani/pecharunt.gif",
+    "sprite": "https://play.pokemonshowdown.com/sprites/ani/pecharunt.png",
     "cry": "https://play.pokemonshowdown.com/audio/cries/pecharunt.mp3",
     "evolutions": [],
     "forms": {},

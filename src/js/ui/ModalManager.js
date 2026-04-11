@@ -5,6 +5,7 @@
 export class ModalManager {
     constructor() {
         this._registry = new Map(); // name → HTMLElement
+        this._zCounter = 40; // base z-index; increments on every open()
     }
 
     /** Register a modal by semantic name. */
@@ -12,7 +13,15 @@ export class ModalManager {
         if (el) this._registry.set(name, el);
     }
 
-    open(name) { this._registry.get(name)?.classList.add('visible'); }
+    /** Open a modal, always bringing it to the front via an auto-incrementing z-index. */
+    open(name) {
+        const el = this._registry.get(name);
+        if (!el) return;
+        this._zCounter++;
+        el.style.zIndex = this._zCounter;
+        el.classList.add('visible');
+    }
+
     close(name) { this._registry.get(name)?.classList.remove('visible'); }
 
     /** Close all open modals. Used by the Escape key handler. */

@@ -543,45 +543,100 @@ export class PokemonBattleArena {
         form.innerHTML = `
             <h4 class="text-lg text-yellow-300 mb-3">${pokemon ? 'Edit' : 'Add'} Pokémon (Slot ${slotId + 1})</h4>
             <div class="mb-2">
-                <label for="pokedex-search" class="text-xs">Search Pokémon</label>
+                <label for="pokedex-search" class="text-xs text-slate-300 uppercase tracking-wider block mb-1">Search Pokémon</label>
                 <input type="text" id="pokedex-search"
-                       class="w-full bg-slate-900 p-2 mt-1 text-xs"
+                       class="w-full bg-slate-900 border border-slate-600 p-2 mt-1 text-xs focus:border-yellow-400 outline-none text-white placeholder:text-slate-500"
                        onclick="this.select()"
+                       placeholder="Type at least 2 letters..."
                        value="${pokemon ? escapeHTML(pokemon.fullName) : ''}">
-                <div id="pokedex-search-results" class="bg-slate-900 border border-slate-600 mt-1"></div>
+                <div id="pokedex-search-results" style="display:none;"></div>
+                <div id="pokedex-grid-picker" class="mt-2 hidden" style="
+                    display: none;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 6px;
+                    max-height: 380px;
+                    overflow-y: auto;
+                    background: #0a1628;
+                    border: 1px solid #334155;
+                    padding: 8px;
+                    scrollbar-width: thin;
+                    scrollbar-color: #facc15 #0a1628;
+                "></div>
             </div>
             <div class="mb-2">
-                <label for="ability-select" class="text-xs text-slate-300">Ability</label>
-                <select id="ability-select" class="w-full bg-slate-900 border border-slate-600 p-2 mt-1 text-xs">
+                <label for="ability-select" class="text-xs text-slate-300 uppercase tracking-wider block mb-1">Ability</label>
+                <select id="ability-select" class="w-full bg-slate-900 border border-slate-600 p-2 mt-1 text-xs text-white focus:border-yellow-400 outline-none">
                     <option value="">-- Select Ability --</option>
                     ${abilityOptionsHTML}
                 </select>
                 <div id="ability-description" class="text-xs text-slate-400 mt-1 italic"></div>
             </div>
             <div class="flex gap-2 mt-4">
-                <button id="confirm-pokemon-edit" class="bg-green-600 hover:bg-green-700 p-2 text-xs w-full">Confirm</button>
-                <button id="cancel-pokemon-edit"  class="bg-gray-600  hover:bg-gray-700  p-2 text-xs w-full">Cancel</button>
+                <button id="confirm-pokemon-edit" class="bg-green-600 hover:bg-green-700 p-2 text-xs w-full font-bold uppercase tracking-wider border border-green-400">Confirm</button>
+                <button id="cancel-pokemon-edit"  class="bg-gray-600  hover:bg-gray-700  p-2 text-xs w-full font-bold uppercase tracking-wider border border-gray-500">Cancel</button>
             </div>`;
         form.classList.remove('hidden');
 
         const searchInput = document.getElementById('pokedex-search');
         const searchResults = document.getElementById('pokedex-search-results');
+        const gridPicker = document.getElementById('pokedex-grid-picker');
         const abilitySelect = document.getElementById('ability-select');
         const abilityDesc = document.getElementById('ability-description');
 
-        // Trie-powered O(k) live search (replaces O(n) filter).
-        searchInput.addEventListener('input', () => {
-            const q = searchInput.value.trim();
-            searchResults.innerHTML = '';
-            if (q.length < 2) return;
-            this.db.search(q, 5).forEach(name => {
-                const div = document.createElement('div');
-                div.className = 'p-2 cursor-pointer hover:bg-slate-700 text-xs';
-                div.textContent = name;
-                div.onclick = () => {
+        const _hideGrid = () => {
+            gridPicker.style.display = 'none';
+            gridPicker.innerHTML = '';
+        };
+
+        const _showGrid = (names) => {
+            gridPicker.innerHTML = '';
+            if (names.length === 0) { _hideGrid(); return; }
+            gridPicker.style.display = 'grid';
+            names.forEach(name => {
+                const item = this.db.find(name);
+                if (!item) return;
+                const node = item.baseNode;
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.title = name;
+                card.style.cssText = `
+                    background: rgba(15,23,42,0.9);
+                    border: 1px solid #334155;
+                    cursor: pointer;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: flex-end;
+                    padding: 4px 2px 5px;
+                    height: 76px;
+                    transition: background 0.1s, border-color 0.1s, box-shadow 0.1s;
+                    position: relative;
+                    overflow: hidden;
+                `;
+                card.innerHTML = `
+                    <img src="${node.sprite || ''}" alt="${name}"
+                         style="width:46px;height:46px;object-fit:contain;image-rendering:pixelated;
+                                filter:drop-shadow(0 0 3px rgba(250,204,21,0));transition:filter 0.15s;"
+                         loading="lazy">
+                    <span style="font-size:8px;color:#cbd5e1;text-align:center;width:100%;
+                                  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+                                  line-height:1.1;margin-top:3px;font-family:monospace;">${name}</span>
+                `;
+                card.addEventListener('mouseenter', () => {
+                    card.style.background = 'rgba(250,204,21,0.12)';
+                    card.style.borderColor = '#facc15';
+                    card.style.boxShadow = '0 0 8px rgba(250,204,21,0.35)';
+                    card.querySelector('img').style.filter = 'drop-shadow(0 0 4px rgba(250,204,21,0.6))';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.background = 'rgba(15,23,42,0.9)';
+                    card.style.borderColor = '#334155';
+                    card.style.boxShadow = 'none';
+                    card.querySelector('img').style.filter = 'drop-shadow(0 0 3px rgba(250,204,21,0))';
+                });
+                card.onclick = () => {
                     searchInput.value = name;
-                    searchResults.innerHTML = '';
-                    // Refresh ability options for the newly selected Pokémon
+                    _hideGrid();
                     if (abilitySelect) {
                         abilitySelect.innerHTML =
                             '<option value="">-- Select Ability --</option>' +
@@ -589,8 +644,24 @@ export class PokemonBattleArena {
                     }
                     if (abilityDesc) abilityDesc.textContent = '';
                 };
-                searchResults.appendChild(div);
+                gridPicker.appendChild(card);
             });
+        };
+
+        // Trie-powered O(k) live search.
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.trim();
+            if (q.length < 2) { _hideGrid(); return; }
+            const names = this.db.search(q, 40);
+            _showGrid(names);
+        });
+
+        // Hide grid when clicking outside
+        document.addEventListener('click', function _outsideClick(e) {
+            if (!gridPicker.contains(e.target) && e.target !== searchInput) {
+                _hideGrid();
+                document.removeEventListener('click', _outsideClick);
+            }
         });
 
         // Ability select — show description

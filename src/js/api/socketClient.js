@@ -95,23 +95,28 @@ export class MultiplayerManager {
         if (typeof window.MergedPokemonData === 'undefined') return [];
         const flat = [];
         
-        const recurse = (obj) => {
+        const recurse = (obj, parentTier) => {
             // Data uses 'Name' (capital N)
             const name = obj.Name || obj.name;
+            const tier = obj.Tier || obj.tier || parentTier;
             if (name) {
                 if (!flat.some(p => (p.Name || p.name) === name)) {
-                    flat.push(obj);
+                    flat.push({ ...obj, _computedTier: tier });
                 }
             }
             if (obj.evolutions && Array.isArray(obj.evolutions)) {
-                obj.evolutions.forEach(recurse);
+                obj.evolutions.forEach(e => recurse(e, tier));
             }
-            if (obj.forms && Array.isArray(obj.forms)) {
-                obj.forms.forEach(recurse);
+            if (obj.forms) {
+                if (Array.isArray(obj.forms)) {
+                    obj.forms.forEach(f => recurse(f, tier));
+                } else if (typeof obj.forms === 'object') {
+                    Object.values(obj.forms).forEach(f => recurse(f, tier));
+                }
             }
         };
 
-        Object.values(window.MergedPokemonData).forEach(recurse);
+        Object.values(window.MergedPokemonData).forEach(p => recurse(p, p.Tier || p.tier));
         console.log('[Multiplayer] Pool size:', flat.length);
         return flat;
     }
@@ -505,7 +510,7 @@ export class MultiplayerManager {
         // Build filtered pool
         let pool = fullPool;
         if (selectedTiers.length > 0 && !selectedTiers.includes('any')) {
-            pool = fullPool.filter(p => selectedTiers.includes(p.tier));
+            pool = fullPool.filter(p => selectedTiers.includes(p._computedTier));
         }
 
         if (pool.length === 0) {
@@ -576,61 +581,147 @@ export class MultiplayerManager {
             return;
         }
         
-        const rawInput = prompt('Enter specific Pok\u00e9mon name (e.g. Charizard):');
-        if (!rawInput) return;
-        const name = rawInput.trim().toLowerCase();
+        const titleEl = document.getElementById('selection-modal-title');
+        if (titleEl) titleEl.textContent = 'Pick a Pokémon';
         
-        // MergedPokemonData is an object keyed by name, not an array
-        const mergedData = window.MergedPokemonData;
-        if (!mergedData) {
-            this.showNotification('Data not loaded yet', 'error');
-            return;
-        }
-        const pokemon = Object.values(mergedData).find(p => (p.Name || p.name || '').toLowerCase() === name);
-        if (!pokemon) {
-            this.showNotification(`Could not find Pokémon: ${rawInput}`, 'error');
-            return;
-        }
+        const grid = document.getElementById('selection-grid');
+        if (!grid) return;
 
-        const pokeName = pokemon.Name || pokemon.name;
-        const pokeId = pokeName;
-        this.showNotification(`Assigned ${pokeName}!`, 'success');
+        // ── Fetch tier filter from Firebase ──────────────────────────────────
+        const roomSnap = await get(ref(db, `rooms/${this.roomCode}`));
+        const settings = roomSnap.exists() ? roomSnap.val().settings : null;
+        const selectedTiers = settings?.selectedTiers || [];
+        const useTierFilter = selectedTiers.length > 0 && !selectedTiers.includes('any');
+        const fullPool = this._getFlattenedPool();
+        const filteredPool = useTierFilter ? fullPool.filter(p => selectedTiers.includes(p._computedTier)) : fullPool;
+        const allowedNames = new Set(filteredPool.map(p => (p.Name || p.name)));
+        const tierLabel = useTierFilter ? `Tiers: ${selectedTiers.join(', ')}` : 'All Tiers';
 
-        const queueSnap = await get(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
-        if (queueSnap.exists()) {
-            // Wildcard mid-game join: promote from entryQueue → players
-            const playerData = queueSnap.val();
-            await set(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
-                ...playerData,
-                assignedPokemonId: pokeId,
-                assignedPokemonName: pokeName,
-                isReady: true
+        // ── Build UI ─────────────────────────────────────────────────────────
+        grid.innerHTML = `
+            <div class="col-span-4 mb-3">
+                <div style="font-size:9px;color:#facc15;text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;">${tierLabel}</div>
+                <input type="text" id="pick-search-input"
+                    style="width:100%;background:#0f172a;border:1px solid #334155;color:#fff;padding:8px 10px;font-size:11px;outline:none;letter-spacing:0.05em;box-sizing:border-box;"
+                    placeholder="Type at least 2 letters to search Pokémon...">
+            </div>
+            <div id="pick-grid-picker" class="col-span-4" style="
+                display: none;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+                max-height: 380px;
+                overflow-y: auto;
+                scrollbar-width: thin;
+                scrollbar-color: #facc15 #0a1628;
+                padding-right: 2px;
+            "></div>
+        `;
+        
+        this.arena.modals.open('selection');
+        const searchInput = document.getElementById('pick-search-input');
+        const gridPicker = document.getElementById('pick-grid-picker');
+        
+        setTimeout(() => searchInput.focus(), 100);
+        
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.trim();
+            gridPicker.innerHTML = '';
+            if (q.length < 2) { gridPicker.style.display = 'none'; return; }
+            const allMatches = this.arena.db.search(q, 200);
+            const names = useTierFilter
+                ? allMatches.filter(n => allowedNames.has(n)).slice(0, 40)
+                : allMatches.slice(0, 40);
+            if (names.length === 0) { gridPicker.style.display = 'none'; return; }
+            gridPicker.style.display = 'grid';
+            names.forEach(name => {
+                const item = this.arena.db.find(name);
+                if (!item) return;
+                const node = item.baseNode;
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.title = name;
+                card.style.cssText = `
+                    background: rgba(15,23,42,0.9);
+                    border: 1px solid #334155;
+                    cursor: pointer;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: flex-end;
+                    padding: 6px 4px 7px;
+                    height: 88px;
+                    transition: background 0.1s, border-color 0.1s, box-shadow 0.1s;
+                    overflow: hidden;
+                    width: 100%;
+                    box-sizing: border-box;
+                `;
+                card.innerHTML = `
+                    <img src="${node.sprite || ''}" alt="${name}"
+                         style="width:52px;height:52px;object-fit:contain;image-rendering:pixelated;
+                                filter:drop-shadow(0 0 3px rgba(250,204,21,0));transition:filter 0.15s;"
+                         loading="lazy">
+                    <span style="font-size:8px;color:#cbd5e1;text-align:center;width:100%;
+                                  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+                                  line-height:1.2;margin-top:4px;font-family:monospace;">${name}</span>
+                `;
+                card.addEventListener('mouseenter', () => {
+                    card.style.background = 'rgba(250,204,21,0.12)';
+                    card.style.borderColor = '#facc15';
+                    card.style.boxShadow = '0 0 8px rgba(250,204,21,0.35)';
+                    card.querySelector('img').style.filter = 'drop-shadow(0 0 4px rgba(250,204,21,0.6))';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.background = 'rgba(15,23,42,0.9)';
+                    card.style.borderColor = '#334155';
+                    card.style.boxShadow = 'none';
+                    card.querySelector('img').style.filter = 'drop-shadow(0 0 3px rgba(250,204,21,0))';
+                });
+                card.onclick = async () => {
+                    this.arena.modals.close('selection');
+                    const pokeName = name;
+                    const pokeId = pokeName;
+                    
+                    this.showNotification(`Assigned ${pokeName}!`, 'success');
+                    
+                    const queueSnap = await get(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
+                    if (queueSnap.exists()) {
+                        // Wildcard mid-game join: promote from entryQueue → players
+                        const playerData = queueSnap.val();
+                        await set(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
+                            ...playerData,
+                            assignedPokemonId: pokeId,
+                            assignedPokemonName: pokeName,
+                            isReady: true
+                        });
+                        await remove(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
+
+                        // Immediately add to local game state
+                        const alreadyInGame = this.arena.gs.players.find(sp => sp.id === targetPlayerId);
+                        if (!alreadyInGame) {
+                            const newPlayer = new Player(targetPlayerId, playerData.name);
+                            const result = this.arena.db.find(pokeId);
+                            if (result) {
+                                newPlayer.team[0] = new Pokemon(result.foundNode, result.baseNode);
+                            } else {
+                                console.warn('[Multiplayer] PICK db.find failed for pokeId:', pokeId);
+                            }
+                            this.arena.gs.players.push(newPlayer);
+                            this.arena.log.add(`⚡ ${playerData.name} joined as wildcard with ${pokeName}!`, 'system');
+                            this.arena.renderer.renderAll();
+                            this.sendGameState();
+                        }
+                    } else {
+                        // Lobby assignment — update in place and mark ready
+                        await update(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
+                            assignedPokemonId: pokeId,
+                            assignedPokemonName: pokeName,
+                            isReady: true
+                        });
+                    }
+                };
+                gridPicker.appendChild(card);
             });
-            await remove(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
-
-            // Immediately add to local game state
-            const alreadyInGame = this.arena.gs.players.find(sp => sp.id === targetPlayerId);
-            if (!alreadyInGame) {
-                const newPlayer = new Player(targetPlayerId, playerData.name);
-                const result = this.arena.db.find(pokeId);
-                if (result) {
-                    newPlayer.team[0] = new Pokemon(result.foundNode, result.baseNode);
-                } else {
-                    console.warn('[Multiplayer] PICK db.find failed for pokeId:', pokeId);
-                }
-                this.arena.gs.players.push(newPlayer);
-                this.arena.log.add(`⚡ ${playerData.name} joined as wildcard with ${pokeName}!`, 'system');
-                this.arena.renderer.renderAll();
-                this.sendGameState();
-            }
-        } else {
-            // Lobby assignment — update in place and mark ready
-            await update(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
-                assignedPokemonId: pokeId,
-                assignedPokemonName: pokeName,
-                isReady: true
-            });
-        }
+        });
     }
 
     /**

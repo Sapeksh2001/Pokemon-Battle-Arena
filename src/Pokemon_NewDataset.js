@@ -1388,6 +1388,27 @@ var MergedPokemonData = {
         ],
         "sprite": "https://play.pokemonshowdown.com/sprites/ani/meowth-alola.gif",
         "cry": "https://play.pokemonshowdown.com/audio/cries/meowth.mp3",
+        "evolutions": [
+          {
+            "Name": "Persian-Alola",
+            "stats": {
+              "hp": 334,
+              "attack": 240,
+              "defence": 240,
+              "specialAttack": 273,
+              "specialDefence": 251,
+              "speed": 361
+            },
+            "types": [
+              "Dark"
+            ],
+            "sprite": "https://play.pokemonshowdown.com/sprites/ani/persian-alola.gif",
+            "cry": "https://play.pokemonshowdown.com/audio/cries/persian.mp3",
+            "evolutions": [],
+            "forms": {},
+            "tier": "Alolan"
+          }
+        ],
         "tier": "Alolan",
         "isSeparateEntry": false
       },
@@ -1406,6 +1427,27 @@ var MergedPokemonData = {
         ],
         "sprite": "https://play.pokemonshowdown.com/sprites/ani/meowth-galar.gif",
         "cry": "https://play.pokemonshowdown.com/audio/cries/meowth.mp3",
+        "evolutions": [
+          {
+            "Name": "Perrserker",
+            "stats": {
+              "hp": 344,
+              "attack": 350,
+              "defence": 328,
+              "specialAttack": 218,
+              "specialDefence": 240,
+              "speed": 218
+            },
+            "types": [
+              "Steel"
+            ],
+            "sprite": "https://play.pokemonshowdown.com/sprites/ani/perrserker.gif",
+            "cry": "https://play.pokemonshowdown.com/audio/cries/perrserker.mp3",
+            "evolutions": [],
+            "forms": {},
+            "tier": "Form"
+          }
+        ],
         "tier": "Galarian",
         "isSeparateEntry": false
       },

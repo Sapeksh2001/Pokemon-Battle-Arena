@@ -149,22 +149,12 @@ export default function Modals() {
             {/* Quick Percentage Buttons */}
             <div>
               <label className="text-[10px] text-on-surface-variant uppercase tracking-wider block mb-2">Quick Set:</label>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-5 gap-2">
                 <button className="hp-quick-btn bg-tertiary-container hover:bg-[#5bf083] text-[#004a1d] p-3 text-xs font-bold step-animation border border-white" data-percent="100">100%</button>
                 <button className="hp-quick-btn bg-secondary-container hover:bg-[#699cff] text-white p-3 text-xs font-bold step-animation border border-[#003271]" data-percent="75">75%</button>
                 <button className="hp-quick-btn bg-primary-container hover:bg-yellow-400 text-on-primary-container p-3 text-xs font-bold step-animation border border-[#685900]" data-percent="50">50%</button>
                 <button className="hp-quick-btn bg-[#b92902] hover:bg-[#ff7351] text-[#ffd2c8] p-3 text-xs font-bold step-animation border border-[#450900]" data-percent="25">25%</button>
-              </div>
-            </div>
-            {/* Fine Tune */}
-            <div>
-              <label className="text-[10px] text-on-surface-variant uppercase tracking-wider block mb-2">Fine Tune:</label>
-              <div className="grid grid-cols-5 gap-2">
-                {[-50, -10, -1, 1, 10].map(n => (
-                  <button key={n} className="hp-adjust-btn bg-surface-variant hover:bg-surface-bright text-secondary p-2 text-xs font-bold step-animation border border-secondary" data-change={n > 0 ? `+${n}` : n}>
-                    {n > 0 ? `+${n}` : n}
-                  </button>
-                ))}
+                <button className="hp-quick-btn bg-black hover:bg-slate-900 text-red-500 p-3 text-xs font-bold step-animation border border-red-500" data-percent="0">0%</button>
               </div>
             </div>
             {/* Confirm / Cancel */}

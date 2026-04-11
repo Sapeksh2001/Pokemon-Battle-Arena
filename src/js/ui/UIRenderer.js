@@ -339,11 +339,13 @@ export class UIRenderer {
     _updateManagementButtons() {
         const sel = document.getElementById('management-pokemon-select');
         const evolveBtn = document.getElementById('evolve-btn');
+        const devolveBtn = document.getElementById('devolve-btn');
         const formBtn = document.getElementById('change-form-btn');
         const reviveBtn = document.getElementById('revive-btn');
-        if (!sel || !evolveBtn || !formBtn || !reviveBtn) return;
+        if (!sel || !evolveBtn || !devolveBtn || !formBtn || !reviveBtn) return;
 
         evolveBtn.disabled = true;
+        devolveBtn.disabled = true;
         formBtn.disabled = true;
         reviveBtn.disabled = true;
 
@@ -366,12 +368,17 @@ export class UIRenderer {
 
         reviveBtn.disabled = !pokemon.isFainted();
         if (!pokemon.isFainted()) {
-            // Handle both string ["Ivysaur"] and object [{ Name: "Ivysaur" }] formats.
+            // Check Evolutions
             const hasEvolutions = pokemon.data?.evolutions?.some(e => {
                 if (typeof e === 'string') return !!e;
                 return !!e?.Name;
             });
             evolveBtn.disabled = !hasEvolutions;
+
+            // Check Devolutions
+            const preEvos = this._gs._arena.db.getPreEvolutions(pokemon.fullName);
+            devolveBtn.disabled = preEvos.length === 0;
+
             const base = pokemon.baseData || pokemon.data;
             // Form entries in the dataset use lowercase `name` (not `Name`).
             // Check both to correctly detect forms like Diglett-Alola, Meowth-Alola, etc.

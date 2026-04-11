@@ -169,7 +169,7 @@ export class PokemonBattleArena {
         const name = input?.value.trim();
         if (!name) return;
 
-        const player = new Player(Date.now(), name);
+        const player = new Player(String(Date.now()), name);
         this.gs.players.push(player);
         input.value = '';
         this.renderer.renderAll();
@@ -1069,7 +1069,7 @@ export class PokemonBattleArena {
             }).filter(Boolean);
             while (team.length < 6) team.push(null);
 
-            const player = new Player(Date.now() + i, name);
+            const player = new Player(String(Date.now() + i), name);
             team.forEach((pk, idx) => player.setSlot(idx, pk));
             this.gs.players.push(player);
         });

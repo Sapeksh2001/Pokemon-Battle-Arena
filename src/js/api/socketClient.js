@@ -534,20 +534,37 @@ export class MultiplayerManager {
         // Check if this player is in entryQueue (wildcard mid-game join) or lobby /players
         const queueSnap = await get(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
         if (queueSnap.exists()) {
-            // Promote: move from entryQueue → players so _listenToLobby picks them up
+            // Wildcard mid-game join: promote from entryQueue → players
             const playerData = queueSnap.val();
             await set(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
                 ...playerData,
                 assignedPokemonId: pokeId,
-                assignedPokemonName: rolled.name,
+                assignedPokemonName: rolled.Name || rolled.name,
                 isReady: true
             });
             await remove(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
+
+            // Immediately add to local game state — don't wait for _listenToLobby callback
+            const alreadyInGame = this.arena.gs.players.find(sp => sp.id === targetPlayerId);
+            if (!alreadyInGame) {
+                const newPlayer = new Player(targetPlayerId, playerData.name);
+                const result = this.arena.db.find(pokeId);
+                if (result) {
+                    newPlayer.team[0] = new Pokemon(result.foundNode, result.baseNode);
+                } else {
+                    console.warn('[Multiplayer] db.find failed for pokeId:', pokeId);
+                }
+                this.arena.gs.players.push(newPlayer);
+                this.arena.log.add(`⚡ ${playerData.name} joined as wildcard with ${rolled.Name || rolled.name}!`, 'system');
+                this.arena.renderer.renderAll();
+                this.sendGameState();
+            }
         } else {
-            // Lobby assignment — just update the player's record in place
+            // Lobby assignment — update the player's record in place and mark ready
             await update(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
                 assignedPokemonId: pokeId,
-                assignedPokemonName: rolled.Name || rolled.name
+                assignedPokemonName: rolled.Name || rolled.name,
+                isReady: true
             });
         }
     }
@@ -581,6 +598,7 @@ export class MultiplayerManager {
 
         const queueSnap = await get(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
         if (queueSnap.exists()) {
+            // Wildcard mid-game join: promote from entryQueue → players
             const playerData = queueSnap.val();
             await set(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
                 ...playerData,
@@ -589,10 +607,28 @@ export class MultiplayerManager {
                 isReady: true
             });
             await remove(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
+
+            // Immediately add to local game state
+            const alreadyInGame = this.arena.gs.players.find(sp => sp.id === targetPlayerId);
+            if (!alreadyInGame) {
+                const newPlayer = new Player(targetPlayerId, playerData.name);
+                const result = this.arena.db.find(pokeId);
+                if (result) {
+                    newPlayer.team[0] = new Pokemon(result.foundNode, result.baseNode);
+                } else {
+                    console.warn('[Multiplayer] PICK db.find failed for pokeId:', pokeId);
+                }
+                this.arena.gs.players.push(newPlayer);
+                this.arena.log.add(`⚡ ${playerData.name} joined as wildcard with ${pokeName}!`, 'system');
+                this.arena.renderer.renderAll();
+                this.sendGameState();
+            }
         } else {
+            // Lobby assignment — update in place and mark ready
             await update(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
                 assignedPokemonId: pokeId,
-                assignedPokemonName: pokeName
+                assignedPokemonName: pokeName,
+                isReady: true
             });
         }
     }

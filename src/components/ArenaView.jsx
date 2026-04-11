@@ -169,9 +169,7 @@ export default function ArenaView() {
                   <h4 className="text-yellow-400 font-label text-sm mb-3 uppercase tracking-widest text-glow">Status &amp; Stats</h4>
                   <div className="space-y-2 text-sm font-body">
                     <div className="grid grid-cols-3 gap-1">
-                      <button id="curse-btn" data-status="curse" className="status-btn bg-[#6e5f00] hover:bg-yellow-600 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1">
-                        <span className="material-symbols-outlined text-[16px]">psychiatry</span>
-                      </button>
+                      <button id="curse-btn" data-status="curse" className="status-btn bg-[#6e5f00] hover:bg-yellow-600 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">CRS</button>
                       <button id="poison-btn" data-status="poison" className="status-btn bg-[#9333ea] hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">PSN</button>
                       <button id="paralyze-btn" data-status="paralyze" className="status-btn bg-[#eab308] hover:bg-yellow-400 text-[#342c00] p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">PAR</button>
                     </div>

@@ -13,8 +13,7 @@ export class Pokemon {
         this.stats = { ...data.stats };
         // Support both old ["Grass Poison"] and new ["Grass", "Poison"] formats
         this.types = data.types.flatMap(t => t.split(' '));
-        this.customSprite = data.customSprite || null;
-        this.sprite = this.customSprite || data.sprite;
+        this.sprite = data.sprite;
         this.cry = data.cry;
         this.tier = data.tier;
         this.data = data;       // raw data for the current form

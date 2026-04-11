@@ -27188,7 +27188,7 @@ var MergedPokemonData = {
       "Dark",
       "Grass"
     ],
-    "sprite": "https://play.pokemonshowdown.com/sprites/ani/wo-chien.gif",
+    "sprite": "https://play.pokemonshowdown.com/sprites/gen5/wochien.png",
     "cry": "https://play.pokemonshowdown.com/audio/cries/wochien.mp3",
     "evolutions": [],
     "forms": {},
@@ -27208,7 +27208,7 @@ var MergedPokemonData = {
       "Dark",
       "Ice"
     ],
-    "sprite": "https://play.pokemonshowdown.com/sprites/ani/chien-pao.gif",
+    "sprite": "https://play.pokemonshowdown.com/sprites/gen5/chienpao.png",
     "cry": "https://play.pokemonshowdown.com/audio/cries/chienpao.mp3",
     "evolutions": [],
     "forms": {},
@@ -27228,7 +27228,7 @@ var MergedPokemonData = {
       "Dark",
       "Ground"
     ],
-    "sprite": "https://play.pokemonshowdown.com/sprites/ani/ting-lu.gif",
+    "sprite": "https://play.pokemonshowdown.com/sprites/gen5/tinglu.png",
     "cry": "https://play.pokemonshowdown.com/audio/cries/tinglu.mp3",
     "evolutions": [],
     "forms": {},
@@ -27248,7 +27248,7 @@ var MergedPokemonData = {
       "Dark",
       "Fire"
     ],
-    "sprite": "https://play.pokemonshowdown.com/sprites/ani/chi-yu.gif",
+    "sprite": "https://play.pokemonshowdown.com/sprites/gen5/chiyu.png",
     "cry": "https://play.pokemonshowdown.com/audio/cries/chiyu.mp3",
     "evolutions": [],
     "forms": {},
@@ -27817,7 +27817,7 @@ var MergedPokemonData = {
       "Poison",
       "Ghost"
     ],
-    "sprite": "https://play.pokemonshowdown.com/sprites/ani/pecharunt.gif",
+    "sprite": "https://play.pokemonshowdown.com/sprites/gen5/pecharunt.png",
     "cry": "https://play.pokemonshowdown.com/audio/cries/pecharunt.mp3",
     "evolutions": [],
     "forms": {},

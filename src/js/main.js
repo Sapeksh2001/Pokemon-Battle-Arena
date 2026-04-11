@@ -607,7 +607,7 @@ export class PokemonBattleArena {
             names.forEach(name => {
                 const item = this.db.find(name);
                 if (!item) return;
-                const node = item.baseNode;
+                const node = item.foundNode;
                 const card = document.createElement('button');
                 card.type = 'button';
                 card.title = name;

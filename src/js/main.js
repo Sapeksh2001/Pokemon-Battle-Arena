@@ -895,6 +895,66 @@ export class PokemonBattleArena {
         });
     }
 
+    handleDevolve() {
+        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+        if (!val) { this._announce('Select a Pokémon to devolve.', true); return; }
+        const [pid, sid] = val.split('|');
+        const player = this.gs.players.find(p => p.id === pid);
+        const pokemon = player?.team[sid];
+        if (!pokemon) return;
+
+        const parents = this.db.getPreEvolutions(pokemon.fullName);
+        if (parents.length === 0) { this._announce(`${pokemon.fullName} has no pre-evolution.`, true); return; }
+
+        parents.length === 1
+            ? this._confirmDevolution(parents[0])
+            : this._openDevolutionChoiceModal(parents);
+    }
+
+    _openDevolutionChoiceModal(parents) {
+        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+        const [pid, sid] = val.split('|');
+        const player = this.gs.players.find(p => p.id === pid);
+        const pokemon = player?.team[sid];
+        document.getElementById('selection-modal-title').textContent = `Devolve ${pokemon?.fullName} into...`;
+        
+        // Wrap parent names into nodes for the selection grid
+        const parentNodes = parents.map(name => {
+            const res = this.db.find(name);
+            return res ? res.foundNode : { Name: name };
+        });
+
+        this._populateSelectionGrid(parentNodes, name => this._confirmDevolution(name));
+        this.modals.open('selection');
+    }
+
+    _confirmDevolution(parentName) {
+        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+        const [pid, sid] = val.split('|');
+        const player = this.gs.players.find(p => p.id === pid);
+        const pokemon = player?.team[sid];
+        if (!player || !pokemon) { this._announce(`Error devolving to ${parentName}.`, true); return; }
+
+        this.history.snapshot(this.gs);
+        const oldName = pokemon.fullName;
+        
+        // Reuse evolve animation for devolution
+        this._animateSprite(pid, 'evolve', () => {
+            const result = this.db.find(parentName);
+            if (!result) return;
+            player.team[sid] = new Pokemon(result.foundNode, result.baseNode);
+            this.modals.close('selection');
+            this._notify(`${oldName} devolved into ${parentName}!`, 'action');
+            this.renderer.renderAll();
+            this.audio.playCry(player.team[sid]);
+
+            // Sync game state in multiplayer
+            if (this.multiplayer && this.multiplayer.mode === 'playing') {
+                this.multiplayer.sendGameState();
+            }
+        });
+    }
+
     openFormChangeModal() {
         const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
         if (!val) return;

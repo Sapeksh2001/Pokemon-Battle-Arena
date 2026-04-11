@@ -17,6 +17,7 @@ export class PokemonDatabase {
         // Tier-filtered names are cached for quick team generation.
         this.allNames = [];
         this.filteredNames = [];
+        this._preEvoMap = new Map(); // evolutionKey -> Set(parentNames)
     }
 
     /** Build all lookup structures. Call once at startup. O(n). */
@@ -42,7 +43,17 @@ export class PokemonDatabase {
             }
             // Recurse into evolutions.
             if (node.evolutions) {
-                for (const evo of node.evolutions) traverse(evo, evo);
+                for (const evo of node.evolutions) {
+                    const evoName = evo?.Name || evo?.name;
+                    if (evoName) {
+                        const evoKey = evoName.toLowerCase();
+                        if (!this._preEvoMap.has(evoKey)) {
+                            this._preEvoMap.set(evoKey, new Set());
+                        }
+                        this._preEvoMap.get(evoKey).add(nodeName);
+                    }
+                    traverse(evo, evo);
+                }
             }
         };
 
@@ -144,5 +155,16 @@ export class PokemonDatabase {
         const formsObj = result.baseNode.forms || {};
         // Dataset uses lowercase `name` for form entries; fall back to f.name if f.Name missing
         return Object.values(formsObj).map(f => f && (f.Name || f.name)).filter(Boolean);
+    }
+
+    /**
+     * Get the list of pre-evolution names for a given Pokémon name.
+     * @param {string} name 
+     * @returns {string[]} Array of parent species names
+     */
+    getPreEvolutions(name) {
+        const key = name?.toLowerCase();
+        const parents = this._preEvoMap.get(key);
+        return parents ? Array.from(parents) : [];
     }
 }

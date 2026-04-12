@@ -1,0 +1,48 @@
+Sandstorm:
+●	All Pokémon lose 5% of their max HP at the end of each turn, except Ground, Rock and Steel types.
+●	The Special Defense of Rock-type Pokémon is increased by 50%. 
+●	The power or healing effects of sunlight or moonlight based moves are halved.
+Hail:
+●	All Pokémon lose 5% of their max HP at the end of each turn, except Ice types.
+●	The move blizzard will have infinite accuracy and also a 30% chance of ignoring move blocking moves, abilities, items.
+●	The power or healing effects of sunlight or moonlight based moves are halved.
+Rain:
+●	The power of Water-type moves increases by 50%.
+●	The power of Fire-type moves decreases by 50%.
+●	The power or healing effects of sunlight or moonlight based moves and fire moves are halved.
+●	Thunder and Hurricane have infinite accuracy.
+●	Pokémon cannot be burnt.
+Harsh Sunlight:
+●	The power of Fire-type moves increases by 50%.
+●	The power of Water-type moves decreases by 50%.
+●	The accuracy of Thunder and Hurricane lowers to 50%.
+●	Pokémon cannot be frozen.
+●	Sunlight based moves won’t require charging.
+●	Sunlight, moonlight based healing moves will heal 66%.
+Heavy Rain:
+●	Fire, Rock, Ground moves power become 0.
+●	Water type moves power doubled.
+●	Electric moves will have infinite accuracy and will always be super effective even on ground types.
+●	Other effects are the same as in Rain.
+●	It is a superior weather.
+Extremely Harsh Sunlight:
+●	Water, Ice, Bug moves power become 0.
+●	Fire type moves power doubled and accuracy is infinite and will leave a foe severely burnt.
+●	Other effects are the same as in Harsh sunlight.
+●	It is a superior weather.
+Snow Storm:
+●	Every non-ice type takes 10% damage. This damage increases after every 2 rounds.
+●	All water type moves become ice type.
+●	Fire, flying, grass, ground, rock, bug, dragon type moves have power -50%.
+●	Ice moves have 2x accuracy and 50% more power.
+●	It is a superior weather.
+Dune Storm:
+●	All types except Rock, Ground & Steel take 10% damage every round and this damage increases by 10% after every 2 rounds.
+●	Flying, fire moves are nullified & grass, bug, fairy, electric, water moves have power -50%. 
+●	Ground moves have 2x accuracy and 50% more power.
+●	It is a superior weather.
+Delta Stream:
+●	Not even superior weather can overtake this weather.
+●	All types of moves except flying type moves have their power halved.
+●	Flying pokemon’s speed is doubled.
+●	It is a superior weather.

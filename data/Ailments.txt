@@ -1,0 +1,58 @@
+Sleep: 
+●	Lasts for 3 rounds
+●	Doesn’t end on switching out
+●	50% chance of waking up on being damaged
+●	You can’t move or use a non continuous ability.
+Poison:
+●	Lasts for 3 rounds
+●	Doesn’t end on switching out.
+●	You lose 5%, 10%, 15% hp in 3 rounds respectively
+●	Steel and poison types can’t be poisoned
+Burn: 
+●	Lasts for 3 rounds
+●	Doesn’t end on switching out.
+●	You lose 10% hp every round.
+●	Your Atk stat is lowered by 20%.
+●	Fire types cannot be burnt.
+Frozen:
+●	Lasts for 3 rounds.
+●	Doesn’t end on switching out.
+●	You can’t move.
+●	Frozen ends on being hit with a fire, steel or fighting move.
+●	Ice types can’t be frozen.
+Paralysis:
+●	Lasts for 3 rounds.
+●	Doesn’t end on switching out.
+●	Your speed is halved.
+●	You have a 50% chance to move.
+●	Ground & electric types can’t be paralyzed.
+Confusion:
+●	Lasts for 3 rounds.
+●	Doesn’t end on switching out.
+●	50% chance to move or deal 50 damage to self.
+●	If you are able to move, then there's a 25% chance that the confusion will end.
+Infatuation:
+●	Lasts for 3 rounds.
+●	Doesn't end on switching out.
+●	You can't hit the foe that infatuated you.
+●	If you are damaged, 50% chance the infatuation will end.
+Bad Poison:
+●	Lasts forever.
+●	Starting from 10%, the damage of bad Poison will increase every round by 2%
+●	Other points are the same as poison.
+Severe Burn:
+●	Lasts forever.
+●	Your Atk stat is lowered by 50%.
+●	Other points are the same as burn.
+Neuro Paralysis:
+●	Lasts forever.
+●	You can't use priority moves.
+●	Other points are the same as paralysis.
+Curse:
+●	You lose 30% hp at the end of every round.
+●	Lasts forever.
+●	Doesn't end on switching out.
+Deep sleep:
+●	Lasts forever.
+●	30% chance of waking up on being damaged.
+●	Other points are the same as sleep.

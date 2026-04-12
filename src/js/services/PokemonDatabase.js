@@ -29,11 +29,23 @@ export class PokemonDatabase {
             const nodeName = node?.Name || node?.name;
             if (!node || typeof node !== 'object' || !nodeName) return;
             const key = nodeName.toLowerCase();
-            if (!this._index.has(key)) {
+            const existing = this._index.get(key);
+            const hasEvos = node.evolutions && node.evolutions.length > 0;
+            const existingHasEvos = existing?.foundNode.evolutions?.length > 0;
+
+            if (!existing || (!existingHasEvos && hasEvos)) {
                 // Normalise: ensure .Name is always set so rest of code can use .Name
                 if (!node.Name && node.name) node.Name = node.name;
-                this._index.set(key, { foundNode: node, baseNode });
-                this._trie.insert(nodeName);
+                
+                // Preserve the most comprehensive baseNode (the one with the most forms)
+                const existingFormsCount = existing?.baseNode?.forms ? Object.keys(existing.baseNode.forms).length : 0;
+                const newFormsCount = baseNode?.forms ? Object.keys(baseNode.forms).length : 0;
+                const finalBaseNode = (existingFormsCount > newFormsCount) ? existing.baseNode : baseNode;
+
+                this._index.set(key, { foundNode: node, baseNode: finalBaseNode });
+                
+                // Only insert into Trie if not already present or if we are upgrading to a better node
+                if (!existing) this._trie.insert(nodeName);
             }
             // Recurse into forms (may use lowercase `name` in dataset)
             if (node.forms) {
@@ -90,33 +102,35 @@ export class PokemonDatabase {
         return pokemon;
     }
 
+    /**
+     * O(k + m) prefix search with substring fallback.
+     * @param {string} query
+     * @param {number} limit
+     * @returns {string[]}
+     */
     search(query, limit = 5) {
         if (!query) return [];
         const q = query.toLowerCase();
         
-        // Find all names that contain the query
-        const matches = this.allNames.filter(name => 
-            name.toLowerCase().includes(q)
-        );
+        // 1. Get prefix matches from Trie (fastest)
+        const prefixMatches = this._trie.search(q, limit);
+        
+        if (prefixMatches.length >= limit) return prefixMatches;
 
-        // Prioritize: 1. Exact match, 2. Starts with, 3. Contains
-        matches.sort((a, b) => {
-            const aL = a.toLowerCase();
-            const bL = b.toLowerCase();
-            
-            if (aL === q) return -1;
-            if (bL === q) return 1;
-            
-            const aStarts = aL.startsWith(q);
-            const bStarts = bL.startsWith(q);
-            
-            if (aStarts && !bStarts) return -1;
-            if (!aStarts && bStarts) return 1;
-            
-            return aL.localeCompare(bL);
-        });
+        // 2. Add substring matches for remaining slots
+        const seen = new Set(prefixMatches.map(n => n.toLowerCase()));
+        const results = [...prefixMatches];
 
-        return matches.slice(0, limit);
+        for (const name of this.allNames) {
+            if (results.length >= limit) break;
+            const lowerName = name.toLowerCase();
+            if (lowerName.includes(q) && !seen.has(lowerName)) {
+                results.push(name);
+                seen.add(lowerName);
+            }
+        }
+
+        return results;
     }
 
     /** Build the tier-filtered name list used for team generation. */

@@ -106,53 +106,20 @@ export class UIRenderer {
         }
 
         const tier = (pokemon.tier || '').toLowerCase();
-        
-        let glowValue = '';
-        let hasGlitters = false;
-        let isGold = false;
-
-        const silverTiers = ['final', 'legendary', 'mythical', 'ultra beast', 'mega'];
-        const goldTiers = ['max', 'gmax'];
-
-        if (goldTiers.some(t => tier.includes(t))) {
-            glowValue = '0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 215, 0, 0.5)';
+        if (tier.includes('legendary') || tier.includes('mythical') ||
+            tier.includes('ultra beast') || tier.includes('mega') || tier.includes('gmax')) {
             card.classList.add('holo-gold');
-            hasGlitters = true;
-            isGold = true;
-        } else if (silverTiers.some(t => tier.includes(t))) {
-            glowValue = '0 0 20px rgba(220, 220, 255, 0.8), inset 0 0 10px rgba(220, 220, 255, 0.5)';
+        } else if (tier === 'final') {
             card.classList.add('holo-silver');
-            hasGlitters = true;
         }
-
-        const types = pokemon.types;
-        const color1 = `var(--type-${types[0].toLowerCase()})`;
-        const color2 = types.length > 1 ? `var(--type-${types[1].toLowerCase()})` : color1;
-
-        // Alternating stripes (creates a solid border if color1 == color2)
-        const borderGradient = `repeating-linear-gradient(45deg, ${color1}, ${color1} 15px, ${color2} 15px, ${color2} 30px)`;
-        card.style.setProperty('--card-border-gradient', borderGradient);
-
-        if (!hasGlitters) {
-            // Type based gradient glow
-            const glowGradient = `linear-gradient(135deg, ${color1}, ${color2})`;
-            card.style.setProperty('--card-glow-gradient', glowGradient);
-            card.style.boxShadow = 'none';
-        } else {
-            card.style.setProperty('--card-glow-gradient', 'transparent');
-            card.style.boxShadow = glowValue;
-        }
-
+        card.classList.add(`tier-border-${tier.replace(/ /g, '-')}`);
         if (pokemon.isFainted()) card.classList.add('opacity-50', 'bg-red-900/30');
 
         const pct = pokemon.getHPPercent();
         const span = 270, startAngle = -135;
         const needleAngle = Math.max(startAngle, Math.min(startAngle + span, startAngle + pct * span));
 
-        const glitterHTML = hasGlitters ? `<div class="card-glitter ${isGold ? 'gold-glitter' : ''}"></div>` : '';
-
         card.innerHTML = `
-            ${glitterHTML}
             <div class="entry-animation-container"></div>
             ${player.id === this._gs.activeTurnPlayerId
                 ? '<div class="turn-indicator-arrow"><span class="material-symbols-outlined text-3xl">keyboard_double_arrow_down</span></div>'
@@ -186,7 +153,6 @@ export class UIRenderer {
                     ${pokemon.isFainted()
                 ? '<div class="absolute inset-0 flex items-center justify-center"><span class="text-red-500 text-2xl font-bold -rotate-12 bg-black/50 px-2">FAINTED</span></div>'
                 : ''}
-                    
                 </div>
                 <!-- Dynamic Floating Text Container inserted locally in later features -->
                 <div class="hp-gauge-container">
@@ -198,8 +164,7 @@ export class UIRenderer {
                         <div class="max-hp">${pokemon.maxHp}</div>
                     </div>
                 </div>
-                <!-- Status Icons Row: Fixed height to prevent layout shifts -->
-                <div class="flex justify-evenly items-center w-full h-[28px] flex-shrink-0">
+                <div class="status-alignment-row">
                     ${this._renderStatusIcons(pokemon)}
                 </div>
             </div>
@@ -228,7 +193,7 @@ export class UIRenderer {
             bad_poison: { icon: 'skull', color: 'text-purple-400' },
             burn: { icon: 'local_fire_department', color: 'text-orange-400' },
             paralyze: { icon: 'bolt', color: 'text-yellow-400' },
-            curse: { icon: 'psychiatry', color: 'text-indigo-400' },
+            curse: { icon: 'tombstone', color: 'text-indigo-400' },
         };
         return Object.keys(pokemon.statuses)
             .filter(s => iconMap[s])
@@ -372,13 +337,11 @@ export class UIRenderer {
     _updateManagementButtons() {
         const sel = document.getElementById('management-pokemon-select');
         const evolveBtn = document.getElementById('evolve-btn');
-        const devolveBtn = document.getElementById('devolve-btn');
         const formBtn = document.getElementById('change-form-btn');
         const reviveBtn = document.getElementById('revive-btn');
-        if (!sel || !evolveBtn || !devolveBtn || !formBtn || !reviveBtn) return;
+        if (!sel || !evolveBtn || !formBtn || !reviveBtn) return;
 
         evolveBtn.disabled = true;
-        devolveBtn.disabled = true;
         formBtn.disabled = true;
         reviveBtn.disabled = true;
 
@@ -401,17 +364,22 @@ export class UIRenderer {
 
         reviveBtn.disabled = !pokemon.isFainted();
         if (!pokemon.isFainted()) {
-            // Check Evolutions
-            const hasEvolutions = pokemon.data?.evolutions?.some(e => {
-                if (typeof e === 'string') return !!e;
-                return !!e?.Name;
-            });
-            evolveBtn.disabled = !hasEvolutions;
-
-            // Check Devolutions
-            const preEvos = this._gs._arena.db.getPreEvolutions(pokemon.fullName);
-            devolveBtn.disabled = preEvos.length === 0;
-
+            // Species-wide evolution check: enable if ANY form in the family has an evolution branch.
+            const root = pokemon.baseData;
+            let canEvolve = (root.evolutions || []).length > 0;
+            
+            if (!canEvolve && root.forms) {
+                for (const f of Object.values(root.forms)) {
+                    if (!f) continue;
+                    const fName = f.Name || f.name;
+                    const fullNode = this._arena.db.find(fName)?.foundNode || f;
+                    if (fullNode.evolutions?.length > 0) {
+                        canEvolve = true;
+                        break;
+                    }
+                }
+            }
+            evolveBtn.disabled = !canEvolve;
             const base = pokemon.baseData || pokemon.data;
             // Form entries in the dataset use lowercase `name` (not `Name`).
             // Check both to correctly detect forms like Diglett-Alola, Meowth-Alola, etc.

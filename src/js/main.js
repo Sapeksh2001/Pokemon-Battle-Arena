@@ -846,6 +846,53 @@ export class PokemonBattleArena {
 
     // ── Evolution & form change ───────────────────────────────────────────
 
+    _resolveEvolutions(pokemon) {
+        const evoTargets = new Map(); // Name -> node
+        const root = pokemon.baseData;
+        if (!root) return [];
+
+        const addEvoBranch = (evo) => {
+            const name = typeof evo === 'string' ? evo : evo.Name;
+            if (!name) return;
+            
+            // 1. Find the target species in the database
+            const targetEntry = this.db.find(name);
+            if (!targetEntry) return;
+
+            // 2. Add the base target species entry
+            const baseNode = targetEntry.foundNode;
+            if (!baseNode.Name) baseNode.Name = name;
+            evoTargets.set(baseNode.Name, baseNode);
+            
+            // 3. Expansion: Include all forms of this target species as direct evolution options
+            // This handles cases like Exeggcute -> Alolan Exeggutor or Pichu -> Pikachu (all caps)
+            const targetForms = targetEntry.baseNode?.forms || {};
+            for (const f of Object.values(targetForms)) {
+                if (f && (f.Name || f.name)) {
+                    const fName = f.Name || f.name;
+                    // For regional variants, prefer the top-level node with full stats
+                    const fullNode = this.db.find(fName)?.foundNode || f;
+                    if (!fullNode.Name) fullNode.Name = fName;
+                    evoTargets.set(fullNode.Name, fullNode);
+                }
+            }
+        };
+
+        // Aggregation Step: Look at ALL forms of the current species to find every possible evolution path
+        // Root Species evolutions
+        if (root.evolutions) root.evolutions.forEach(addEvoBranch);
+        
+        // Form-specific evolutions (handles regional branches like Perrserker or Alolan Persian)
+        const forms = root.forms || {};
+        for (const f of Object.values(forms)) {
+            const fName = f.Name || f.name;
+            const fullFormNode = this.db.find(fName)?.foundNode || f;
+            if (fullFormNode.evolutions) fullFormNode.evolutions.forEach(addEvoBranch);
+        }
+        
+        return Array.from(evoTargets.values());
+    }
+
     handleEvolve() {
         const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
         if (!val) { this._announce('Select a Pokémon to evolve.', true); return; }
@@ -853,7 +900,9 @@ export class PokemonBattleArena {
         const player = this.gs.players.find(p => p.id === pid);
         const pokemon = player?.team[sid];
         if (!pokemon) return;
-        const evos = (pokemon.data.evolutions || []).filter(e => e?.Name);
+        // Resolve evolutions from the CURRENT FORM, falling back to top-level entry.
+        // This ensures Galarian Meowth → Perrserker and Galarian Ponyta → Galarian Rapidash.
+        const evos = this._resolveEvolutions(pokemon);
         if (evos.length === 0) { this._announce(`${pokemon.fullName} cannot evolve further.`, true); return; }
         evos.length === 1
             ? this._confirmEvolution(evos[0].Name)

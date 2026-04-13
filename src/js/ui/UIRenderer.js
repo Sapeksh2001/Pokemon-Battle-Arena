@@ -204,7 +204,7 @@ export class UIRenderer {
             bad_poison: { icon: 'skull', color: 'text-purple-400' },
             burn: { icon: 'local_fire_department', color: 'text-orange-400' },
             paralyze: { icon: 'bolt', color: 'text-yellow-400' },
-            curse: { icon: 'tombstone', color: 'text-indigo-400' },
+            curse: { icon: 'skull', color: 'text-indigo-400' },
         };
         return Object.keys(pokemon.statuses)
             .filter(s => iconMap[s])

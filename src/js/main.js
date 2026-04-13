@@ -623,7 +623,7 @@ export class PokemonBattleArena {
                 card.innerHTML = `
                     <img src="${node.sprite || ''}" alt="${name}"
                          onerror="const name='${name.toLowerCase().replace(/[^a-z0-9]/g, '')}'; if(!this.dataset.tried){this.dataset.tried=1; if(this.src.includes('.gif')){this.src=this.src.replace('/ani/','/gen5/').replace('.gif','.png');}else{this.dataset.tried=2;this.src='https://play.pokemonshowdown.com/sprites/dex/'+name+'.png';}}else if(this.dataset.tried=='1'){this.dataset.tried=2;this.src='https://play.pokemonshowdown.com/sprites/dex/'+name+'.png';}"
-                         style="width:52px;height:52px;object-fit:contain;
+                         style="width:46px;height:46px;object-fit:contain;image-rendering:pixelated;
                                 filter:drop-shadow(0 0 3px rgba(250,204,21,0));transition:filter 0.15s;"
                          loading="lazy">
                     <span style="font-size:8px;color:#cbd5e1;text-align:center;width:100%;

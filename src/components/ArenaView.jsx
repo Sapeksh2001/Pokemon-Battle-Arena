@@ -174,7 +174,7 @@ export default function ArenaView() {
                     <div className="grid grid-cols-3 gap-1">
                       <button id="weather-btn" className="bg-[#2563eb] hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">WTH</button>
                       <button id="burn-btn" data-status="burn" className="status-btn bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>BRN</button>
-                      <button id="toxic-btn" data-status="bad_poison" className="status-btn bg-[#581c87] hover:bg-purple-800 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>skull</span>TOX</button>
+                      <button id="toxic-btn" data-status="bad_poison" className="status-btn bg-[#581c87] hover:bg-purple-800 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>coronavirus</span>TOX</button>
                     </div>
                     <div>
                       <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-sm">TARGET</label>

@@ -201,7 +201,7 @@ export class UIRenderer {
     _renderStatusIcons(pokemon) {
         const iconMap = {
             poison: { icon: 'science', color: 'text-purple-400' },
-            bad_poison: { icon: 'skull', color: 'text-purple-400' },
+            bad_poison: { icon: 'coronavirus', color: 'text-purple-400' },
             burn: { icon: 'local_fire_department', color: 'text-orange-400' },
             paralyze: { icon: 'bolt', color: 'text-yellow-400' },
             curse: { icon: 'skull', color: 'text-indigo-400' },

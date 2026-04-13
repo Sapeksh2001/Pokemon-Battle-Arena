@@ -267,6 +267,12 @@ export class PokemonBattleArena {
             return;
         }
 
+        if (attacker.hasStatus('paralysis') && Math.random() < 0.5) {
+            this._notify(`${attacker.fullName} is paralyzed and couldn't move!`, 'damage');
+            this.audio.playCry(attacker);
+            return;
+        }
+
         this.history.snapshot(this.gs);
         this.audio.playCry(attacker);
 
@@ -352,8 +358,12 @@ export class PokemonBattleArena {
             pokemon.removeStatus(status);
             this._notify(`${pokemon.fullName}'s ${status} was cured.`, 'status');
         } else {
-            pokemon.applyStatus(status);
-            this._notify(`${pokemon.fullName} was afflicted with ${status}.`, 'status');
+            const applied = pokemon.applyStatus(status);
+            if (applied === false) {
+                this._notify(`${pokemon.fullName} is immune to ${status}!`, 'action');
+            } else {
+                this._notify(`${pokemon.fullName} was afflicted with ${status}.`, 'status');
+            }
         }
         this.renderer.renderAll();
 
@@ -1123,21 +1133,61 @@ export class PokemonBattleArena {
 
     _applyStatusDamage() {
         const affected = [];
+        const cured = [];
         this.gs.players.forEach(player => {
             const pokemon = player.getActivePokemon();
             if (!pokemon || pokemon.isFainted()) return;
 
-            if (pokemon.hasStatus('poison') || pokemon.hasStatus('bad_poison') || pokemon.hasStatus('burn')) {
-                const dmg = Math.max(1, Math.floor(pokemon.maxHp / 8));
-                pokemon.takeDamage(dmg);
+            let totalDmg = 0;
+            let curedStatus = [];
+
+            if (pokemon.hasStatus('poison')) {
+                const rounds = pokemon.statuses['poison'].duration;
+                const multipliers = [0.05, 0.10, 0.15];
+                const mult = multipliers[Math.min(rounds, 2)];
+                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * mult));
+                pokemon.statuses['poison'].duration++;
+                if (pokemon.statuses['poison'].duration >= 3) curedStatus.push('poison');
+            }
+
+            if (pokemon.hasStatus('bad_poison') || pokemon.hasStatus('toxic')) {
+                const sName = pokemon.hasStatus('bad_poison') ? 'bad_poison' : 'toxic';
+                const rounds = pokemon.statuses[sName].duration;
+                const mult = 0.10 + (0.02 * rounds); // 10%, 12%, 14%...
+                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * mult));
+                pokemon.statuses[sName].duration++;
+            }
+
+            if (pokemon.hasStatus('burn')) {
+                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * 0.10));
+                pokemon.statuses['burn'].duration++;
+                if (pokemon.statuses['burn'].duration >= 3) curedStatus.push('burn');
+            }
+
+            if (pokemon.hasStatus('curse')) {
+                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * 0.30));
+                pokemon.statuses['curse'].duration++;
+            }
+
+            if (pokemon.hasStatus('paralysis')) {
+                pokemon.statuses['paralysis'].duration++;
+                if (pokemon.statuses['paralysis'].duration >= 3) curedStatus.push('paralysis');
+            }
+
+            if (totalDmg > 0) {
+                pokemon.takeDamage(totalDmg);
                 affected.push(pokemon.fullName);
             }
+
+            curedStatus.forEach(s => pokemon.removeStatus(s));
+            if (curedStatus.length > 0) cured.push(pokemon.fullName);
         });
+
         if (affected.length > 0) {
-            this._notify(
-                `${affected.join(', ')} took damage from their status conditions!`,
-                'damage'
-            );
+            this._notify(`${affected.join(', ')} took damage from their status conditions!`, 'damage');
+        }
+        if (cured.length > 0) {
+            this._notify(`${cured.join(', ')} recovered from their status conditions!`, 'heal');
         }
     }
 

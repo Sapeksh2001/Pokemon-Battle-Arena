@@ -40,17 +40,14 @@ export class BattleEngine {
             ? defender.getEffectiveStat('defence')
             : defender.getEffectiveStat('specialDefence');
 
-        // Authentic Generation 5 formula (Level 100 baseline)
-        const level = 100;
         const a = offStat;
         const d = defStat;
 
-        const baseDamage = Math.floor(Math.floor(Math.floor(2 * level / 5 + 2) * movePower * a / d) / 50) + 2;
-        // RNG variance (0.85 to 1.00)
-        const rng = (Math.floor(Math.random() * 16) + 85) / 100;
-
-        // Final combat damage
-        const damage = Math.max(1, Math.floor(baseDamage * effectiveness * rng));
+        // Custom damage formula: (Attacker Stat - Defender Stat) + (Power * Effectiveness)
+        const rawDamage = (a - d) + (movePower * effectiveness);
+        
+        // Final combat damage (minimum 0)
+        const damage = Math.max(0, Math.floor(rawDamage));
 
         return { damage, effectiveness };
     }

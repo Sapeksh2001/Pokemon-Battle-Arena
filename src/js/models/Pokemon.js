@@ -42,7 +42,14 @@ export class Pokemon {
 
     /** Returns the effective value of a stat after applying in-battle modifiers. */
     getEffectiveStat(statName) {
-        return this.stats[statName] + (this.statModifiers[statName] || 0);
+        let val = this.stats[statName] + (this.statModifiers[statName] || 0);
+        if (statName === 'attack' && this.hasStatus('burn')) {
+            val = Math.floor(val * 0.8);
+        }
+        if (statName === 'speed' && this.hasStatus('paralysis')) {
+            val = Math.floor(val * 0.5);
+        }
+        return Math.max(1, val);
     }
 
     // Mutations
@@ -80,7 +87,16 @@ export class Pokemon {
         return newModifier - current;
     }
 
-    applyStatus(status) { this.statuses[status] = true; }
+    applyStatus(status) {
+        if (status === 'poison' || status === 'bad_poison' || status === 'toxic') {
+            if (this.types.includes('Steel') || this.types.includes('Poison')) return false;
+        }
+        if (status === 'burn' && this.types.includes('Fire')) return false;
+        if (status === 'paralysis' && (this.types.includes('Ground') || this.types.includes('Electric'))) return false;
+        
+        this.statuses[status] = { duration: 0 };
+        return true;
+    }
     removeStatus(status) { delete this.statuses[status]; }
     hasStatus(status) { return !!this.statuses[status]; }
 

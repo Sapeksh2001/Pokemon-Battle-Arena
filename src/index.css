@@ -25,7 +25,7 @@
  * POKÉMON BATTLE ARENA - STYLESHEET
  * This file defines the entire visual appearance of the application.
  * It uses a combination of custom CSS for the main battle arena and utility classes (from Tailwind) for modals.
- * The aesthetic is intentionally retro and pixelated, enhanced with the Stitch "Indigo Plateau" design system.
+ * The aesthetic is modern and smooth, enhanced with the Stitch "Indigo Plateau" design system.
  */
 
 /* --- STITCH DESIGN SYSTEM UTILITIES --- */
@@ -152,10 +152,8 @@ body {
     font-family: 'Press Start 2P', cursive; /* The global pixel font. */
     background-color: #0f172a; /* Dark blue background. */
     color: #ffffff; /* Global font color: White for readability on dark background */
-    /* These properties disable font anti-aliasing to achieve a sharp, pixelated look. */
-    -webkit-font-smoothing: none;
+    -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-smooth: never;
     font-size: var(--font-size-sm); /* Use a fluid font size as the base. */
 }
 
@@ -416,7 +414,7 @@ button, input, select {
 }
 
 .pokemon-sprite { 
-    image-rendering: pixelated; /* Ensures the sprites look sharp and not blurry. */
+    /* image-rendering: pixelated; // Removed for smoother quality as requested */
     filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.2)); 
     transition: transform 0.3s ease;
     object-fit: contain;
@@ -518,7 +516,7 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 
 /* --- PARALLAX BACKGROUND STYLES --- */
 #parallax-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
-.parallax-layer { position: absolute; top: 0; left: 0; width: 200%; height: 100%; background-repeat: repeat-x; background-position: 0 0; background-size: auto 100%; image-rendering: pixelated; animation: scroll linear infinite; }
+.parallax-layer { position: absolute; top: 0; left: 0; width: 200%; height: 100%; background-repeat: repeat-x; background-position: 0 0; background-size: auto 100%; animation: scroll linear infinite; }
 .parallax-layer.ground { background-size: auto 128px; background-position: bottom left; }
 /* The animation scrolls the background image horizontally. Different layers have different animation durations, creating the parallax effect. */
 @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }

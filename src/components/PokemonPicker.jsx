@@ -40,8 +40,8 @@ function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
             key={pokemon.fullName}
             src={pokemon.sprite}
             alt={pokemon.fullName}
-            className="w-full h-full object-contain pixelated"
-            style={{ imageRendering: 'pixelated' }}
+            className="w-full h-full object-contain"
+            style={{ }}
             onError={e => {
               const target = e.target;
               if(!target.dataset.tried){

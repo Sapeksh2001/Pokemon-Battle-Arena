@@ -26,6 +26,39 @@ function GameRoot() {
   // and all DOM IDs are available. script.js polls for this flag.
   useEffect(() => {
     window.__reactReady = true;
+    
+    // Global Fullscreen Shortcut
+    const handleFullscreenKey = (e) => {
+      // Check if user is typing in any input or contenteditable element
+      const active = document.activeElement;
+      const isInput = (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) || 
+                      e.target.isContentEditable || 
+                      e.target.tagName === 'INPUT' || 
+                      e.target.tagName === 'TEXTAREA';
+      
+      if (e.key.toLowerCase() === 'f' && !isInput) {
+        console.info('Pokemon Arena: Immersive Fullscreen triggered.');
+        e.preventDefault();
+        
+        const doc = document.documentElement;
+        const fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        
+        if (!fullscreenElement) {
+          const request = doc.requestFullscreen || doc.webkitRequestFullscreen || doc.mozRequestFullScreen || doc.msRequestFullscreen;
+          if (request) {
+            request.call(doc).catch(err => {
+              console.error(`Fullscreen Request Failed: ${err.message}`);
+            });
+          }
+        } else {
+          const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+          if (exit) exit.call(document);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleFullscreenKey, { capture: true });
+    return () => window.removeEventListener('keydown', handleFullscreenKey, { capture: true });
   }, []);
 
   // Re-hydrate lucide icons when arena is ready

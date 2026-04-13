@@ -158,7 +158,7 @@ export class UIRenderer {
             <div class="flex flex-col items-center justify-center flex-grow min-h-0 relative">
                 <div class="relative">
                     <img src="${pokemon.sprite}"
-                         onerror="this.onerror=null;this.src='https://placehold.co/96x96/000000/FFFFFF?text=?';"
+                         onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src=this.src.replace('/ani/','/gen5/').replace('.gif','.png');}else if(this.dataset.tried=='1'){this.dataset.tried=2;this.src=this.src.replace('/gen5/','/dex/');}else{this.onerror=null;this.src='https://placehold.co/96x96/000000/FFFFFF?text=?';}"
                          alt="${escapeHTML(pokemon.fullName)}"
                          class="pokemon-sprite ${pokemon.isFainted() ? 'grayscale' : ''}">
                     ${pokemon.isFainted()
@@ -252,6 +252,7 @@ export class UIRenderer {
             const border = isActive ? 'border-2 border-transparent' : 'border-2 border-transparent';
             return `<img src="${src}" title="${p ? escapeHTML(p.fullName) : 'Empty'}"
                          class="w-16 h-16 team-pokeball bg-transparent p-1 ${border} ${isFainted ? 'grayscale' : ''}"
+                         onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src=this.src.replace('/ani/','/gen5/').replace('.gif','.png');}else if(this.dataset.tried=='1'){this.dataset.tried=2;this.src=this.src.replace('/gen5/','/dex/');}"
                          onclick="window.handleTeamIconClick('${player.id}', ${i})">`;
         }).join('');
     }

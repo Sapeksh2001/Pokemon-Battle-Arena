@@ -41,7 +41,18 @@ function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
             alt={pokemon.fullName}
             className="w-full h-full object-contain pixelated"
             style={{ imageRendering: 'pixelated' }}
-            onError={e => { e.target.id = 'img-error'; e.target.style.display = 'none'; }}
+            onError={e => {
+              if(!e.target.dataset.tried){
+                e.target.dataset.tried = '1';
+                e.target.src = e.target.src.replace('/ani/', '/gen5/').replace('.gif', '.png');
+              } else if (e.target.dataset.tried === '1') {
+                e.target.dataset.tried = '2';
+                e.target.src = e.target.src.replace('/gen5/', '/dex/');
+              } else {
+                e.target.id = 'img-error'; 
+                e.target.style.display = 'none';
+              }
+            }}
           />
         ) : (
           <span className="material-symbols-outlined text-[20px] text-[#40485d]">catching_pokemon</span>

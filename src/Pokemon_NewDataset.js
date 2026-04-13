@@ -27288,7 +27288,7 @@ var MergedPokemonData = {
       "Fairy",
       "Fighting"
     ],
-    "sprite": "https://play.pokemonshowdown.com/sprites/ani/iron-valiant.gif",
+    "sprite": "https://play.pokemonshowdown.com/sprites/gen5/ironvaliant.png",
     "cry": "https://play.pokemonshowdown.com/audio/cries/ironvaliant.mp3",
     "evolutions": [],
     "forms": {},
@@ -27368,7 +27368,7 @@ var MergedPokemonData = {
       "Grass",
       "Psychic"
     ],
-    "sprite": "https://play.pokemonshowdown.com/sprites/ani/ironleaves.gif",
+    "sprite": "https://play.pokemonshowdown.com/sprites/gen5/ironleaves.png",
     "cry": "https://play.pokemonshowdown.com/audio/cries/ironleaves.mp3",
     "evolutions": [],
     "forms": {},
@@ -27528,7 +27528,7 @@ var MergedPokemonData = {
     "types": [
       "Grass"
     ],
-    "sprite": "https://play.pokemonshowdown.com/sprites/gen5/.png",
+    "sprite": "https://play.pokemonshowdown.com/sprites/gen5/ogerpon.png",
     "cry": "https://play.pokemonshowdown.com/audio/cries/ogerpon.mp3",
     "evolutions": [],
     "forms": {
@@ -27546,7 +27546,7 @@ var MergedPokemonData = {
           "Grass",
           "Water"
         ],
-        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/.png",
+        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/ogerpon-wellspring.png",
         "cry": "https://play.pokemonshowdown.com/audio/cries/ogerpon.mp3",
         "tier": "Variant",
         "isSeparateEntry": false
@@ -27565,7 +27565,7 @@ var MergedPokemonData = {
           "Grass",
           "Fire"
         ],
-        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/.png",
+        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/ogerpon-hearthflame.png",
         "cry": "https://play.pokemonshowdown.com/audio/cries/ogerpon.mp3",
         "tier": "Variant",
         "isSeparateEntry": false
@@ -27584,7 +27584,7 @@ var MergedPokemonData = {
           "Grass",
           "Rock"
         ],
-        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/.png",
+        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/ogerpon-cornerstone.png",
         "cry": "https://play.pokemonshowdown.com/audio/cries/ogerpon.mp3",
         "tier": "Variant",
         "isSeparateEntry": false
@@ -27602,7 +27602,7 @@ var MergedPokemonData = {
         "types": [
           "Grass"
         ],
-        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/.png",
+        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/ogerpon-tealtera.png",
         "cry": "https://play.pokemonshowdown.com/audio/cries/ogerpon.mp3",
         "tier": "Variant",
         "isSeparateEntry": false
@@ -27621,7 +27621,7 @@ var MergedPokemonData = {
           "Grass",
           "Water"
         ],
-        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/.png",
+        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/ogerpon-wellspringtera.png",
         "cry": "https://play.pokemonshowdown.com/audio/cries/ogerpon.mp3",
         "tier": "Variant",
         "isSeparateEntry": false
@@ -27640,7 +27640,7 @@ var MergedPokemonData = {
           "Grass",
           "Fire"
         ],
-        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/.png",
+        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/ogerpon-hearthflametera.png",
         "cry": "https://play.pokemonshowdown.com/audio/cries/ogerpon.mp3",
         "tier": "Variant",
         "isSeparateEntry": false
@@ -27659,7 +27659,7 @@ var MergedPokemonData = {
           "Grass",
           "Rock"
         ],
-        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/.png",
+        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/ogerpon-cornerstonetera.png",
         "cry": "https://play.pokemonshowdown.com/audio/cries/ogerpon.mp3",
         "tier": "Variant",
         "isSeparateEntry": false
@@ -27760,7 +27760,7 @@ var MergedPokemonData = {
     "types": [
       "Normal"
     ],
-    "sprite": "https://play.pokemonshowdown.com/sprites/gen5/.png",
+    "sprite": "https://play.pokemonshowdown.com/sprites/gen5/terapagos.png",
     "cry": "https://play.pokemonshowdown.com/audio/cries/terapagos.mp3",
     "evolutions": [],
     "forms": {
@@ -27777,7 +27777,7 @@ var MergedPokemonData = {
         "types": [
           "Normal"
         ],
-        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/.png",
+        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/terapagos-terastal.png",
         "cry": "https://play.pokemonshowdown.com/audio/cries/terapagos.mp3",
         "tier": "Variant",
         "isSeparateEntry": false
@@ -27795,7 +27795,7 @@ var MergedPokemonData = {
         "types": [
           "Normal"
         ],
-        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/.png",
+        "sprite": "https://play.pokemonshowdown.com/sprites/gen5/terapagos-stellar.png",
         "cry": "https://play.pokemonshowdown.com/audio/cries/terapagos.mp3",
         "tier": "Variant",
         "isSeparateEntry": false

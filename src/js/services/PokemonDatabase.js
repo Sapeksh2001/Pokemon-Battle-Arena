@@ -71,7 +71,7 @@ export class PokemonDatabase {
 
         for (const pokemon of Object.values(this._raw)) traverse(pokemon, pokemon);
 
-        this.allNames = [...this._index.values()].map(v => v.foundNode.Name);
+        this.allNames = [...this._index.values()].map(v => v.foundNode.Name || v.foundNode.name);
         this.filteredNames = this._buildFiltered([
             'Basic', 'Mid', 'Final', 
             'Legendary', 'Mythical', 'Ultra Beast', 
@@ -155,7 +155,7 @@ export class PokemonDatabase {
         // The raw data structure has evolutions stored as arrays or objects.
         // Let's assume the baseNode has an `evolutions` array of target species names or objects with `Name`.
         const evos = result.foundNode.evolutions || [];
-        return evos.map(evo => typeof evo === 'string' ? evo : evo.Name).filter(Boolean);
+        return evos.map(evo => typeof evo === 'string' ? evo : (evo.Name || evo.name)).filter(Boolean);
     }
 
     /**

@@ -1,4 +1,5 @@
 import { applyModification } from '../utils/helpers.js';
+import { spriteOverrides } from '../data/sprite_overrides.js';
 
 // ==========================================
 // DOMAIN MODEL: POKÉMON
@@ -6,14 +7,16 @@ import { applyModification } from '../utils/helpers.js';
 
 export class Pokemon {
     constructor(data, baseData) {
-        this.baseName = baseData.Name;
-        this.fullName = data.Name;
+        this.baseName = baseData.Name || baseData.name;
+        this.fullName = data.Name || data.name;
         this.maxHp = data.stats.hp;
         this.currentHP = data.stats.hp;
         this.stats = { ...data.stats };
         // Support both old ["Grass Poison"] and new ["Grass", "Poison"] formats
         this.types = data.types.flatMap(t => t.split(' '));
-        this.sprite = data.sprite;
+        
+        // Manual override check
+        this.sprite = spriteOverrides[this.fullName] || data.sprite;
         this.cry = data.cry;
         this.tier = data.tier;
         this.data = data;       // raw data for the current form

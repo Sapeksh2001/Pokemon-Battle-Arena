@@ -485,7 +485,9 @@ export class PokemonBattleArena {
                         ? '<div class="absolute top-1 left-1 text-yellow-400 z-10 animate-pulse"><i data-lucide="star" class="w-4 h-4 fill-current"></i></div>'
                         : ''}
                     <div class="sprite-container flex-grow flex items-center justify-center p-2">
-                        <img src="${pokemon.sprite}" alt="${escapeHTML(pokemon.fullName)}" class="h-16 w-auto object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
+                        <img src="${pokemon.sprite}" alt="${escapeHTML(pokemon.fullName)}" 
+                             onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src=this.src.replace('/ani/','/gen5/').replace('.gif','.png');}else if(this.dataset.tried=='1'){this.dataset.tried=2;this.src=this.src.replace('/gen5/','/dex/');}"
+                             class="h-16 w-auto object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
                     </div>
                     <div class="name-tag w-full bg-black/40 py-1 px-1 mb-1">
                         <p class="font-bold text-[10px] uppercase truncate text-white">${escapeHTML(pokemon.fullName)}</p>
@@ -551,7 +553,7 @@ export class PokemonBattleArena {
                 <input type="text" id="pokedex-search"
                        class="w-full bg-slate-900 border border-slate-600 p-2 mt-1 text-xs focus:border-yellow-400 outline-none text-white placeholder:text-slate-500"
                        onclick="this.select()"
-                       placeholder="Type at least 2 letters..."
+                       placeholder="Search Pokémon..."
                        value="${pokemon ? escapeHTML(pokemon.fullName) : ''}">
                 <div id="pokedex-search-results" style="display:none;"></div>
                 <div id="pokedex-grid-picker" class="mt-2 hidden" style="
@@ -596,6 +598,7 @@ export class PokemonBattleArena {
             gridPicker.innerHTML = '';
             if (names.length === 0) { _hideGrid(); return; }
             gridPicker.style.display = 'grid';
+            const fragment = document.createDocumentFragment();
             names.forEach(name => {
                 const item = this.db.find(name);
                 if (!item) return;
@@ -648,17 +651,26 @@ export class PokemonBattleArena {
                     }
                     if (abilityDesc) abilityDesc.textContent = '';
                 };
-                gridPicker.appendChild(card);
+                fragment.appendChild(card);
             });
+            gridPicker.appendChild(fragment);
         };
 
         // Trie-powered O(k) live search.
-        searchInput.addEventListener('input', () => {
+        const _refreshGrid = () => {
             const q = searchInput.value.trim();
+            if (q.length === 0) {
+                _showGrid(this.db.allNames); 
+                return;
+            }
             if (q.length < 2) { _hideGrid(); return; }
             const names = this.db.search(q, 40);
             _showGrid(names);
-        });
+        };
+
+        searchInput.addEventListener('input', _refreshGrid);
+        searchInput.addEventListener('focus', _refreshGrid);
+        _refreshGrid(); // Show initial grid
 
         // Hide grid when clicking outside
         document.addEventListener('click', function _outsideClick(e) {
@@ -852,7 +864,7 @@ export class PokemonBattleArena {
         if (!root) return [];
 
         const addEvoBranch = (evo) => {
-            const name = typeof evo === 'string' ? evo : evo.Name;
+            const name = typeof evo === 'string' ? evo : (evo.Name || evo.name);
             if (!name) return;
             
             // 1. Find the target species in the database
@@ -905,7 +917,7 @@ export class PokemonBattleArena {
         const evos = this._resolveEvolutions(pokemon);
         if (evos.length === 0) { this._announce(`${pokemon.fullName} cannot evolve further.`, true); return; }
         evos.length === 1
-            ? this._confirmEvolution(evos[0].Name)
+            ? this._confirmEvolution(evos[0].Name || evos[0].name)
             : this._openEvolutionChoiceModal(evos);
     }
 
@@ -1013,7 +1025,7 @@ export class PokemonBattleArena {
         if (!pokemon?.baseData) return;
 
         const forms = [pokemon.baseData, ...Object.values(pokemon.baseData.forms || {})]
-            .filter(f => f?.Name && f.Name !== pokemon.fullName);
+            .filter(f => (f?.Name || f?.name) && (f.Name || f.name) !== pokemon.fullName);
 
         if (forms.length === 0) {
             this._announce(`${pokemon.fullName} has no other forms.`, true);
@@ -1056,12 +1068,13 @@ export class PokemonBattleArena {
         if (!grid) return;
         grid.innerHTML = '';
         dataItems.forEach(item => {
-            if (!item?.Name) return;
+            const itemName = item?.Name || item?.name;
+            if (!itemName) return;
             const div = document.createElement('div');
             div.className = 'bg-slate-700 p-2 text-center cursor-pointer hover:bg-slate-600';
-            div.innerHTML = `<img src="${item.sprite || ''}" alt="${escapeHTML(item.Name)}" class="mx-auto h-16">
-                             <p class="font-bold text-xs mt-1">${escapeHTML(item.Name)}</p>`;
-            div.onclick = () => onSelect(item.Name);
+            div.innerHTML = `<img src="${item.sprite || ''}" alt="${escapeHTML(itemName)}" class="mx-auto h-16">
+                             <p class="font-bold text-xs mt-1">${escapeHTML(itemName)}</p>`;
+            div.onclick = () => onSelect(itemName);
             grid.appendChild(div);
         });
     }
@@ -1344,7 +1357,7 @@ export class PokemonBattleArena {
 
         // Build map for every known Pokémon in the database.
         for (const { foundNode } of this.db._index.values()) {
-            const name = foundNode.Name;
+            const name = foundNode.Name || foundNode.name;
             if (!name || window.PokemonAbilitiesMap[name]) continue;
             const types = (foundNode.types || []).flatMap(t => t.split(' '));
             const abilities = new Set();

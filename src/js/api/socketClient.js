@@ -603,7 +603,7 @@ export class MultiplayerManager {
                 <div style="font-size:9px;color:#facc15;text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;">${tierLabel}</div>
                 <input type="text" id="pick-search-input"
                     style="width:100%;background:#0f172a;border:1px solid #334155;color:#fff;padding:8px 10px;font-size:11px;outline:none;letter-spacing:0.05em;box-sizing:border-box;"
-                    placeholder="Type at least 2 letters to search Pokémon...">
+                    placeholder="Search Pokémon...">
             </div>
             <div id="pick-grid-picker" class="col-span-4" style="
                 display: none;
@@ -623,9 +623,19 @@ export class MultiplayerManager {
         
         setTimeout(() => searchInput.focus(), 100);
         
-        searchInput.addEventListener('input', () => {
+        const _refreshGrid = () => {
             const q = searchInput.value.trim();
             gridPicker.innerHTML = '';
+            
+            if (q.length === 0) {
+                const allNamesArr = Array.from(allowedNames);
+                const names = allNamesArr.slice(0, 500);
+                if (names.length === 0) { gridPicker.style.display = 'none'; return; }
+                gridPicker.style.display = 'grid';
+                _renderCards(names);
+                return;
+            }
+
             if (q.length < 2) { gridPicker.style.display = 'none'; return; }
             const allMatches = this.arena.db.search(q, 200);
             const names = useTierFilter
@@ -633,6 +643,10 @@ export class MultiplayerManager {
                 : allMatches.slice(0, 40);
             if (names.length === 0) { gridPicker.style.display = 'none'; return; }
             gridPicker.style.display = 'grid';
+            _renderCards(names);
+        };
+
+        const _renderCards = (names) => {
             names.forEach(name => {
                 const item = this.arena.db.find(name);
                 if (!item) return;
@@ -680,12 +694,10 @@ export class MultiplayerManager {
                     this.arena.modals.close('selection');
                     const pokeName = name;
                     const pokeId = pokeName;
-                    
                     this.showNotification(`Assigned ${pokeName}!`, 'success');
                     
                     const queueSnap = await get(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
                     if (queueSnap.exists()) {
-                        // Wildcard mid-game join: promote from entryQueue → players
                         const playerData = queueSnap.val();
                         await set(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
                             ...playerData,
@@ -695,7 +707,6 @@ export class MultiplayerManager {
                         });
                         await remove(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
 
-                        // Immediately add to local game state
                         const alreadyInGame = this.arena.gs.players.find(sp => sp.id === targetPlayerId);
                         if (!alreadyInGame) {
                             const newPlayer = new Player(targetPlayerId, playerData.name);
@@ -711,7 +722,6 @@ export class MultiplayerManager {
                             this.sendGameState();
                         }
                     } else {
-                        // Lobby assignment — update in place and mark ready
                         await update(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
                             assignedPokemonId: pokeId,
                             assignedPokemonName: pokeName,
@@ -721,7 +731,10 @@ export class MultiplayerManager {
                 };
                 gridPicker.appendChild(card);
             });
-        });
+        };
+
+        searchInput.addEventListener('input', _refreshGrid);
+        _refreshGrid();
     }
 
     /**

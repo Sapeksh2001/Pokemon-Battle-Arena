@@ -8,8 +8,7 @@ A browser-based real-time multiplayer Pokémon battle simulator. Up to 6 players
 
 ## Screenshots
 
-### Hero
-![Hero](./assets/hero.png)
+
 
 ### Gameplay
 ![Gameplay](./assets/gameplay.png)

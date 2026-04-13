@@ -112,8 +112,7 @@ export default function ArenaView() {
               <div className="grid lg:grid-cols-5 gap-3 h-full">
 
                 {/* Attack Command */}
-                <div className="bg-surface-container border-2 border-outline-variant p-2 relative overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-red-500/50 to-transparent" />
+                <div className="control-panel-mesh p-2 group">
                   <h4 className="text-yellow-400 font-label text-[11px] mb-1.5 uppercase tracking-widest text-glow">Attack Command</h4>
                   <div className="space-y-1 text-xs font-body">
 
@@ -164,8 +163,7 @@ export default function ArenaView() {
                 </div>
 
                 {/* Status & Stats */}
-                <div className="bg-surface-container border-2 border-outline-variant p-2 relative overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
+                <div className="control-panel-mesh p-2 group">
                   <h4 className="text-yellow-400 font-label text-sm mb-3 uppercase tracking-widest text-glow">Status &amp; Stats</h4>
                   <div className="space-y-2 text-sm font-body">
                     <div className="grid grid-cols-3 gap-1">
@@ -221,8 +219,7 @@ export default function ArenaView() {
                 </div>
 
                 {/* Utility */}
-                <div className="bg-surface-container border-2 border-outline-variant p-2 relative overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-green-500/50 to-transparent" />
+                <div className="control-panel-mesh p-2 group">
                   <h4 className="text-yellow-400 font-label text-sm mb-3 uppercase tracking-widest text-glow">Utility</h4>
                   <div className="space-y-2 text-sm font-body">
                     <div className="text-center">
@@ -246,8 +243,7 @@ export default function ArenaView() {
                 </div>
 
                 {/* Management */}
-                <div className="bg-surface-container border-2 border-outline-variant p-2 relative overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
+                <div className="control-panel-mesh p-2 group">
                   <h4 className="text-yellow-400 font-label text-sm mb-3 uppercase tracking-widest text-glow">Management</h4>
                   <div className="space-y-2 text-sm font-body">
                     <div>
@@ -273,8 +269,7 @@ export default function ArenaView() {
                 </div>
 
                 {/* Round & History */}
-                <div className="bg-surface-container border-2 border-outline-variant p-2 relative overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent" />
+                <div className="control-panel-mesh p-2 group">
                   <h4 className="text-yellow-400 font-label text-sm mb-3 uppercase tracking-widest text-glow">Round &amp; History</h4>
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     <button id="undo-btn"
@@ -319,7 +314,7 @@ export default function ArenaView() {
 
             {/* RIGHT: Battle Log */}
             <div className="battle-log-panel h-full w-full lg:w-[600px] flex-shrink-0">
-              <div className="bg-surface-container border-2 border-outline-variant h-full flex flex-col relative overflow-hidden">
+              <div className="control-panel-mesh h-full flex flex-col">
                 <div className="bg-surface-container-high px-3 py-2 border-b-2 border-outline-variant flex justify-between items-center flex-shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-yellow-400 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>history_edu</span>

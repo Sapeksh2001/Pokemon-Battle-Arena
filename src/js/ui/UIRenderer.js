@@ -249,9 +249,9 @@ export class UIRenderer {
                 : (isFainted
                     ? 'https://img.pokemondb.net/sprites/items/luxury-ball.png'
                     : 'https://img.pokemondb.net/sprites/items/poke-ball.png');
-            const border = isActive ? 'border-2 border-yellow-400' : 'border-2 border-outline-variant';
+            const border = isActive ? 'border-2 border-transparent' : 'border-2 border-transparent';
             return `<img src="${src}" title="${p ? escapeHTML(p.fullName) : 'Empty'}"
-                         class="w-16 h-16 team-pokeball bg-surface-container-low p-1 ${border} ${isFainted ? 'grayscale' : ''}"
+                         class="w-16 h-16 team-pokeball bg-transparent p-1 ${border} ${isFainted ? 'grayscale' : ''}"
                          onclick="window.handleTeamIconClick('${player.id}', ${i})">`;
         }).join('');
     }

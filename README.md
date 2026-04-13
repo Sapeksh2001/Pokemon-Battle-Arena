@@ -8,17 +8,11 @@ A browser-based real-time multiplayer Pokémon battle simulator. Up to 6 players
 
 ## Screenshots
 
-### Authentication
-![Auth Screen](C:\Users\honey\.gemini\antigravity\brain\b61df766-5e48-40fd-aa80-e20dfc6f827e\screenshot_auth_1776021523640.png)
+### Hero
+![Hero](./assets/hero.png)
 
-### Lobby
-![Lobby Screen](C:\Users\honey\.gemini\antigravity\brain\b61df766-5e48-40fd-aa80-e20dfc6f827e\screenshot_lobby_1776021542019.png)
-
-### Arena — Battle Screen
-![Arena Screen](C:\Users\honey\.gemini\antigravity\brain\b61df766-5e48-40fd-aa80-e20dfc6f827e\screenshot_arena_1776021671218.png)
-
-### Create Room Modal
-![Room Modal](C:\Users\honey\.gemini\antigravity\brain\b61df766-5e48-40fd-aa80-e20dfc6f827e\screenshot_room_modal_1776021742357.png)
+### Gameplay
+![Gameplay](./assets/gameplay.png)
 
 ---
 

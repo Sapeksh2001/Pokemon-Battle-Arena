@@ -1,6 +1,6 @@
 # Backend Structure — Pokémon Battle Arena
 
-**Last Updated**: 2026-04-13
+**Last Updated**: 2026-04-14
 
 ---
 

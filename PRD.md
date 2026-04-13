@@ -1,7 +1,7 @@
 # Product Requirements Document — Pokémon Battle Arena
 
 **Version**: 1.2.0
-**Last Updated**: 2026-04-13
+**Last Updated**: 2026-04-14
 **Owner**: Sapeksh
 
 ---

@@ -31,7 +31,7 @@ const TIMEOUT_MS = 30_000;
 function snapshotGs(gs) {
   if (!gs) return null;
   return {
-    players:               [...(gs.players || [])],
+    players:               (gs.players || []).map(p => ({ ...p })),
     round:                 gs.round,
     weather:               gs.weather,
     activeTurnPlayerId:    gs.activeTurnPlayerId,

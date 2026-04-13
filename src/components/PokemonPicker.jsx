@@ -37,20 +37,30 @@ function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
       <div className="w-full h-full flex items-center justify-center relative">
         {pokemon.sprite ? (
           <img
+            key={pokemon.fullName}
             src={pokemon.sprite}
             alt={pokemon.fullName}
             className="w-full h-full object-contain pixelated"
             style={{ imageRendering: 'pixelated' }}
             onError={e => {
-              if(!e.target.dataset.tried){
-                e.target.dataset.tried = '1';
-                e.target.src = e.target.src.replace('/ani/', '/gen5/').replace('.gif', '.png');
-              } else if (e.target.dataset.tried === '1') {
-                e.target.dataset.tried = '2';
-                e.target.src = e.target.src.replace('/gen5/', '/dex/');
+              const target = e.target;
+              if(!target.dataset.tried){
+                target.dataset.tried = '1';
+                if(target.src.includes('.gif')){
+                  target.src = target.src.replace('/ani/', '/gen5/').replace('.gif', '.png');
+                } else {
+                  // If it was already a PNG, skip directly to dex directory
+                  target.dataset.tried = '2';
+                  const slug = (pokemon.fullName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                  target.src = `https://play.pokemonshowdown.com/sprites/dex/${slug}.png`;
+                }
+              } else if (target.dataset.tried === '1') {
+                target.dataset.tried = '2';
+                const slug = (pokemon.fullName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                target.src = `https://play.pokemonshowdown.com/sprites/dex/${slug}.png`;
               } else {
-                e.target.id = 'img-error'; 
-                e.target.style.display = 'none';
+                target.id = 'img-error'; 
+                target.style.display = 'none';
               }
             }}
           />

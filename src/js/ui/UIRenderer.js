@@ -105,6 +105,17 @@ export class UIRenderer {
             return card;
         }
 
+        // Set type colors as CSS variables for the dynamic gradients
+        if (pokemon.types && pokemon.types.length > 0) {
+            card.style.setProperty('--type-1-color', `var(--type-${pokemon.types[0].toLowerCase()})`);
+            if (pokemon.types.length > 1) {
+                card.style.setProperty('--type-2-color', `var(--type-${pokemon.types[1].toLowerCase()})`);
+            } else {
+                // For single type, type-2 is same as type-1 for gradients
+                card.style.setProperty('--type-2-color', `var(--type-${pokemon.types[0].toLowerCase()})`);
+            }
+        }
+
         const tier = (pokemon.tier || '').toLowerCase();
         if (tier.includes('legendary') || tier.includes('mythical') ||
             tier.includes('ultra beast') || tier.includes('mega') || tier.includes('gmax')) {

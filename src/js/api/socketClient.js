@@ -679,8 +679,8 @@ export class MultiplayerManager {
                                   line-height:1.2;margin-top:4px;font-family:monospace;">${name}</span>
                 `;
                 card.addEventListener('mouseenter', () => {
-                    card.style.transform = 'scale(1.1)';
-                    card.querySelector('img').style.filter = 'drop-shadow(0 0 8px rgba(250,204,21,0.6))';
+                    card.style.transform = 'scale(1.15)';
+                    card.querySelector('img').style.filter = 'drop-shadow(0 0 10px rgba(250,204,21,0.8))';
                 });
                 card.addEventListener('mouseleave', () => {
                     card.style.transform = 'scale(1)';

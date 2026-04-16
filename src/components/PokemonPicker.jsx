@@ -20,7 +20,6 @@ function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
       style={{
         background: 'transparent',
         borderColor: 'transparent',
-        boxShadow: isSelected ? '0 0 15px 2px rgba(250,204,21,0.6)' : 'none',
         transform: isSelected ? 'scale(1.15)' : 'scale(1)',
         opacity: isFainted ? 0.4 : 1,
         width: 44,
@@ -41,8 +40,11 @@ function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
             key={pokemon.fullName}
             src={pokemon.sprite}
             alt={pokemon.fullName}
-            className="w-full h-full object-contain pixelated"
-            style={{ imageRendering: 'pixelated' }}
+            className="w-full h-full object-contain pixelated transition-all duration-300"
+            style={{ 
+              imageRendering: 'pixelated',
+              filter: isSelected ? 'drop-shadow(0 0 8px rgba(250,204,21,0.8))' : 'none'
+            }}
             onError={e => {
               const target = e.target;
               if(!target.dataset.tried){

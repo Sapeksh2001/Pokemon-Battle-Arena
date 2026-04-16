@@ -641,8 +641,8 @@ export class PokemonBattleArena {
                                   line-height:1.1;margin-top:3px;font-family:monospace;">${name}</span>
                 `;
                 card.addEventListener('mouseenter', () => {
-                    card.style.transform = 'scale(1.1)';
-                    card.querySelector('img').style.filter = 'drop-shadow(0 0 8px rgba(250,204,21,0.6))';
+                    card.style.transform = 'scale(1.15)';
+                    card.querySelector('img').style.filter = 'drop-shadow(0 0 10px rgba(250,204,21,0.8))';
                 });
                 card.addEventListener('mouseleave', () => {
                     card.style.transform = 'scale(1)';
@@ -1078,11 +1078,11 @@ export class PokemonBattleArena {
             const itemName = item?.Name || item?.name;
             if (!itemName) return;
             const div = document.createElement('div');
-            div.className = 'bg-transparent p-2 text-center cursor-pointer transition-all hover:scale-110';
+            div.className = 'bg-transparent p-2 text-center cursor-pointer transition-all hover:scale-115 group';
             div.innerHTML = `<img src="${item.sprite || ''}" alt="${escapeHTML(itemName)}" 
                              onerror="const name='${itemName.toLowerCase().replace(/[^a-z0-9]/g, '')}'; if(!this.dataset.tried){this.dataset.tried=1; if(this.src.includes('.gif')){this.src=this.src.replace('/ani/','/gen5/').replace('.gif','.png');}else{this.dataset.tried=2;this.src='https://play.pokemonshowdown.com/sprites/dex/'+name+'.png';}}else if(this.dataset.tried=='1'){this.dataset.tried=2;this.src='https://play.pokemonshowdown.com/sprites/dex/'+name+'.png';}"
-                             class="mx-auto h-16">
-                             <p class="font-bold text-xs mt-1">${escapeHTML(itemName)}</p>`;
+                             class="mx-auto h-16 transition-all duration-300 group-hover:drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]">
+                             <p class="font-bold text-xs mt-1 transition-colors group-hover:text-yellow-400">${escapeHTML(itemName)}</p>`;
             div.onclick = () => onSelect(itemName);
             grid.appendChild(div);
         });

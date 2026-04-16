@@ -12,6 +12,7 @@ export class UIRenderer {
     constructor(gameState, arena) {
         this._gs = gameState;
         this._arena = arena;
+        this._prevPokemonNames = new Map();
         this.settings = {
             damageNumbers: true,
             animationSpeed: '0.5s'
@@ -28,21 +29,27 @@ export class UIRenderer {
      */
     _buildGaugeHTML(pct) {
         const radius = 45;
-        const circumference = 2 * Math.PI * radius;
-        const offset = circumference - (pct * circumference);
-        
-        // Determine color based on pct
-        let arcColor = 'var(--hp-color-green)';
-        if (pct < 0.2) arcColor = 'var(--hp-color-red)';
-        else if (pct < 0.5) arcColor = 'var(--hp-color-orange)';
-        else if (pct < 0.8) arcColor = 'var(--hp-color-yellow)';
+        const circumference = 2 * Math.PI * radius; // ~282.7
+        const arcLength = 0.75 * circumference; // 270 degrees (~212)
+        const offset = arcLength - (pct * arcLength);
 
         return `
+            <div class="hp-gauge-spectrum"></div>
             <svg class="hp-gauge-svg" viewBox="0 0 100 100">
+                <defs>
+                    <mask id="hp-gauge-mask">
+                        <circle cx="50" cy="50" r="${radius}" 
+                                fill="none"
+                                stroke="white"
+                                stroke-width="12"
+                                stroke-dasharray="${arcLength} ${circumference}"
+                                stroke-dashoffset="${offset}"
+                                stroke-linecap="round" />
+                    </mask>
+                </defs>
                 <circle class="hp-gauge-bg" cx="50" cy="50" r="${radius}" />
-                <circle class="hp-gauge-arc" cx="50" cy="50" r="${radius}" 
-                        style="stroke-dashoffset: ${offset}; stroke: ${arcColor};" />
-                <circle class="hp-gauge-shine" cx="50" cy="50" r="${radius}" />
+                <circle class="hp-gauge-shine" cx="50" cy="50" r="${radius}" 
+                        style="stroke-dasharray: 40 ${circumference + 100};" />
             </svg>
         `;
     }
@@ -116,12 +123,16 @@ export class UIRenderer {
         }
 
         // Handle flip animation if pokemon changed
-        const lastPokemon = card.dataset.lastPokemon;
-        if (lastPokemon && lastPokemon !== pokemon.fullName) {
+        const prevName = this._prevPokemonNames.get(player.id);
+        if (prevName && prevName !== pokemon.fullName) {
             card.classList.add('flipping');
-            setTimeout(() => card.classList.remove('flipping'), 2000);
+            // Remove flipping after animation completes
+            setTimeout(() => {
+                const el = document.getElementById(`player-card-${player.id}`);
+                if (el) el.classList.remove('flipping');
+            }, 2000);
         }
-        card.dataset.lastPokemon = pokemon.fullName;
+        this._prevPokemonNames.set(player.id, pokemon.fullName);
 
         const tier = (pokemon.tier || '').toLowerCase();
         if (tier.includes('legendary') || tier.includes('mythical') ||

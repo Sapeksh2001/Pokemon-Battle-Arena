@@ -452,21 +452,41 @@ button, input, select {
     position: absolute;
     width: 100%;
     height: 100%;
-    transform: rotate(-90deg);
+    transform: rotate(75deg); /* Aligns 270° arc from 7 to 4 o'clock */
+}
+
+.hp-gauge-arc {
+    fill: none;
+    stroke: white; /* Base color for the mask */
+    stroke-width: 12;
+    stroke-dasharray: 212; /* ~270 degrees */
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hp-gauge-spectrum {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 180deg,
+        var(--hp-color-red) 0%,
+        var(--hp-color-orange) 20%,
+        var(--hp-color-yellow-orange) 40%,
+        var(--hp-color-yellow) 60%,
+        var(--hp-color-yellow-green) 80%,
+        var(--hp-color-green) 100%
+    );
+    mask: url(#hp-gauge-mask);
+    -webkit-mask: url(#hp-gauge-mask);
+    pointer-events: none;
 }
 
 .hp-gauge-bg {
     fill: none;
     stroke: rgba(255, 255, 255, 0.05);
     stroke-width: 12;
-}
-
-.hp-gauge-arc {
-    fill: none;
-    stroke-width: 12;
-    stroke-dasharray: 283; /* 2 * PI * 45 */
-    stroke-linecap: round;
-    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.5s ease;
+    stroke-dasharray: 212;
 }
 
 .hp-gauge-shine {
@@ -495,10 +515,17 @@ button, input, select {
     animation: vertical-flip 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
+/* Suppress sprite-level animations when the full card is flipping to prevent visual mess */
+.player-card.flipping .pokemon-sprite {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: scale(1) !important;
+}
+
 @keyframes vertical-flip {
     0% { transform: rotateY(0deg); }
-    45% { transform: rotateY(90deg) scale(0.9); }
-    55% { transform: rotateY(90deg) scale(0.9); }
+    45% { transform: rotateY(90deg) scale(0.95); filter: brightness(1.5); }
+    55% { transform: rotateY(90deg) scale(0.95); filter: brightness(1.5); }
     100% { transform: rotateY(0deg); }
 }
 

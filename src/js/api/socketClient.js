@@ -655,8 +655,8 @@ export class MultiplayerManager {
                 card.type = 'button';
                 card.title = name;
                 card.style.cssText = `
-                    background: rgba(15,23,42,0.9);
-                    border: 1px solid #334155;
+                    background: transparent;
+                    border: 1px solid transparent;
                     cursor: pointer;
                     display: flex;
                     flex-direction: column;
@@ -664,8 +664,8 @@ export class MultiplayerManager {
                     justify-content: flex-end;
                     padding: 6px 4px 7px;
                     height: 88px;
-                    transition: background 0.1s, border-color 0.1s, box-shadow 0.1s;
-                    overflow: hidden;
+                    transition: transform 0.2s, drop-shadow 0.2s;
+                    overflow: visible;
                     width: 100%;
                     box-sizing: border-box;
                 `;
@@ -679,15 +679,11 @@ export class MultiplayerManager {
                                   line-height:1.2;margin-top:4px;font-family:monospace;">${name}</span>
                 `;
                 card.addEventListener('mouseenter', () => {
-                    card.style.background = 'rgba(250,204,21,0.12)';
-                    card.style.borderColor = '#facc15';
-                    card.style.boxShadow = '0 0 8px rgba(250,204,21,0.35)';
-                    card.querySelector('img').style.filter = 'drop-shadow(0 0 4px rgba(250,204,21,0.6))';
+                    card.style.transform = 'scale(1.1)';
+                    card.querySelector('img').style.filter = 'drop-shadow(0 0 8px rgba(250,204,21,0.6))';
                 });
                 card.addEventListener('mouseleave', () => {
-                    card.style.background = 'rgba(15,23,42,0.9)';
-                    card.style.borderColor = '#334155';
-                    card.style.boxShadow = 'none';
+                    card.style.transform = 'scale(1)';
                     card.querySelector('img').style.filter = 'drop-shadow(0 0 3px rgba(250,204,21,0))';
                 });
                 card.onclick = async () => {

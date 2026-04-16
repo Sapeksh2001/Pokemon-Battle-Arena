@@ -486,7 +486,7 @@ export class PokemonBattleArena {
         for (let i = 0; i < 6; i++) {
             const pokemon = player.team[i];
             const slot = document.createElement('div');
-            slot.className = 'bg-slate-700 p-2 text-center cursor-pointer hover:bg-slate-600 relative overflow-hidden h-full flex flex-col items-center justify-between min-h-[120px] border border-outline-variant';
+            slot.className = 'bg-transparent p-2 text-center cursor-pointer transition-all hover:scale-110 relative overflow-visible h-full flex flex-col items-center justify-between min-h-[120px] border border-transparent hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]';
             slot.dataset.slotId = i;
 
             if (pokemon) {
@@ -572,11 +572,11 @@ export class PokemonBattleArena {
                     gap: 6px;
                     max-height: 380px;
                     overflow-y: auto;
-                    background: #0a1628;
-                    border: 1px solid #334155;
+                    background: transparent;
+                    border: 1px solid transparent;
                     padding: 8px;
                     scrollbar-width: thin;
-                    scrollbar-color: #facc15 #0a1628;
+                    scrollbar-color: #facc15 transparent;
                 "></div>
             </div>
             <div class="mb-2">
@@ -617,8 +617,8 @@ export class PokemonBattleArena {
                 card.type = 'button';
                 card.title = name;
                 card.style.cssText = `
-                    background: rgba(15,23,42,0.9);
-                    border: 1px solid #334155;
+                    background: transparent;
+                    border: 1px solid transparent;
                     cursor: pointer;
                     display: flex;
                     flex-direction: column;
@@ -626,9 +626,9 @@ export class PokemonBattleArena {
                     justify-content: flex-end;
                     padding: 4px 2px 5px;
                     height: 76px;
-                    transition: background 0.1s, border-color 0.1s, box-shadow 0.1s;
+                    transition: transform 0.2s, drop-shadow 0.2s;
                     position: relative;
-                    overflow: hidden;
+                    overflow: visible;
                 `;
                 card.innerHTML = `
                     <img src="${node.sprite || ''}" alt="${name}"
@@ -641,15 +641,11 @@ export class PokemonBattleArena {
                                   line-height:1.1;margin-top:3px;font-family:monospace;">${name}</span>
                 `;
                 card.addEventListener('mouseenter', () => {
-                    card.style.background = 'rgba(250,204,21,0.12)';
-                    card.style.borderColor = '#facc15';
-                    card.style.boxShadow = '0 0 8px rgba(250,204,21,0.35)';
-                    card.querySelector('img').style.filter = 'drop-shadow(0 0 4px rgba(250,204,21,0.6))';
+                    card.style.transform = 'scale(1.1)';
+                    card.querySelector('img').style.filter = 'drop-shadow(0 0 8px rgba(250,204,21,0.6))';
                 });
                 card.addEventListener('mouseleave', () => {
-                    card.style.background = 'rgba(15,23,42,0.9)';
-                    card.style.borderColor = '#334155';
-                    card.style.boxShadow = 'none';
+                    card.style.transform = 'scale(1)';
                     card.querySelector('img').style.filter = 'drop-shadow(0 0 3px rgba(250,204,21,0))';
                 });
                 card.onclick = () => {
@@ -1082,7 +1078,7 @@ export class PokemonBattleArena {
             const itemName = item?.Name || item?.name;
             if (!itemName) return;
             const div = document.createElement('div');
-            div.className = 'bg-slate-700 p-2 text-center cursor-pointer hover:bg-slate-600';
+            div.className = 'bg-transparent p-2 text-center cursor-pointer transition-all hover:scale-110';
             div.innerHTML = `<img src="${item.sprite || ''}" alt="${escapeHTML(itemName)}" 
                              onerror="const name='${itemName.toLowerCase().replace(/[^a-z0-9]/g, '')}'; if(!this.dataset.tried){this.dataset.tried=1; if(this.src.includes('.gif')){this.src=this.src.replace('/ani/','/gen5/').replace('.gif','.png');}else{this.dataset.tried=2;this.src='https://play.pokemonshowdown.com/sprites/dex/'+name+'.png';}}else if(this.dataset.tried=='1'){this.dataset.tried=2;this.src='https://play.pokemonshowdown.com/sprites/dex/'+name+'.png';}"
                              class="mx-auto h-16">

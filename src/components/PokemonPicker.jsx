@@ -18,9 +18,10 @@ function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
       title={pokemon.fullName || 'Pokémon'}
       className="relative flex-shrink-0 flex items-center justify-center p-1 border-2 transition-all duration-150 cursor-pointer group"
       style={{
-        background: isSelected ? 'rgba(250,204,21,0.2)' : 'rgba(13,22,45,0.7)',
-        borderColor: isSelected ? '#facc15' : '#40485d',
-        boxShadow: isSelected ? '0 0 10px 1px rgba(250,204,21,0.45)' : 'none',
+        background: 'transparent',
+        borderColor: 'transparent',
+        boxShadow: isSelected ? '0 0 15px 2px rgba(250,204,21,0.6)' : 'none',
+        transform: isSelected ? 'scale(1.15)' : 'scale(1)',
         opacity: isFainted ? 0.4 : 1,
         width: 44,
         height: 44,

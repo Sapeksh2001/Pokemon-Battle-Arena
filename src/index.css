@@ -455,38 +455,42 @@ button, input, select {
     transform: rotate(75deg); /* Aligns 270° arc from 7 to 4 o'clock */
 }
 
-.hp-gauge-arc {
-    fill: none;
-    stroke: white; /* Base color for the mask */
-    stroke-width: 12;
-    stroke-dasharray: 212; /* ~270 degrees */
-    stroke-linecap: round;
-    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 .hp-gauge-spectrum {
     position: absolute;
-    inset: 0;
+    inset: 15%; /* Shrink slightly to fit within the dial better */
     border-radius: 50%;
     background: conic-gradient(
         from 180deg,
-        var(--hp-color-red) 0%,
-        var(--hp-color-orange) 20%,
-        var(--hp-color-yellow-orange) 40%,
-        var(--hp-color-yellow) 60%,
-        var(--hp-color-yellow-green) 80%,
-        var(--hp-color-green) 100%
+        #ff0000 0%,
+        #ff8c00 20%,
+        #ffd700 40%,
+        #ffff00 60%,
+        #adff2f 80%,
+        #00ff00 100%
     );
-    mask: url(#hp-gauge-mask);
-    -webkit-mask: url(#hp-gauge-mask);
+    mask: var(--hp-gauge-mask);
+    -webkit-mask: var(--hp-gauge-mask);
+    filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
     pointer-events: none;
 }
 
+/* Individual card mask assignments to prevent cross-card ID pollution */
+#player-card-1 .hp-gauge-spectrum { --hp-gauge-mask: url(#hp-gauge-mask-1); }
+#player-card-2 .hp-gauge-spectrum { --hp-gauge-mask: url(#hp-gauge-mask-2); }
+#player-card-3 .hp-gauge-spectrum { --hp-gauge-mask: url(#hp-gauge-mask-3); }
+#player-card-4 .hp-gauge-spectrum { --hp-gauge-mask: url(#hp-gauge-mask-4); }
+#player-card-5 .hp-gauge-spectrum { --hp-gauge-mask: url(#hp-gauge-mask-5); }
+#player-card-6 .hp-gauge-spectrum { --hp-gauge-mask: url(#hp-gauge-mask-6); }
+
 .hp-gauge-bg {
     fill: none;
-    stroke: rgba(255, 255, 255, 0.05);
-    stroke-width: 12;
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 8;
     stroke-dasharray: 212;
+}
+
+.hp-gauge-arc {
+    display: none; /* Replaced by masked spectrum */
 }
 
 .hp-gauge-shine {
@@ -511,22 +515,23 @@ button, input, select {
     transform-style: preserve-3d;
 }
 
-.player-card.flipping {
-    animation: vertical-flip 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+.player-card.flipping-sequential {
+    animation: sequential-flip-1080 2s cubic-bezier(0.45, 0, 0.55, 1) forwards;
 }
 
-/* Suppress sprite-level animations when the full card is flipping to prevent visual mess */
-.player-card.flipping .pokemon-sprite {
+/* Suppress all legacy switch/fade animations */
+.pokemon-sprite, 
+.player-card.flipping-sequential .pokemon-sprite,
+.switch-in-animation,
+.switch-out-animation {
     animation: none !important;
     opacity: 1 !important;
-    transform: scale(1) !important;
+    transform: none !important;
 }
 
-@keyframes vertical-flip {
+@keyframes sequential-flip-1080 {
     0% { transform: rotateY(0deg); }
-    45% { transform: rotateY(90deg) scale(0.95); filter: brightness(1.5); }
-    55% { transform: rotateY(90deg) scale(0.95); filter: brightness(1.5); }
-    100% { transform: rotateY(0deg); }
+    100% { transform: rotateY(1080deg); }
 }
 
 .status-alignment-row { 

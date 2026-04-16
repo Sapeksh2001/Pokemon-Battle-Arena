@@ -116,7 +116,6 @@ export class UIRenderer {
     _createPlayerCard(player) {
         const pokemon = player.getActivePokemon();
         const card = document.createElement('div');
-        // ... (rest of the card logic using the d_ variables calculated above)
 
         card.className = 'player-card p-4 flex flex-col items-center justify-between h-full';
         card.id = `player-card-${player.id}`;
@@ -126,7 +125,6 @@ export class UIRenderer {
         card.classList.toggle('selected-target', player.id === this._gs.selectedAttackTargetId);
         card.classList.toggle('selected-status-target', player.id === this._gs.selectedStatusTargetId);
 
-        const pokemon = player.getActivePokemon();
         if (!pokemon) {
             card.innerHTML = `
                 <div class="flex flex-col items-center justify-center h-full text-center font-body">

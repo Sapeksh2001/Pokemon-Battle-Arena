@@ -27,23 +27,24 @@ export class UIRenderer {
      * @param {number} pct - HP percentage 0.0 to 1.0
      */
     _buildGaugeHTML(pct) {
-        const colors = [
-            'var(--hp-color-red)', 'var(--hp-color-orange)', 'var(--hp-color-yellow-orange)',
-            'var(--hp-color-yellow)', 'var(--hp-color-yellow-green)', 'var(--hp-color-green)'
-        ];
-        const total = 60, span = 270, start = -135;
-        const activeCount = Math.max(1, Math.round(pct * total));
-        let html = '';
-        for (let i = 0; i < total; i++) {
-            const color = colors[Math.floor(i / (total / colors.length))];
-            const rotation = start + (i / (total - 1)) * span;
-            const active = i < activeCount;
-            const opacity = active ? '1' : '0.12';
-            html += '<div class="hp-segment-rotator" style="transform:rotate(' + rotation + 'deg);">'
-                + '<div class="hp-segment-visual" style="background-color:' + color + ';opacity:' + opacity + ';"></div>'
-                + '</div>';
-        }
-        return html;
+        const radius = 45;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (pct * circumference);
+        
+        // Determine color based on pct
+        let arcColor = 'var(--hp-color-green)';
+        if (pct < 0.2) arcColor = 'var(--hp-color-red)';
+        else if (pct < 0.5) arcColor = 'var(--hp-color-orange)';
+        else if (pct < 0.8) arcColor = 'var(--hp-color-yellow)';
+
+        return `
+            <svg class="hp-gauge-svg" viewBox="0 0 100 100">
+                <circle class="hp-gauge-bg" cx="50" cy="50" r="${radius}" />
+                <circle class="hp-gauge-arc" cx="50" cy="50" r="${radius}" 
+                        style="stroke-dashoffset: ${offset}; stroke: ${arcColor};" />
+                <circle class="hp-gauge-shine" cx="50" cy="50" r="${radius}" />
+            </svg>
+        `;
     }
 
     // ── Full re-render ───────────────────────────────────────────────
@@ -107,14 +108,20 @@ export class UIRenderer {
 
         // Set type colors as CSS variables for the dynamic gradients
         if (pokemon.types && pokemon.types.length > 0) {
-            card.style.setProperty('--type-1-color', `var(--type-${pokemon.types[0].toLowerCase()})`);
-            if (pokemon.types.length > 1) {
-                card.style.setProperty('--type-2-color', `var(--type-${pokemon.types[1].toLowerCase()})`);
-            } else {
-                // For single type, type-2 is same as type-1 for gradients
-                card.style.setProperty('--type-2-color', `var(--type-${pokemon.types[0].toLowerCase()})`);
-            }
+            const type1 = pokemon.types[0].toLowerCase();
+            const type2 = pokemon.types[1] ? pokemon.types[1].toLowerCase() : type1;
+            
+            card.style.setProperty('--type-1-color', `var(--type-${type1})`);
+            card.style.setProperty('--type-2-color', `var(--type-${type2})`);
         }
+
+        // Handle flip animation if pokemon changed
+        const lastPokemon = card.dataset.lastPokemon;
+        if (lastPokemon && lastPokemon !== pokemon.fullName) {
+            card.classList.add('flipping');
+            setTimeout(() => card.classList.remove('flipping'), 2000);
+        }
+        card.dataset.lastPokemon = pokemon.fullName;
 
         const tier = (pokemon.tier || '').toLowerCase();
         if (tier.includes('legendary') || tier.includes('mythical') ||
@@ -167,9 +174,7 @@ export class UIRenderer {
                 </div>
                 <!-- Dynamic Floating Text Container inserted locally in later features -->
                 <div class="hp-gauge-container">
-                    <div class="hp-gauge-segments-container">${this._buildGaugeHTML(pct)}</div>
-                    <div class="hp-gauge-pivot"></div>
-                    <div class="hp-gauge-needle" style="transform:rotate(${needleAngle}deg);"></div>
+                    ${this._buildGaugeHTML(pct)}
                     <div class="hp-gauge-center" onclick="window.editHP('${player.id}')">
                         <div class="current-hp">${pokemon.currentHP}</div>
                         <div class="max-hp">${pokemon.maxHp}</div>
@@ -208,7 +213,7 @@ export class UIRenderer {
         };
         return Object.keys(pokemon.statuses)
             .filter(s => iconMap[s])
-            .map(s => `<span class="material-symbols-outlined text-[20px] ${iconMap[s].color}" style="font-variation-settings: 'FILL' 1;">${iconMap[s].icon}</span>`)
+            .map(s => `<span class="material-symbols-outlined text-[20px] ${iconMap[s].color} status-icon-aura" style="font-variation-settings: 'FILL' 1;">${iconMap[s].icon}</span>`)
             .join('');
     }
 

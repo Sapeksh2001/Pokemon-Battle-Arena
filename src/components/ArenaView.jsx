@@ -77,6 +77,12 @@ export default function ArenaView() {
                 style={{ boxShadow: '4px 4px 0px 0px #450900' }}>
                 END ROUND 1
               </button>
+              <button id="quit-battle-btn"
+                onClick={() => window.handleQuit?.()}
+                className="bg-surface-variant text-red-400 hover:text-red-300 px-4 py-2 border-2 border-[#450900] transition-colors font-label text-[8px] uppercase step-animation ml-2"
+                style={{ boxShadow: '4px 4px 0px 0px #450900' }}>
+                QUIT
+              </button>
             </div>
             {/* Timer */}
             <div className="flex items-center gap-2">
@@ -292,19 +298,19 @@ export default function ArenaView() {
                       <span><span className="material-symbols-outlined text-[18px] align-middle">keyboard</span> Shortcuts</span>
                       <span className={`material-symbols-outlined text-[18px] transition-transform ${showShortcuts ? 'rotate-180' : ''}`} id="shortcuts-chevron">expand_more</span>
                     </button>
-                    <div id="shortcuts-list" className={`${showShortcuts ? 'block' : 'hidden'} text-[10px] font-body text-slate-400 space-y-1 pl-2 border-l-2 border-yellow-600 mt-2`}>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">1-6</kbd> Select Player</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Space</kbd> End Round</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">P</kbd> Physical Atk</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">S</kbd> Special Atk</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">E</kbd> Evolve</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">F</kbd> Form Change</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">R</kbd> Random #</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">T</kbd> Toggle Timer</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Shift+T</kbd> Reset Timer</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Ctrl+Z</kbd> Undo</span></div>
-                      <div className="flex justify-between text-yellow-500/80"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Ctrl+Y</kbd> Redo</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant text-[9px] font-mono">Esc</kbd> Close Modal</span></div>
+                    <div id="shortcuts-list" className={`${showShortcuts ? 'block' : 'hidden'} text-xs font-body text-slate-300 space-y-1.5 pl-2 border-l-2 border-yellow-600 mt-2 max-h-[250px] overflow-y-auto custom-scrollbar pr-2`}>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">1-6</kbd> Select Player</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Space</kbd> End Round</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">P</kbd> Physical Atk</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">S</kbd> Special Atk</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">E</kbd> Evolve</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">F</kbd> Form Change</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">R</kbd> Random #</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">T</kbd> Toggle Timer</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Shift+T</kbd> Reset Timer</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Ctrl+Z</kbd> Undo</span></div>
+                      <div className="flex justify-between text-yellow-500/80"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Ctrl+Y</kbd> Redo</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Esc</kbd> Close Modal</span></div>
                     </div>
                   </div>
                 </div>

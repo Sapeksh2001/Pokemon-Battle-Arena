@@ -23,6 +23,7 @@ export class Timer {
                 if (onTick) onTick(this.timeLeft);
             } else {
                 this.pause();
+                if (this.onTimeout) this.onTimeout();
             }
         }, 1000);
     }

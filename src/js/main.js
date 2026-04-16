@@ -38,6 +38,9 @@ export class PokemonBattleArena {
 
         // Renderer (needs a reference back to arena for onclick callbacks).
         this.renderer = new UIRenderer(this.gs, this);
+
+        // Hook up round timer timeout
+        this.timer.onTimeout = () => this._handleTimeout();
     }
 
     // ── Bootstrap ─────────────────────────────────────────────────────────
@@ -73,6 +76,7 @@ export class PokemonBattleArena {
         window.handleTeamIconClick = (pid, sid) => this.handleTeamIconClick(pid, sid);
         window.editHP = id => this.editHP(id);
         window.removePlayer = id => this.removePlayer(id);
+        window.handleQuit = () => this.handleQuit();
         // Expose switch-pokemon for the management section's Switch button.
         window.switchActivePokemonForMgmt = () => {
             const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
@@ -316,6 +320,80 @@ export class PokemonBattleArena {
         damage > 0
             ? this._animateSprite(targetId, 'damage', onDone)
             : onDone();
+    }
+
+    _handleTimeout() {
+        const attackerId = document.getElementById('attacker-select')?.dataset?.value || document.getElementById('attacker-select')?.value;
+        const targetId = document.getElementById('attack-target-select')?.dataset?.value || document.getElementById('attack-target-select')?.value;
+        const isMultiPlayer = this.gs.players.length > 2;
+
+        if (!attackerId) {
+            this._notify('Round Timeout: No attacker selected!', 'system', true);
+            return;
+        }
+
+        const attackerPlayer = this.gs.players.find(p => p.id === attackerId);
+        const attackerPokemon = attackerPlayer?.getActivePokemon();
+        if (!attackerPokemon || attackerPokemon.isFainted()) return;
+
+        // Reset inputs to a 'timeout' state
+        const powerInput = document.getElementById('move-power-input');
+        const typeSel = document.getElementById('move-type-select');
+        const nameSel = document.getElementById('move-name-select');
+
+        if (isMultiPlayer && targetId) {
+            // Target selected in 3+ player game -> Fire random move
+            const moves = (typeof MovesetsData !== 'undefined') ? (MovesetsData[attackerPokemon.fullName] || MovesetsData[attackerPokemon.fullName.split(' ')[0]]) : null;
+            const moveList = moves || Object.keys(MovesData);
+            const randomMoveName = moveList[Math.floor(Math.random() * moveList.length)];
+            const moveData = MovesData[randomMoveName];
+
+            if (moveData && nameSel && typeSel && powerInput) {
+                nameSel.value = randomMoveName;
+                typeSel.value = moveData.type;
+                powerInput.value = moveData.power || 50;
+                this._notify(`Timeout: ${attackerPokemon.fullName} acted randomly!`, 'action');
+                this.handleAttack(moveData.category || 'physical');
+            }
+        } else {
+            // 2 Players OR No target in 3+ players -> Attack self with Struggle
+            if (nameSel && typeSel && powerInput) {
+                const targetSel = document.getElementById('attack-target-select');
+                if (targetSel) {
+                    // Set target to self
+                    if (targetSel.dataset) targetSel.dataset.value = attackerId;
+                    targetSel.value = attackerId;
+                }
+                
+                nameSel.value = "Struggle";
+                typeSel.value = "Normal";
+                powerInput.value = 50;
+                
+                this._notify(`Timeout: ${attackerPokemon.fullName} hit itself in confusion!`, 'damage');
+                this.handleAttack('physical');
+            }
+        }
+    }
+
+    handleQuit() {
+        if (!confirm('Are you sure you want to quit the current battle?')) return;
+        
+        this.audio.play('click');
+        this.timer.reset();
+        
+        // Hide arena, show lobby
+        const arena = document.getElementById('arena-view');
+        const lobby = document.getElementById('lobby-view');
+        if (arena) arena.classList.add('hidden');
+        if (lobby) lobby.classList.remove('hidden');
+        
+        // If in multiplayer, signal a disconnect or leave
+        if (this.multiplayer && this.multiplayer.mode === 'playing') {
+            this.multiplayer.disconnect();
+        }
+
+        this.log.add('Trainer quit the battle.', 'system');
+        this._announce('Quitted Battle');
     }
 
     updateAttackPreview() {

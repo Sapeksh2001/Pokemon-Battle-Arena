@@ -12,9 +12,6 @@ export class UIRenderer {
     constructor(gameState, arena) {
         this._gs = gameState;
         this._arena = arena;
-        this._prevPokemonNames = new Map();
-        this._flipStages = new Map(); // tracks [0-6]
-        this._fromPokemon = new Map(); // stores old pkmn for reveal
         this.settings = {
             damageNumbers: true,
             animationSpeed: '0.5s'
@@ -29,32 +26,24 @@ export class UIRenderer {
      * segments above it (lost HP) render dim so the arc visually shrinks.
      * @param {number} pct - HP percentage 0.0 to 1.0
      */
-    _buildGaugeHTML(player, pokemon, pct) {
-        const radius = 45;
-        const circumference = 2 * Math.PI * radius; // ~282.7
-        const arcLength = 0.75 * circumference; // 270 degrees (~212)
-        const offset = arcLength - (pct * arcLength);
-        const maskId = `hp-gauge-mask-${player.id}`;
-
-        return `
-            <div class="hp-gauge-spectrum"></div>
-            <svg class="hp-gauge-svg" viewBox="0 0 100 100">
-                <defs>
-                    <mask id="${maskId}">
-                        <circle cx="50" cy="50" r="${radius}" 
-                                fill="none"
-                                stroke="white"
-                                stroke-width="8"
-                                stroke-dasharray="${arcLength} ${circumference}"
-                                stroke-dashoffset="${offset}"
-                                stroke-linecap="round" />
-                    </mask>
-                </defs>
-                <circle class="hp-gauge-bg" cx="50" cy="50" r="${radius}" />
-                <circle class="hp-gauge-shine" cx="50" cy="50" r="${radius}" 
-                        style="stroke-dasharray: 40 ${circumference + 100};" />
-            </svg>
-        `;
+    _buildGaugeHTML(pct) {
+        const colors = [
+            'var(--hp-color-red)', 'var(--hp-color-orange)', 'var(--hp-color-yellow-orange)',
+            'var(--hp-color-yellow)', 'var(--hp-color-yellow-green)', 'var(--hp-color-green)'
+        ];
+        const total = 60, span = 270, start = -135;
+        const activeCount = Math.max(1, Math.round(pct * total));
+        let html = '';
+        for (let i = 0; i < total; i++) {
+            const color = colors[Math.floor(i / (total / colors.length))];
+            const rotation = start + (i / (total - 1)) * span;
+            const active = i < activeCount;
+            const opacity = active ? '1' : '0.12';
+            html += '<div class="hp-segment-rotator" style="transform:rotate(' + rotation + 'deg);">'
+                + '<div class="hp-segment-visual" style="background-color:' + color + ';opacity:' + opacity + ';"></div>'
+                + '</div>';
+        }
+        return html;
     }
 
     // ── Full re-render ───────────────────────────────────────────────
@@ -92,31 +81,8 @@ export class UIRenderer {
         return card;
     }
 
-    _triggerSequentialFlip(playerId) {
-        const totalDuration = 2000;
-        const stages = 6;
-        const interval = totalDuration / stages;
-        
-        for (let s = 1; s <= stages; s++) {
-            setTimeout(() => {
-                this._flipStages.set(playerId, s);
-                this.renderAll(); // Force re-render to update the element for this stage
-                
-                if (s === stages) {
-                    setTimeout(() => {
-                        this._flipStages.set(playerId, 0);
-                        this._fromPokemon.delete(playerId);
-                        this.renderAll();
-                    }, interval);
-                }
-            }, s * (interval * 0.9)); // Shift slightly to hit the "edge" points
-        }
-    }
-
     _createPlayerCard(player) {
-        const pokemon = player.getActivePokemon();
         const card = document.createElement('div');
-
         card.className = 'player-card p-4 flex flex-col items-center justify-between h-full';
         card.id = `player-card-${player.id}`;
         card.dataset.playerId = player.id;
@@ -125,6 +91,7 @@ export class UIRenderer {
         card.classList.toggle('selected-target', player.id === this._gs.selectedAttackTargetId);
         card.classList.toggle('selected-status-target', player.id === this._gs.selectedStatusTargetId);
 
+        const pokemon = player.getActivePokemon();
         if (!pokemon) {
             card.innerHTML = `
                 <div class="flex flex-col items-center justify-center h-full text-center font-body">
@@ -147,37 +114,13 @@ export class UIRenderer {
             card.style.setProperty('--type-2-color', `var(--type-${type2})`);
         }
 
-        // Handle 6-stage sequential flip reveal
-        const currentPkmn = pokemon;
-        const prevName = this._prevPokemonNames.get(player.id);
-        const currentStage = this._flipStages.get(player.id) || 0;
-        
-        if (prevName && prevName !== currentPkmn.fullName && currentStage === 0) {
-            // Start the sequence
-            this._fromPokemon.set(player.id, this._gs.players.find(p => p.id === player.id).getActivePokemon()); // This is subtle, might need a better clone
-            this._flipStages.set(player.id, 1);
-            card.classList.add('flipping-sequential');
-            
-            // Trigger the stage increments
-            this._triggerSequentialFlip(player.id);
+        // Handle flip animation if pokemon changed
+        const lastPokemon = card.dataset.lastPokemon;
+        if (lastPokemon && lastPokemon !== pokemon.fullName) {
+            card.classList.add('flipping');
+            setTimeout(() => card.classList.remove('flipping'), 2000);
         }
-
-        // Determine which data to show based on stage
-        const fromPkmn = this._fromPokemon.get(player.id) || currentPkmn;
-        const activePkmn = (key, stageThreshold) => (currentStage >= stageThreshold ? currentPkmn[key] : fromPkmn[key]);
-        
-        // Custom logic for nested/processed data
-        const getDisplayPkmn = (stageThreshold) => (currentStage >= stageThreshold ? currentPkmn : fromPkmn);
-        
-        const d_types = getDisplayPkmn(1).types;
-        const d_name = activePkmn('name', 2);
-        const d_tier = activePkmn('tier', 3);
-        const d_stats = getDisplayPkmn(4).stats;
-        const d_maxHP = getDisplayPkmn(5).maxHp;
-        const d_hp = getDisplayPkmn(5).hp;
-        const d_sprite = getDisplayPkmn(6).sprite;
-
-        this._prevPokemonNames.set(player.id, currentPkmn.fullName);
+        card.dataset.lastPokemon = pokemon.fullName;
 
         const tier = (pokemon.tier || '').toLowerCase();
         if (tier.includes('legendary') || tier.includes('mythical') ||
@@ -212,17 +155,17 @@ export class UIRenderer {
                         </button>
                     </div>
                 </div>
-                <h3 class="font-bold card-pokemon-name">${escapeHTML(d_name)}</h3>
-                <p class="pokemon-tier">${d_tier || 'Unknown'}</p>
+                <h3 class="font-bold card-pokemon-name">${escapeHTML(pokemon.fullName)}</h3>
+                <p class="pokemon-tier">${pokemon.tier || 'Unknown'}</p>
                 <div class="flex justify-center gap-2 mt-1">
-                    ${this._renderTypeBadges(d_types)}
+                    ${this._renderTypeBadges(pokemon.types)}
                 </div>
             </div>
             <div class="flex flex-col items-center justify-center flex-grow min-h-0 relative">
                 <div class="relative">
-                    <img src="${d_sprite}"
+                    <img src="${pokemon.sprite}"
                          onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src=this.src.replace('/ani/','/gen5/').replace('.gif','.png');}else if(this.dataset.tried=='1'){this.dataset.tried=2;this.src=this.src.replace('/gen5/','/dex/');}else{this.onerror=null;this.src='https://placehold.co/96x96/000000/FFFFFF?text=?';}"
-                         alt="${escapeHTML(d_name)}"
+                         alt="${escapeHTML(pokemon.fullName)}"
                          class="pokemon-sprite ${pokemon.isFainted() ? 'grayscale' : ''}">
                     ${pokemon.isFainted()
                 ? '<div class="absolute inset-0 flex items-center justify-center"><span class="text-red-500 text-2xl font-bold -rotate-12 bg-black/50 px-2">FAINTED</span></div>'
@@ -230,10 +173,12 @@ export class UIRenderer {
                 </div>
                 <!-- Dynamic Floating Text Container inserted locally in later features -->
                 <div class="hp-gauge-container">
-                    ${this._buildGaugeHTML(player, getDisplayPkmn(5), pct)}
+                    <div class="hp-gauge-segments-container">${this._buildGaugeHTML(pct)}</div>
+                    <div class="hp-gauge-pivot"></div>
+                    <div class="hp-gauge-needle" style="transform:rotate(${needleAngle}deg);"></div>
                     <div class="hp-gauge-center" onclick="window.editHP('${player.id}')">
-                        <div class="current-hp">${d_hp}</div>
-                        <div class="max-hp">${d_maxHP}</div>
+                        <div class="current-hp">${pokemon.currentHP}</div>
+                        <div class="max-hp">${pokemon.maxHp}</div>
                     </div>
                 </div>
                 <div class="status-alignment-row">

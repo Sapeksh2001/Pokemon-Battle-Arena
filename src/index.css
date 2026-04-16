@@ -437,77 +437,21 @@ button, input, select {
     height: clamp(8rem, 18vw, 16rem);
 }
 
-/* --- PREMIUM RADIAL GAUGE STYLES --- */
-.hp-gauge-container { 
-    position: relative; 
-    width: clamp(120px, 20vw, 220px); 
-    height: clamp(120px, 20vw, 220px); 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    margin-top: 1rem; 
-}
-
-.hp-gauge-svg {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    transform: rotate(75deg); /* Aligns 270° arc from 7 to 4 o'clock */
-}
-
-.hp-gauge-spectrum {
-    position: absolute;
-    inset: 15%; /* Shrink slightly to fit within the dial better */
-    border-radius: 50%;
-    background: conic-gradient(
-        from 180deg,
-        #ff0000 0%,
-        #ff8c00 20%,
-        #ffd700 40%,
-        #ffff00 60%,
-        #adff2f 80%,
-        #00ff00 100%
-    );
-    mask: var(--hp-gauge-mask);
-    -webkit-mask: var(--hp-gauge-mask);
-    filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
-    pointer-events: none;
-}
-
-/* Individual card mask assignments to prevent cross-card ID pollution */
-#player-card-1 .hp-gauge-spectrum { --hp-gauge-mask: url(#hp-gauge-mask-1); }
-#player-card-2 .hp-gauge-spectrum { --hp-gauge-mask: url(#hp-gauge-mask-2); }
-#player-card-3 .hp-gauge-spectrum { --hp-gauge-mask: url(#hp-gauge-mask-3); }
-#player-card-4 .hp-gauge-spectrum { --hp-gauge-mask: url(#hp-gauge-mask-4); }
-#player-card-5 .hp-gauge-spectrum { --hp-gauge-mask: url(#hp-gauge-mask-5); }
-#player-card-6 .hp-gauge-spectrum { --hp-gauge-mask: url(#hp-gauge-mask-6); }
-
-.hp-gauge-bg {
-    fill: none;
-    stroke: rgba(255, 255, 255, 0.1);
-    stroke-width: 8;
-    stroke-dasharray: 212;
-}
-
-.hp-gauge-arc {
-    display: none; /* Replaced by masked spectrum */
-}
-
-.hp-gauge-shine {
-    fill: none;
-    stroke: white;
-    stroke-width: 12;
-    stroke-dasharray: 40, 243;
-    stroke-linecap: round;
-    opacity: 0.4;
-    filter: blur(2px);
-    animation: gauge-shimmer 4s linear infinite;
-}
-
-@keyframes gauge-shimmer {
-    from { stroke-dashoffset: 283; }
-    to { stroke-dashoffset: -283; }
-}
+/* --- SEGMENTED HP METER STYLES --- */
+/* This is a complex component built from several layered elements to create a radial gauge. */
+.hp-gauge-container { position: relative; width: clamp(120px, 20vw, 220px); height: clamp(120px, 20vw, 220px); display: flex; justify-content: center; align-items: center; margin-top: 1rem; }
+.hp-gauge-segments-container { position: absolute; width: 100%; height: 100%; border-radius: 50%; }
+/* Each segment is a small bar inside a rotated container. */
+.hp-segment-rotator { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.hp-segment-visual { position: absolute; top: 0; left: calc(50% - 4px); width: 8px; height: 16px; background-color: white; border-radius: 4px; }
+/* The needle's rotation is controlled by an inline style set by JavaScript. */
+.hp-gauge-needle { position: absolute; bottom: 50%; left: calc(50% - 3px); width: 6px; height: 50px; background: #e2e8f0; clip-path: polygon(20% 0, 80% 0, 100% 100%, 0% 100%); transform-origin: bottom center; transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); z-index: 10; }
+/* The center circle displays the numeric HP. */
+.hp-gauge-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: clamp(85px, 16vw, 140px); height: clamp(85px, 16vw, 140px); background: #1e293b; border-radius: 50% !important; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #ffffff; z-index: 12; border: 4px solid #475569; cursor: pointer; box-sizing: border-box; }
+.hp-gauge-center .current-hp { font-size: var(--font-size-xl); font-weight: bold; line-height: 1.2; }
+.hp-gauge-center .max-hp { font-size: var(--font-size-base); color: #94a3b8; line-height: 1; margin-top: 2px; }
+/* The decorative pivot point in the very center. */
+.hp-gauge-pivot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 15px; height: 15px; background: #475569; border-radius: 50%; z-index: 11; border: 2px solid #94a3b8; }
 
 .player-card {
     transition: transform 0.3s ease, opacity 0.3s ease;
@@ -515,23 +459,15 @@ button, input, select {
     transform-style: preserve-3d;
 }
 
-.player-card.flipping-sequential {
-    animation: sequential-flip-1080 2s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+.player-card.flipping {
+    animation: vertical-flip 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* Suppress all legacy switch/fade animations */
-.pokemon-sprite, 
-.player-card.flipping-sequential .pokemon-sprite,
-.switch-in-animation,
-.switch-out-animation {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-}
-
-@keyframes sequential-flip-1080 {
+@keyframes vertical-flip {
     0% { transform: rotateY(0deg); }
-    100% { transform: rotateY(1080deg); }
+    45% { transform: rotateY(90deg) scale(0.9); }
+    55% { transform: rotateY(90deg) scale(0.9); }
+    100% { transform: rotateY(0deg); }
 }
 
 .status-alignment-row { 

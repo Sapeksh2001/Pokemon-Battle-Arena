@@ -11,10 +11,12 @@
 import { useState } from 'react';
 import PokemonPicker from './PokemonPicker';
 import { useGameStore } from '../store/useGameStore';
+import { useEffect } from 'react';
 
 export default function ArenaView() {
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const { dispatch, arena } = useGameStore();
+  const { dispatch, arena, gameState } = useGameStore();
+  const ver = gameState?._ver;
 
   const getArena = () => arena;
 
@@ -54,8 +56,16 @@ export default function ArenaView() {
       arena.audio?.play('error');
     }
   };
+  // Force the engine renderer to repopulate the DOM after React re-renders
+  useEffect(() => {
+    if (arena?.renderer) {
+      arena.renderer.renderAll();
+      if ((window as any).lucide) (window as any).lucide.createIcons();
+    }
+  }, [ver, arena]);
+
   return (
-    <div id="arena-view" className="hidden">
+    <div id="arena-view" className="flex flex-col h-screen overflow-hidden">
       {/* CRT & Pixel Grid & Animated Backgrounds */}
       <div className="fixed inset-0 z-0 bg-arena-animated" />
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none opacity-40">

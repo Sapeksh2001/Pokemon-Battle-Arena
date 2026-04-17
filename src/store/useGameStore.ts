@@ -16,6 +16,7 @@ interface GameState {
   selectedStatusTargetId: number | null;
   currentHPEdit: any;
   _raw: any;
+  _ver: number; // Version counter to force re-renders
 }
 
 interface LoadState {
@@ -28,17 +29,22 @@ interface LoadState {
 interface GameStore {
   loadState: LoadState;
   gameState: GameState | null;
+  currentView: 'lobby' | 'arena';
   arena: any;
   setLoadState: (state: Partial<LoadState>) => void;
   setGameState: (gs: any) => void;
   setArena: (arena: any) => void;
+  setView: (view: 'lobby' | 'arena') => void;
   dispatch: (action: string, ...args: any[]) => void;
 }
 
 function snapshotGs(gs: any): GameState | null {
   if (!gs) return null;
   return {
-    players: (gs.players || []).map((p: any) => ({ ...p })),
+    players: (gs.players || []).map((p: any) => ({ 
+      ...p,
+      team: (p.team || []).map((pk: any) => pk ? { ...pk, stats: { ...pk.stats }, statModifiers: { ...pk.statModifiers }, statuses: { ...pk.statuses } } : null)
+    })),
     round: gs.round,
     weather: gs.weather,
     activeTurnPlayerId: gs.activeTurnPlayerId,
@@ -46,6 +52,7 @@ function snapshotGs(gs: any): GameState | null {
     selectedStatusTargetId: gs.selectedStatusTargetId,
     currentHPEdit: gs.currentHPEdit,
     _raw: gs,
+    _ver: (Date.now()),
   };
 }
 
@@ -57,6 +64,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     error: null,
   },
   gameState: null,
+  currentView: 'lobby',
   arena: null,
 
   setLoadState: (state) => set((prev) => ({ loadState: { ...prev.loadState, ...state } })),
@@ -64,6 +72,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setGameState: (gs) => set({ gameState: snapshotGs(gs) }),
   
   setArena: (arena) => set({ arena }),
+
+  setView: (view) => set({ currentView: view }),
 
   dispatch: (action, ...args) => {
     const arena = get().arena;

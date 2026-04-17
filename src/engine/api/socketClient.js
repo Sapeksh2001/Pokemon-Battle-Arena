@@ -56,16 +56,18 @@ export class MultiplayerManager {
             return;
         }
 
-        // 2. Switch from Lobby View to Arena View
-        const lobby = document.getElementById('lobby-view');
-        const arenaNode = document.getElementById('arena-view');
-        
-        if (lobby && arenaNode) {
-            lobby.classList.add('hidden');
-            arenaNode.classList.remove('hidden');
-            console.log('[MULTIPLAYER] Transitioned to Arena View');
+        // 2. Switch from Lobby View to Arena View via Zustand store
+        if ((window as any).useGameStore) {
+            const store = (window as any).useGameStore.getState();
+            store.setView('arena');
+            console.log('[MULTIPLAYER] Transitioned to Arena View via Store');
         } else {
-            console.warn('[MULTIPLAYER] UI nodes not found for transition');
+            // Fallback for legacy compatibility
+            const lobby = document.getElementById('lobby-view');
+            const arenaNode = document.getElementById('arena-view');
+            if (lobby) lobby.classList.add('hidden');
+            if (arenaNode) arenaNode.classList.remove('hidden');
+            console.warn('[MULTIPLAYER] useGameStore not found, using DOM fallback');
         }
 
         // 3. Initialize the battle and Render (delayed slightly for DOM synchronization)

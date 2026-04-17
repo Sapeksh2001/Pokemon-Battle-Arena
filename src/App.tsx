@@ -22,6 +22,7 @@ import { authManager } from './engine/api/authManager.js';
 
 function GameRoot() {
   const loadState = useGameStore(state => state.loadState);
+  const currentView = useGameStore(state => state.currentView);
 
   // Signal the legacy engine (public/script.js) that React has mounted
   // and all DOM IDs are available. script.js polls for this flag.
@@ -101,9 +102,8 @@ function GameRoot() {
         </div>
       )}
 
-      {/* Both views are always in the DOM; the engine toggles .hidden */}
-      <LobbyView />
-      <ArenaView />
+      {/* Conditional rendering based on currentView */}
+      {currentView === 'lobby' ? <LobbyView /> : <ArenaView />}
       <Modals />
     </>
   );

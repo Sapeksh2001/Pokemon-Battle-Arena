@@ -180,5 +180,19 @@ export class PlayerManager {
         if (this.arena.multiplayer && this.arena.multiplayer.mode === 'playing') {
             this.arena.multiplayer.sendGameState();
         }
+    assignPokemonToPlayer(playerId: string, slotIndex: number, pokemonName: string) {
+        const player = this.arena.gs.players.find(p => p.id === playerId);
+        if (!player) return;
+
+        const result = this.arena.db.find(pokemonName);
+        if (result) {
+            player.team[slotIndex] = new Pokemon(result.foundNode, result.baseNode);
+            this.arena.renderer.renderAll();
+            this.arena._notify(`${player.name}'s Slot ${slotIndex + 1} updated to ${pokemonName}.`, 'system');
+            
+            if (this.arena.multiplayer && this.arena.multiplayer.mode === 'playing') {
+                this.arena.multiplayer.sendGameState();
+            }
+        }
     }
 }

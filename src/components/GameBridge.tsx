@@ -8,6 +8,10 @@ export default function GameBridge() {
   const { setArena, setGameState, setLoadState } = useGameStore();
 
   useEffect(() => {
+    (window as any).useGameStore = useGameStore;
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     let elapsed = 0;
 

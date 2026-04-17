@@ -1,6 +1,6 @@
-import { PokemonBattleArena } from './js/main.js';
-import { escapeHTML } from './js/utils/helpers.js';
-import { loadGameData } from './js/services/DataLoader.js';
+import { PokemonBattleArena } from './engine/main.js';
+import { escapeHTML } from './engine/utils/helpers.js';
+import { loadGameData } from './engine/services/DataLoader.js';
 
 window.escapeHTML = escapeHTML;
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { authManager } from '../js/api/authManager.js';
+import { authManager } from '../engine/api/authManager.js';
 
 /**
  * Modals

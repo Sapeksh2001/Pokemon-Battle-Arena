@@ -11,13 +11,13 @@
  *   - Modals are permanently in the DOM so the engine can show/hide them.
  */
 import { useEffect, useState } from 'react';
-import { ArenaProvider, useArena } from './context/ArenaContext';
+import { ArenaProvider, useArena } from './contexts/ArenaContext';
 import LoadingOverlay from './components/LoadingOverlay';
 import LobbyView from './components/LobbyView';
 import ArenaView from './components/ArenaView';
 import Modals from './components/Modals';
 import AuthView from './components/AuthView';
-import { authManager } from './js/api/authManager.js';
+import { authManager } from './engine/api/authManager.js';
 
 function GameRoot() {
   const { loadState } = useArena();

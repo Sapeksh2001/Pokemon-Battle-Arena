@@ -5,11 +5,11 @@
 // We inject <script> tags on demand and wait for onload,
 // then verify the global exists before resolving.
 
-import pokemonDataUrl from '../../Pokemon_NewDataset.js?url';
-import abilityDataUrl from '../../ability.js?url';
-import abilitiesMapUrl from '../../abilities_map.js?url';
-import movesDataUrl from '../../moves_data.js?url';
-import movesetsDataUrl from '../../movesets.js?url';
+import pokemonDataUrl from '../../data/Pokemon_NewDataset.js?url';
+import abilityDataUrl from '../../data/ability.js?url';
+import abilitiesMapUrl from '../../data/abilities_map.js?url';
+import movesDataUrl from '../../data/moves_data.js?url';
+import movesetsDataUrl from '../../data/movesets.js?url';
 
 const DATA_FILES = [
     { src: pokemonDataUrl,   global: 'MergedPokemonData',    label: 'Pokémon data'   },

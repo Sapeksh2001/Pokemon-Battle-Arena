@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { authManager } from '../js/api/authManager.js';
+import { authManager } from '../engine/api/authManager.js';
 
 export default function AuthView({ onAuthSuccess }) {
   const [error, setError] = useState(null);

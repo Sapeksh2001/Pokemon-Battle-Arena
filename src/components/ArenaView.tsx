@@ -10,11 +10,13 @@
  */
 import { useState } from 'react';
 import PokemonPicker from './PokemonPicker';
-import { useArena } from '../contexts/ArenaContext';
+import { useGameStore } from '../store/useGameStore';
 
 export default function ArenaView() {
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const { dispatch, getArena } = useArena() ?? {};
+  const { dispatch, arena } = useGameStore();
+
+  const getArena = () => arena;
 
   // Local helpers that wrap dispatch for cleaner JSX
   const act = (action, ...args) => () => dispatch?.(action, ...args);

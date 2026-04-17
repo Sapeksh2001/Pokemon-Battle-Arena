@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authManager } from '../engine/api/authManager.js';
+import { useGameStore } from '../store/useGameStore';
 
 /**
  * LobbyView
@@ -7,7 +8,8 @@ import { authManager } from '../engine/api/authManager.js';
  * Renders the lobby screen with trainer name input and action buttons.
  */
 export default function LobbyView() {
-  const [user, setUser] = useState(authManager.currentUser);
+  const { dispatch, arena } = useGameStore();
+  const [user, setUser] = useState<any>(authManager.currentUser);
   const [newName, setNewName] = useState(user?.displayName || '');
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -88,7 +90,7 @@ export default function LobbyView() {
             <div className="space-y-4">
               {/* Quick Battle */}
               <button id="quick-battle-btn"
-                onClick={() => window.arena?.multiplayer?.quickBattle()}
+                onClick={() => dispatch('multiplayer.quickBattle')}
                 className="w-full bg-tertiary-container text-on-tertiary-container p-4 border-2 border-white flex items-center gap-4 step-animation hover:bg-[#5bf083] transition-all hard-shadow-tertiary group">
 
                 <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
@@ -134,7 +136,7 @@ export default function LobbyView() {
                  <button id="load-game-btn"
                     onClick={() => {
                       const modal = document.getElementById('load-modal');
-                      if (modal) { modal.classList.add('visible'); window.arena?.multiplayer?.loadSavedGames(); }
+                      if (modal) { modal.classList.add('visible'); dispatch('multiplayer.loadSavedGames'); }
                     }}
                     className="bg-[#1e293b] text-[#5bf083] p-4 border-2 border-[#004a1d] flex flex-col items-start gap-2 step-animation hover:bg-[#004a1d]/30 transition-all group">
                     <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>cloud_download</span>
@@ -146,7 +148,7 @@ export default function LobbyView() {
                       type="file" accept=".json" id="snapshot-upload" className="hidden" 
                       onChange={(e) => {
                         const file = e.target.files[0];
-                        if (file) window.arena?.multiplayer?.importSnapshot(file);
+                        if (file) dispatch('multiplayer.importSnapshot', file);
                       }}
                     />
                     <button 

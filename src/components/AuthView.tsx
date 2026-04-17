@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { authManager } from '../engine/api/authManager.js';
 
-export default function AuthView({ onAuthSuccess }) {
-  const [error, setError] = useState(null);
+interface AuthViewProps {
+  onAuthSuccess: () => void;
+}
+
+export default function AuthView({ onAuthSuccess }: AuthViewProps) {
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleGoogleLogin = async (e) => {

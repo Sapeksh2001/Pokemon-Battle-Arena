@@ -6,11 +6,19 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { useArena } from '../contexts/ArenaContext';
+import { useGameStore } from '../store/useGameStore';
 
 // ─── Single card (Sprite Only) ───────────────────────────────────────────────
 
-function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
+interface PokemonCardProps {
+  pokemon: any;
+  value: string;
+  isSelected: boolean;
+  isFainted: boolean;
+  onClick: () => void;
+}
+
+function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }: PokemonCardProps) {
   return (
     <button
       type="button"
@@ -45,7 +53,7 @@ function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
               imageRendering: 'pixelated',
               filter: isSelected ? 'drop-shadow(0 0 8px rgba(250,204,21,0.8))' : 'none'
             }}
-            onError={e => {
+            onError={(e: any) => {
               const target = e.target;
               if(!target.dataset.tried){
                 target.dataset.tried = '1';
@@ -77,17 +85,23 @@ function PokemonCard({ pokemon, value, isSelected, isFainted, onClick }) {
 
 // ─── Unified Picker ─────────────────────────────────────────────────────────
 
-export default function PokemonPicker({ selectId }) {
-  const { gameState, getArena } = useArena();
+interface PokemonPickerProps {
+  selectId: string;
+}
+
+export default function PokemonPicker({ selectId }: PokemonPickerProps) {
+  const { gameState, arena } = useGameStore();
   const [selected, setSelected] = useState('');
-  const [entries, setEntries] = useState([]);
+  const [entries, setEntries] = useState<any[]>([]);
+
+  const getArena = () => arena;
 
   // Build entry list from arena game state (Active Pokémon ONLY)
   const buildEntries = useCallback(() => {
-    const arena = getArena();
-    if (!arena?.gs?.players) return [];
+    const arenaVal = getArena();
+    if (!arenaVal?.gs?.players) return [];
 
-    return arena.gs.players.flatMap(player => {
+    return arenaVal.gs.players.flatMap((player: any) => {
       // Always get the active Pokémon
       const pk = player.getActivePokemon?.();
       if (!pk) return [];
@@ -111,13 +125,13 @@ export default function PokemonPicker({ selectId }) {
 
   useEffect(() => {
     setEntries(buildEntries());
-    const sel = document.getElementById(selectId);
+    const sel = document.getElementById(selectId) as HTMLSelectElement | null;
     if (sel) setSelected(sel.value);
   }, [gameState, selectId, buildEntries]);
 
-  const handleClick = useCallback((value) => {
+  const handleClick = useCallback((value: string) => {
     setSelected(value);
-    const sel = document.getElementById(selectId);
+    const sel = document.getElementById(selectId) as HTMLSelectElement | null;
     if (!sel) return;
     sel.setAttribute('data-value', value);
     sel.value = value;

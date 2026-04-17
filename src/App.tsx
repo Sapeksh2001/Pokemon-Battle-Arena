@@ -11,7 +11,8 @@
  *   - Modals are permanently in the DOM so the engine can show/hide them.
  */
 import { useEffect, useState } from 'react';
-import { ArenaProvider, useArena } from './contexts/ArenaContext';
+import { useGameStore } from './store/useGameStore';
+import GameBridge from './components/GameBridge';
 import LoadingOverlay from './components/LoadingOverlay';
 import LobbyView from './components/LobbyView';
 import ArenaView from './components/ArenaView';
@@ -20,38 +21,38 @@ import AuthView from './components/AuthView';
 import { authManager } from './engine/api/authManager.js';
 
 function GameRoot() {
-  const { loadState } = useArena();
+  const loadState = useGameStore(state => state.loadState);
 
   // Signal the legacy engine (public/script.js) that React has mounted
   // and all DOM IDs are available. script.js polls for this flag.
   useEffect(() => {
-    window.__reactReady = true;
+    (window as any).__reactReady = true;
     
     // Global Fullscreen Shortcut
-    const handleFullscreenKey = (e) => {
+    const handleFullscreenKey = (e: KeyboardEvent) => {
       // Check if user is typing in any input or contenteditable element
       const active = document.activeElement;
       const isInput = (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) || 
-                      e.target.isContentEditable || 
-                      e.target.tagName === 'INPUT' || 
-                      e.target.tagName === 'TEXTAREA';
+                      (e.target as HTMLElement).isContentEditable || 
+                      (e.target as HTMLElement).tagName === 'INPUT' || 
+                      (e.target as HTMLElement).tagName === 'TEXTAREA';
       
       if (e.key.toLowerCase() === 'f' && !isInput) {
         console.info('Pokemon Arena: Immersive Fullscreen triggered.');
         e.preventDefault();
         
         const doc = document.documentElement;
-        const fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        const fullscreenElement = document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement;
         
         if (!fullscreenElement) {
-          const request = doc.requestFullscreen || doc.webkitRequestFullscreen || doc.mozRequestFullScreen || doc.msRequestFullscreen;
+          const request = doc.requestFullscreen || (doc as any).webkitRequestFullscreen || (doc as any).mozRequestFullScreen || (doc as any).msRequestFullscreen;
           if (request) {
             request.call(doc).catch(err => {
               console.error(`Fullscreen Request Failed: ${err.message}`);
             });
           }
         } else {
-          const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+          const exit = document.exitFullscreen || (document as any).webkitExitFullscreen || (document as any).mozCancelFullScreen || (document as any).msExitFullscreen;
           if (exit) exit.call(document);
         }
       }
@@ -63,13 +64,14 @@ function GameRoot() {
 
   // Re-hydrate lucide icons when arena is ready
   useEffect(() => {
-    if (loadState.status === 'ready' && window.lucide) {
-      window.lucide.createIcons();
+    if (loadState.status === 'ready' && (window as any).lucide) {
+      (window as any).lucide.createIcons();
     }
   }, [loadState.status]);
 
   return (
     <>
+      <GameBridge />
       {/* Loading overlay — visible while status is 'loading' */}
       {loadState.status !== 'ready' && loadState.status !== 'error' && (
         <LoadingOverlay progress={loadState.progress} label={loadState.label} />
@@ -108,7 +110,7 @@ function GameRoot() {
 }
 
 export default function App() {
-  const [user, setUser] = useState(undefined);
+  const [user, setUser] = useState<any>(undefined);
 
   useEffect(() => {
     const unsubscribe = authManager.subscribe((authUser) => {
@@ -126,8 +128,6 @@ export default function App() {
   }
 
   return (
-    <ArenaProvider>
-      <GameRoot />
-    </ArenaProvider>
+    <GameRoot />
   );
 }

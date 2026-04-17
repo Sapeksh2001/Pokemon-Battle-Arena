@@ -2,7 +2,12 @@
  * LoadingOverlay
  * Matches the legacy #data-loading-overlay exactly.
  */
-export default function LoadingOverlay({ progress = 0, label = '' }) {
+interface LoadingOverlayProps {
+  progress?: number;
+  label?: string;
+}
+
+export default function LoadingOverlay({ progress = 0, label = '' }: LoadingOverlayProps) {
   return (
     <div
       style={{

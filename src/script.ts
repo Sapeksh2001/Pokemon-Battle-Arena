@@ -1,18 +1,23 @@
-import { PokemonBattleArena } from './engine/main.js';
+import { PokemonBattleArena } from './engine/main';
 import { escapeHTML } from './engine/utils/helpers.js';
 import { loadGameData } from './engine/services/DataLoader.js';
 
 window.escapeHTML = escapeHTML;
 
 // ── Loading overlay helpers ──────────────────────────────────────────────────
-function updateLoadingOverlay(loaded, total, label) {
+function updateLoadingOverlay(loaded: number, total: number, label: string) {
     const msgEl  = document.getElementById('loading-message');
     const barEl  = document.getElementById('loading-bar-fill');
     const pctEl  = document.getElementById('loading-pct');
     const pct    = Math.round((loaded / total) * 100);
+
     if (msgEl)  msgEl.textContent  = `Loading ${label}… ${loaded}/${total}`;
     if (barEl)  barEl.style.width  = `${pct}%`;
     if (pctEl)  pctEl.textContent  = `${pct}%`;
+
+    // Sync with GameStore/GameBridge
+    (window as any).__loadProgress = pct;
+    (window as any).__loadLabel = label;
 }
 
 function hideLoadingOverlay() {
@@ -37,8 +42,8 @@ async function startApp() {
 
     hideLoadingOverlay();
 
-    const arena = new PokemonBattleArena();
-    window.arena = arena; // Expose globally for event handlers & callbacks
+    const arena = new (PokemonBattleArena as any)();
+    (window as any).arena = arena; // Expose globally for event handlers & callbacks
     arena.init();
 
     // Auto-join from URL parameter
@@ -60,12 +65,11 @@ async function startApp() {
 
 console.log('[App] script.js module execution started.');
 
-// Do NOT boot on DOMContentLoaded — at that point React may still be gated
 // on the AuthView (waiting for Google/email OAuth to resolve).
 // Instead, poll for window.__reactReady, which is set by GameRoot's useEffect
-// in App.jsx only after auth resolves and all game DOM elements are mounted.
+// in App.tsx only after auth resolves and all game DOM elements are mounted.
 function waitForReactAndStart() {
-    if (window.__reactReady) {
+    if ((window as any).__reactReady) {
         console.log('[App] React DOM ready — starting game engine.');
         startApp();
     } else {
@@ -76,7 +80,7 @@ function waitForReactAndStart() {
 waitForReactAndStart();
 
 // Expose globals for onclicks
-window.copyRoomCode = function() {
+(window as any).copyRoomCode = function() {
     const roomCode = document.getElementById('room-code-display')?.textContent?.trim();
     if (!roomCode) return;
     navigator.clipboard.writeText(roomCode).then(() => {
@@ -90,7 +94,7 @@ window.copyRoomCode = function() {
     });
 };
 
-window.shareRoomLink = function() {
+(window as any).shareRoomLink = function() {
     const roomCode = document.getElementById('room-code-display')?.textContent?.trim();
     if (!roomCode) return;
     const joinUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
@@ -102,7 +106,7 @@ window.shareRoomLink = function() {
     }
 };
 
-window.copyToClipboardWithFeedback = function(text) {
+(window as any).copyToClipboardWithFeedback = function(text: string) {
     navigator.clipboard.writeText(text).then(() => {
         const feedback = document.getElementById('copy-feedback');
         if (feedback) { feedback.textContent = '🔗 Link copied to clipboard!'; feedback.classList.remove('hidden'); setTimeout(() => feedback.classList.add('hidden'), 3000); }

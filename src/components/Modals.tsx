@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authManager } from '../engine/api/authManager.js';
+import { useGameStore } from '../store/useGameStore';
 
 /**
  * Modals
@@ -8,7 +9,8 @@ import { authManager } from '../engine/api/authManager.js';
  * classList.toggle('active') and querySelector('#modal-id') as before.
  */
 export default function Modals() {
-  const [user, setUser] = useState(authManager.currentUser);
+  const { dispatch, arena } = useGameStore();
+  const [user, setUser] = useState<any>(authManager.currentUser);
 
   // Room Creation State
   const [roomName, setRoomName] = useState('');
@@ -31,7 +33,7 @@ export default function Modals() {
     { id: 'Paldean', label: 'Paldea' }
   ];
 
-  const toggleTier = (tierId) => {
+  const toggleTier = (tierId: string) => {
     setSelectedTiers(prev => 
       prev.includes(tierId) 
         ? prev.filter(t => t !== tierId) 
@@ -48,7 +50,7 @@ export default function Modals() {
     return unsub;
   }, []);
 
-  const closeModal = (id) => {
+  const closeModal = (id: string) => {
     const modal = document.getElementById(id);
     if (modal) {
       modal.classList.remove('visible');
@@ -56,10 +58,6 @@ export default function Modals() {
   };
 
   const handleCreateRoom = async () => {
-    if (!window.arena?.multiplayer) {
-        alert('Multiplayer engine not initialized');
-        return;
-    }
     const name = user?.displayName || 'Anonymous';
     const settings = {
         roomName,
@@ -67,18 +65,18 @@ export default function Modals() {
         battleType,
         selectedTiers
     };
-    await window.arena.multiplayer.createRoom(name, settings);
+    await dispatch('multiplayer.createRoom', name, settings);
     closeModal('room-modal');
   };
 
   const handleJoinRoom = async () => {
-    if (!window.arena?.multiplayer || !roomCode) {
+    if (!roomCode) {
         alert('Please enter a room code');
         return;
     }
     const name = user?.displayName || 'Anonymous';
     
-    await window.arena.multiplayer.joinRoom(roomCode, name, joinRole);
+    await dispatch('multiplayer.joinRoom', roomCode, name, joinRole);
     closeModal('join-modal');
   };
 
@@ -373,7 +371,7 @@ export default function Modals() {
               <span className="material-symbols-outlined text-[#699cff] text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>public</span>
               <h2 className="text-2xl font-bold text-yellow-400 font-headline uppercase tracking-tighter text-glow">Multiplayer Lobby</h2>
             </div>
-            <button onClick={() => window.arena?.multiplayer?.leaveRoom()} className="text-secondary hover:text-white transition-colors">
+            <button onClick={() => dispatch('multiplayer.leaveRoom')} className="text-secondary hover:text-white transition-colors">
               <span className="material-symbols-outlined text-[28px]">logout</span>
             </button>
           </div>
@@ -423,11 +421,11 @@ export default function Modals() {
                 </div>
               </div>
               <div className="controls mt-4 flex gap-3">
-                <button id="ready-btn" onClick={() => window.arena?.multiplayer?.toggleReady()}
+                <button id="ready-btn" onClick={() => dispatch('multiplayer.toggleReady')}
                   className="flex-1 bg-secondary-container hover:bg-[#699cff] text-white font-bold py-4 px-4 border-2 border-white step-animation uppercase tracking-widest text-xs hard-shadow-secondary flex justify-center items-center gap-2">
                   <span className="material-symbols-outlined">rule</span> Toggle Ready
                 </button>
-                <button id="start-game-btn" onClick={() => window.arena?.multiplayer?.startGame()}
+                <button id="start-game-btn" onClick={() => dispatch('multiplayer.startGame')}
                   className="flex-1 bg-tertiary-container hover:bg-[#5bf083] text-[#004a1d] font-bold py-4 px-4 border-2 border-white step-animation uppercase tracking-widest text-xs overflow-hidden relative"
                   style={{ display: 'none', boxShadow: '4px 4px 0px 0px #004a1d' }}>
                   <div className="absolute inset-0 bg-white/20 hover:bg-transparent transition-colors" />

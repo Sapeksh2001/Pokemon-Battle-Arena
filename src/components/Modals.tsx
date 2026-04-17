@@ -99,7 +99,7 @@ export default function Modals() {
             {/* Dynamically filled by JavaScript */}
           </div>
           <div className="flex justify-end pt-2 border-t-2 border-outline-variant">
-            <button id="confirm-team-btn" className="bg-tertiary-container hover:bg-[#5bf083] text-on-tertiary-container px-6 py-3 border-2 border-white font-bold uppercase step-animation hard-shadow-tertiary flex items-center gap-2 text-[10px]">
+            <button id="confirm-team-btn" onClick={() => (window as any).arena?.confirmTeamEdit?.()} className="bg-tertiary-container hover:bg-[#5bf083] text-on-tertiary-container px-6 py-3 border-2 border-white font-bold uppercase step-animation hard-shadow-tertiary flex items-center gap-2 text-[10px]">
               <span className="material-symbols-outlined text-[14px]">check</span> DONE
             </button>
           </div>
@@ -157,7 +157,7 @@ export default function Modals() {
             </div>
             {/* Confirm / Cancel */}
             <div className="flex gap-2 pt-4 border-t-2 border-outline-variant mt-4">
-              <button id="confirm-hp-edit" className="bg-tertiary-container hover:bg-[#5bf083] text-[#004a1d] p-4 w-full font-bold text-sm border-2 border-white step-animation uppercase tracking-wider flex justify-center items-center gap-2">
+              <button id="confirm-hp-edit" onClick={() => (window as any).arena?.hp?.confirmHPEdit?.()} className="bg-tertiary-container hover:bg-[#5bf083] text-[#004a1d] p-4 w-full font-bold text-sm border-2 border-white step-animation uppercase tracking-wider flex justify-center items-center gap-2">
                 <span className="material-symbols-outlined text-[18px]">check</span> CONFIRM
               </button>
               <button onClick={() => closeModal('hp-edit-modal')} id="cancel-hp-edit" className="bg-surface-variant hover:bg-surface-bright text-secondary p-4 w-full font-bold text-sm border-2 border-secondary step-animation uppercase tracking-wider flex justify-center items-center gap-2">

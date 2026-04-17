@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { useArena } from '../context/ArenaContext';
+import { useArena } from '../contexts/ArenaContext';
 
 // ─── Single card (Sprite Only) ───────────────────────────────────────────────
 

@@ -10,7 +10,7 @@
  */
 import { useState } from 'react';
 import PokemonPicker from './PokemonPicker';
-import { useArena } from '../context/ArenaContext';
+import { useArena } from '../contexts/ArenaContext';
 
 export default function ArenaView() {
   const [showShortcuts, setShowShortcuts] = useState(false);

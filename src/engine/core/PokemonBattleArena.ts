@@ -15,6 +15,8 @@ import { BattleManager } from '../managers/BattleManager';
 import { StatusManager } from '../managers/StatusManager';
 import { HPManager } from '../managers/HPManager';
 import { UIManager } from '../managers/UIManager';
+import { Player } from '../models/Player.js';
+import { Pokemon } from '../models/Pokemon.js';
 
 export class PokemonBattleArena {
     audio: AudioManager;
@@ -84,6 +86,7 @@ export class PokemonBattleArena {
         this.ui._populateMoveTypeSelector();
         this.ui._setupEventListeners();
         this.ui._setupKeyboardShortcuts();
+        (this as any)._setupHPListeners();
         (this as any)._setupMultiplayerUI();
 
         this.renderer.renderAll();
@@ -144,7 +147,7 @@ export class PokemonBattleArena {
     // Internal Helpers
     _showDamageNumber(pid: string, amount: number, type: string) { (this.renderer as any).showDamageNumber(pid, amount, type); }
     _animateSprite(pid: string, type: string, cb: () => void) { (this.renderer as any).animateSprite(pid, type, cb); }
-    openConfirmModal(title: string, msg: string, cb: () => void) { (this.modals as any).openConfirm(title, msg, cb); }
+    openConfirmModal(title: string, msg: string, cb: () => void) { this.modals.openConfirm(title, msg, cb); }
     updateAttackPreview() { this.ui.updateAttackPreview(); }
 
     // Modals
@@ -158,6 +161,22 @@ export class PokemonBattleArena {
     // Stubs for remaining legacy logic
     _handleTimeoutLegacy() { this.log.add('[SYSTEM] Timer finished!', 'system'); this.audio.play('notification'); }
     
+    _setupHPListeners() {
+        const confirmBtn = document.getElementById('confirm-hp-edit');
+        if (confirmBtn) confirmBtn.onclick = () => this.hp.confirmHPEdit();
+
+        document.querySelectorAll('.hp-quick-btn').forEach(btn => {
+            (btn as HTMLButtonElement).onclick = () => {
+                const pct = parseInt((btn as HTMLButtonElement).dataset.percent || '0');
+                const input = document.getElementById('hp-new-value') as HTMLInputElement | null;
+                const { pokemon } = this.gs.currentHPEdit || {};
+                if (input && pokemon) {
+                    input.value = Math.floor(pokemon.maxHp * (pct / 100)).toString();
+                }
+            };
+        });
+    }
+
     openTeamManager(id: string) {
         const player = this.gs.players.find((p: any) => p.id === id);
         if (!player) return;
@@ -211,6 +230,58 @@ export class PokemonBattleArena {
                 this.modals.close('selection');
             };
             grid.appendChild(btn);
+        });
+    }
+
+    /** 
+     * Internal: populates the arena with iconic trainers for Quick Battle.
+     */
+    _prepopulate() {
+        const trainers = [
+            { id: 'trainer-ash', name: 'Ash Ketchum', team: ['Pikachu', 'Charizard', 'Lucario', 'Greninja', 'Sceptile', 'Gengar'] },
+            { id: 'trainer-misty', name: 'Misty', team: ['Starmie', 'Gyarados', 'Lapras', 'Psyduck', 'Politoed', 'Corsola'] },
+            { id: 'trainer-brock', name: 'Brock', team: ['Onix', 'Steelix', 'Geodude', 'Crobat', 'Sudowoodo', 'Ludicolo'] },
+            { id: 'trainer-cynthia', name: 'Cynthia', team: ['Garchomp', 'Milotic', 'Lucario', 'Togekiss', 'Spiritomb', 'Roserade'] },
+            { id: 'trainer-red', name: 'Red', team: ['Pikachu', 'Charizard', 'Blastoise', 'Venusaur', 'Snorlax', 'Lapras'] },
+            { id: 'trainer-blue', name: 'Blue', team: ['Blastoise', 'Arcanine', 'Exeggutor', 'Pidgeot', 'Alakazam', 'Rhydon'] }
+        ];
+
+        this.gs.players = trainers.map(t => {
+            const p = new Player(t.id, t.name);
+            t.team.forEach((name, i) => {
+                const res = this.db.find(name);
+                if (res) p.team[i] = new Pokemon(res.foundNode, res.baseNode);
+            });
+            return p;
+        });
+
+        this.log.add('⭐ Quick Battle teams generated! All iconic trainers are here.', 'system');
+        
+        // Notify React that players are now in state
+        (window as any).__arenaNotify?.();
+        
+        // Initial render to populate DOM
+        this.renderer.renderAll();
+    }
+
+    /** 
+     * Internal: extra UI bindings for multiplayer modals.
+     */
+    _setupMultiplayerUI() {
+        document.getElementById('confirm-create-room')?.addEventListener('click', () => {
+             const name = (document.getElementById('trainer-name-lobby') as HTMLInputElement)?.value;
+             const roomName = (document.getElementById('room-name-input') as HTMLInputElement)?.value;
+             if (name) this.multiplayer.createRoom(name, { roomName });
+        });
+
+        document.getElementById('confirm-join-room')?.addEventListener('click', () => {
+             const name = (document.getElementById('trainer-name-lobby') as HTMLInputElement)?.value;
+             const code = (document.getElementById('join-room-code') as HTMLInputElement)?.value;
+             if (name && code) this.multiplayer.joinRoom(code, name);
+        });
+
+        document.getElementById('copy-room-code')?.addEventListener('click', () => {
+             (window as any).copyRoomCode();
         });
     }
 }

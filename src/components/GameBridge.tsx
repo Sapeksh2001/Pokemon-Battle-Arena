@@ -45,9 +45,14 @@ export default function GameBridge() {
         // Patch renderer for legacy renderAll() support
         if (arena.renderer?.renderAll) {
           const orig = arena.renderer.renderAll.bind(arena.renderer);
+          let isNotifying = false;
           arena.renderer.renderAll = () => {
             orig();
-            (window as any).__arenaNotify?.();
+            if (!isNotifying) {
+              isNotifying = true;
+              (window as any).__arenaNotify?.();
+              isNotifying = false;
+            }
           };
         }
 

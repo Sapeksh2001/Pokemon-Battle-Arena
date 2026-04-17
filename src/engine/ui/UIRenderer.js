@@ -409,4 +409,47 @@ export class UIRenderer {
             formBtn.disabled = otherForms.length === 0;
         }
     }
+
+    // ── Visual Effects ───────────────────────────────────────────────
+
+    /**
+     * Display a floating number (+ or -) over a player card.
+     * @param {string} playerId
+     * @param {number} amount
+     * @param {string} type     - 'damage', 'heal', 'critical'
+     */
+    showDamageNumber(playerId, amount, type) {
+        const card = document.getElementById(`player-card-${playerId}`);
+        if (!card) return;
+        
+        const container = card.querySelector('.entry-animation-container');
+        if (!container) return;
+
+        const el = document.createElement('div');
+        el.className = `damage-number ${type}-text`;
+        el.textContent = (type === 'heal' ? '+' : '-') + amount;
+        
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 1500);
+    }
+
+    /**
+     * Trigger a CSS-based animation on a pokemon sprite.
+     * @param {string} playerId
+     * @param {string} type     - 'damage', 'heal', 'faint', 'evolve'
+     * @param {Function} cb     - Completion callback
+     */
+    animateSprite(playerId, type, cb) {
+        const card = document.getElementById(`player-card-${playerId}`);
+        const img = card?.querySelector('.pokemon-sprite');
+        if (!img) { if (cb) cb(); return; }
+
+        img.classList.add(`anim-${type}`);
+        
+        const duration = type === 'faint' ? 1200 : 500;
+        setTimeout(() => {
+            img.classList.remove(`anim-${type}`);
+            if (cb) cb();
+        }, duration);
+    }
 }

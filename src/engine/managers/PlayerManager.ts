@@ -180,6 +180,8 @@ export class PlayerManager {
         if (this.arena.multiplayer && this.arena.multiplayer.mode === 'playing') {
             this.arena.multiplayer.sendGameState();
         }
+    }
+
     assignPokemonToPlayer(playerId: string, slotIndex: number, pokemonName: string) {
         const player = this.arena.gs.players.find(p => p.id === playerId);
         if (!player) return;

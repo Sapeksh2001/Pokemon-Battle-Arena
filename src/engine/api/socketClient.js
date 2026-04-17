@@ -57,8 +57,8 @@ export class MultiplayerManager {
         }
 
         // 2. Switch from Lobby View to Arena View via Zustand store
-        if ((window as any).useGameStore) {
-            const store = (window as any).useGameStore.getState();
+        if (window.useGameStore) {
+            const store = window.useGameStore.getState();
             store.setView('arena');
             console.log('[MULTIPLAYER] Transitioned to Arena View via Store');
         } else {

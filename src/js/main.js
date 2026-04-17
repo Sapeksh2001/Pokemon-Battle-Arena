@@ -165,6 +165,7 @@ export class PokemonBattleArena {
     // ── Player management ─────────────────────────────────────────────────
 
     addPlayer() {
+        this.audio.play('click');
         if (this.gs.players.length >= 6) {
             this._announce('Lobby Full: Maximum 6 trainers allowed.', true);
             return;
@@ -219,6 +220,7 @@ export class PokemonBattleArena {
     // ── Round ─────────────────────────────────────────────────────────────
 
     endRound() {
+        this.audio.play('confirm');
         this.history.snapshot(this.gs);
         this.gs.round++;
         this._applyWeatherDamage();
@@ -1603,21 +1605,11 @@ export class PokemonBattleArena {
         // Management
         document.getElementById('management-pokemon-select')?.addEventListener('change', () => this.renderer._updateManagementButtons());
 
-        // Player management
-        document.getElementById('add-player-btn')?.addEventListener('click', () => { this.audio.play('click'); this.addPlayer(); });
-        document.getElementById('end-round-btn')?.addEventListener('click', () => { this.audio.play('confirm'); this.endRound(); });
-
         // Timer
         const timerDisplay = document.getElementById('timer-display');
         this.timer.linkDisplay(timerDisplay);
-        document.getElementById('timer-start')?.addEventListener('click', () => { this.audio.play('click'); this.timer.start(); });
-        document.getElementById('timer-pause')?.addEventListener('click', () => { this.audio.play('click'); this.timer.pause(); });
-        document.getElementById('timer-reset')?.addEventListener('click', () => { this.audio.play('click'); this.timer.reset(); });
 
-        // Undo / Redo
-        document.getElementById('undo-btn')?.addEventListener('click', () => {
-            if (this.history.undo(this.gs, this.db)) {
-                this.audio.play('click');
+        // Battle log
                 this.renderer.renderAll();
                 this.log.add('[UNDO] Action undone', 'system');
                 this._announce('Action undone');

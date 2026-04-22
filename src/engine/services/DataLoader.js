@@ -1,15 +1,15 @@
 // ==========================================
-// DATA LOADER — Async dynamic script injection
+// DATA LOADER — Async JSON fetch
 // ==========================================
-// Each data file sets a global variable when it runs.
-// We inject <script> tags on demand and wait for onload,
-// then verify the global exists before resolving.
+// Each data file is now a JSON file.
+// We fetch them on demand and assign to window globals
+// to maintain compatibility with the legacy engine.
 
-import pokemonDataUrl from '../../data/Pokemon_NewDataset.js?url';
-import abilityDataUrl from '../../data/ability.js?url';
-import abilitiesMapUrl from '../../data/abilities_map.js?url';
-import movesDataUrl from '../../data/moves_data.js?url';
-import movesetsDataUrl from '../../data/movesets.js?url';
+import pokemonDataUrl from '../../data/Pokemon_NewDataset.json?url';
+import abilityDataUrl from '../../data/ability.json?url';
+import abilitiesMapUrl from '../../data/abilities_map.json?url';
+import movesDataUrl from '../../data/moves_data.json?url';
+import movesetsDataUrl from '../../data/movesets.json?url';
 
 const DATA_FILES = [
     { src: pokemonDataUrl,   global: 'MergedPokemonData',    label: 'Pokémon data'   },
@@ -20,25 +20,17 @@ const DATA_FILES = [
 ];
 
 /**
- * Dynamically inject a classic (non-module) script tag and wait for it to load.
- * @param {string} src  - URL/path relative to the document
- * @returns {Promise<void>}
+ * Fetch a JSON file and return the parsed object.
+ * @param {string} src - URL/path
+ * @returns {Promise<object>}
  */
-function loadScript(src) {
-    return new Promise((resolve, reject) => {
-        console.log(`[DataLoader] Creating <script> for ${src}`);
-        const el = document.createElement('script');
-        el.src = src;
-        el.onload = () => {
-            console.log(`[DataLoader] Script loaded event fired for ${src}`);
-            resolve();
-        };
-        el.onerror = () => {
-            console.error(`[DataLoader] Error event fired for ${src}`);
-            reject(new Error(`Failed to load: ${src}`));
-        };
-        document.head.appendChild(el);
-    });
+async function loadJson(src) {
+    console.log(`[DataLoader] Fetching JSON from ${src}`);
+    const response = await fetch(src);
+    if (!response.ok) {
+        throw new Error(`Failed to load: ${src} (Status: ${response.status})`);
+    }
+    return await response.json();
 }
 
 /**
@@ -59,18 +51,19 @@ export async function loadGameData(onProgress) {
         if (window[globalName]) {
             console.log(`[DataLoader] ${globalName} already exists on window. Skipping ${src}.`);
         } else {
-            console.log(`[DataLoader] Awaiting loadScript for ${src}...`);
+            console.log(`[DataLoader] Awaiting fetch for ${src}...`);
             try {
-                await loadScript(src);
+                const data = await loadJson(src);
+                window[globalName] = data;
             } catch (err) {
                 console.error(`[DataLoader] Caught error loading ${src}:`, err);
                 throw err;
             }
 
-            // Sanity check — the script should have set the global
+            // Sanity check
             if (!window[globalName]) {
                 console.error(`[DataLoader] Sanity check failed! window.${globalName} is undefined after loading ${src}.`);
-                throw new Error(`Script loaded but global "window.${globalName}" is still undefined. Check ${src}.`);
+                throw new Error(`Fetch successful but global "window.${globalName}" is still undefined.`);
             }
             console.log(`[DataLoader] Successfully verified global "window.${globalName}".`);
         }

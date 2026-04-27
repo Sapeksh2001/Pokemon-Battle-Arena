@@ -188,13 +188,14 @@ button, input, select {
 
 
 .player-card {
-    background-color: rgba(10, 15, 30, 0.95);
-    /* Extra Contrasting Radial Gradient Background */
+    background-color: rgba(15, 23, 42, 0.9);
+    /* Mesh Gradient Background - Adjusted 3x3 Grid Logic */
     background-image: 
-        radial-gradient(circle at 10% 10%, var(--type-1-color, transparent) 0%, transparent 80%),
-        radial-gradient(circle at 90% 90%, var(--type-2-color, transparent) 0%, transparent 80%),
-        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
-    background-blend-mode: color-dodge;
+        radial-gradient(circle at 16.6% 16.6%, var(--type-1-color, transparent) 0%, transparent 75%),
+        radial-gradient(circle at 50% 16.6%, var(--type-1-color, transparent) 0%, transparent 75%),
+        radial-gradient(circle at 50% 83.3%, var(--type-2-color, transparent) 0%, transparent 75%),
+        radial-gradient(circle at 83.3% 83.3%, var(--type-2-color, transparent) 0%, transparent 75%);
+    background-blend-mode: screen;
     
     border: 4px solid;
     /* Radial Mesh Border Image */

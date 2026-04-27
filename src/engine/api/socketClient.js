@@ -1010,6 +1010,9 @@ export class MultiplayerManager {
     }
 
     async loadAndResume(roomCode) {
+        const loadModal = document.getElementById('load-modal');
+        if (loadModal) loadModal.classList.remove('active', 'visible');
+
         const user = authManager.currentUser;
         if (!user) { this.showNotification('You must be logged in to load', 'error'); return; }
         const name = this.playerName || user.displayName || user.email || 'Trainer';
@@ -1034,7 +1037,6 @@ export class MultiplayerManager {
                 this.showNotification('Room offline. Restoring last save locally...', 'info');
                 this.mode = 'playing';
                 this.roomCode = roomCode;
-                document.getElementById('load-modal')?.classList.remove('visible');
                 const lobbyView = document.getElementById('lobby-view');
                 const arenaView = document.getElementById('arena-view');
                 const loadingScreen = document.getElementById('loading-screen');

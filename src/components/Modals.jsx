@@ -44,7 +44,7 @@ export default function Modals() {
   const [joinRole, setJoinRole] = useState('player');
 
   // Quick Play State
-  const [quickPlayTiers, setQuickPlayTiers] = useState(['Basic', 'Mid', 'Final', 'Legendary', 'Mythical', 'Ultra Beast', 'Alolan', 'Galarian', 'Hisuian', 'Paldean']);
+  const [quickPlayTiers, setQuickPlayTiers] = useState(['Final', 'Legendary', 'Ultra Beast', 'Mythical']);
 
   const toggleQuickPlayTier = (tierId) => {
     setQuickPlayTiers(prev => 

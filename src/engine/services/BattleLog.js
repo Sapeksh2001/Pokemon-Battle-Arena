@@ -58,9 +58,13 @@ export class BattleLog {
 
     clear() {
         if (!confirm('Clear the entire battle log? This cannot be undone.')) return;
+        this.reset();
+        this.add('Battle log cleared.', 'system');
+    }
+
+    reset() {
         this._buffer.clear();
         this._render();
-        this.add('Battle log cleared.', 'system');
     }
 
     export() {

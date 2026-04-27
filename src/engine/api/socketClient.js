@@ -2,7 +2,7 @@ import { Player } from '../models/Player.js';
 import { Pokemon } from '../models/Pokemon.js';
 import { 
     ref, set, get, onValue, off, push, update, remove, 
-    serverTimestamp, onDisconnect, query, limitToLast, onChildAdded 
+    serverTimestamp, onDisconnect, query, limitToLast, onChildAdded, orderByChild
 } from "firebase/database";
 import { db } from '../../firebase.js';
 import { authManager } from './authManager.js';
@@ -52,6 +52,10 @@ export class MultiplayerManager {
         console.log('[MULTIPLAYER] Starting Quick Battle...', settings);
         this.mode = 'offline';
         
+        if (this.arena?.log) {
+            this.arena.log.reset();
+        }
+
         // 1. Prepopulate the arena with dummy data
         if (typeof this.arena._prepopulate === 'function') {
             this.arena._prepopulate(settings.selectedTiers);
@@ -133,6 +137,10 @@ export class MultiplayerManager {
     async createRoom(trainerName, settings = {}) {
         if (!trainerName) return;
         
+        if (this.arena?.log) {
+            this.arena.log.reset();
+        }
+
         const roomCode = Math.floor(100000 + Math.random() * 900000).toString();
         this.roomCode = roomCode;
         this.isHost = true;
@@ -174,6 +182,9 @@ export class MultiplayerManager {
 
     async joinRoom(roomCode, playerName, role = 'player') {
         this.playerName = playerName;
+        if (this.arena?.log) {
+            this.arena.log.reset();
+        }
         const roomRef = ref(db, `rooms/${roomCode}`);
         const snapshot = await get(roomRef);
 
@@ -904,7 +915,7 @@ export class MultiplayerManager {
          const user = authManager.currentUser;
          if (!user) return;
          
-         const recentRoomsQuery = query(ref(db, `users/${user.uid}/recent_rooms`), limitToLast(20));
+         const recentRoomsQuery = query(ref(db, `users/${user.uid}/recent_rooms`), orderByChild('joinedAt'), limitToLast(20));
          onValue(recentRoomsQuery, (snapshot) => {
              const list = document.getElementById('recent-rooms-list');
              if (!list) return;
@@ -939,7 +950,11 @@ export class MultiplayerManager {
             const state = this.serializeGameState();
             const gs = this.arena.gs;
             const playerNames = (gs.players || []).map(p => p.name).filter(Boolean);
-            const pokemonNames = (gs.players || []).map(p => p.team?.[0]?.name || p.team?.[0]?.species || null).filter(Boolean);
+            const pokemonNames = (gs.players || []).map(p => {
+                const activeIndex = p.activePokemonIndex !== undefined ? p.activePokemonIndex : 0;
+                const active = p.team?.[activeIndex] || p.team?.[0];
+                return active?.name || active?.species || null;
+            }).filter(Boolean);
             await set(ref(db, `users/${user.uid}/saved_games/${this.roomCode}`), {
                 snapshot: state,
                 savedAt: Date.now(),
@@ -961,7 +976,7 @@ export class MultiplayerManager {
     loadSavedGames() {
         const user = authManager.currentUser;
         if (!user) return;
-        const savedQuery = query(ref(db, `users/${user.uid}/saved_games`), limitToLast(20));
+        const savedQuery = query(ref(db, `users/${user.uid}/saved_games`), orderByChild('savedAt'), limitToLast(20));
         onValue(savedQuery, (snapshot) => {
             const list = document.getElementById('load-game-list');
             if (!list) return;

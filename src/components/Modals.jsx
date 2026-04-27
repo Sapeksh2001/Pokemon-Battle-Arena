@@ -363,7 +363,7 @@ export default function Modals() {
             </div>
             <div className="text-sm">
               <p className="mb-2 text-xs font-bold text-slate-300 uppercase tracking-wider">Recent Rooms:</p>
-              <div id="recent-rooms-list" className="space-y-2">
+              <div id="recent-rooms-list" className="space-y-2 max-h-[30vh] overflow-y-auto pr-1 pb-4 custom-scrollbar">
                 {/* Dynamically populated by JS */}
                 <div className="text-center text-[10px] text-slate-400 py-2">Loading recent rooms...</div>
               </div>
@@ -521,9 +521,9 @@ export default function Modals() {
       </div>
       {/* Load Game Modal */}
       <div id="load-modal" className="modal-overlay">
-        <div className="modal-content max-w-2xl relative overflow-hidden group">
+        <div className="modal-content max-w-2xl relative overflow-hidden group flex flex-col max-h-[90vh]">
           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#5bf083]/50 to-transparent" />
-          <div className="flex justify-between items-center mb-6 border-b-2 border-outline-variant pb-3">
+          <div className="flex justify-between items-center mb-6 border-b-2 border-outline-variant pb-3 shrink-0">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-[#5bf083] text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>cloud_download</span>
               <div>
@@ -541,12 +541,12 @@ export default function Modals() {
           {/* Save cards grid */}
           <div
             id="load-game-list"
-            className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1 font-body">
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1 overflow-y-auto pr-2 pb-4 font-body custom-scrollbar">
             {/* Populated by loadSavedGames() inside socketClient.js */}
             <div className="text-center text-[10px] text-slate-400 py-8 col-span-2">Loading saves…</div>
           </div>
 
-          <div className="mt-4 pt-3 border-t-2 border-outline-variant flex justify-between items-center">
+          <div className="mt-4 pt-3 border-t-2 border-outline-variant flex justify-between items-center shrink-0">
             <p className="text-[9px] text-slate-500 uppercase tracking-wider">
               Saves are stored per account on Firebase — each player keeps their own copy
             </p>

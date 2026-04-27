@@ -99,13 +99,14 @@ export default function Modals() {
   };
 
   const handleJoinRoom = async () => {
-    if (!window.arena?.multiplayer || !roomCode) {
+    const codeToJoin = document.getElementById('room-code-input')?.value || roomCode;
+    if (!window.arena?.multiplayer || !codeToJoin) {
         alert('Please enter a room code');
         return;
     }
     const name = user?.displayName || 'Anonymous';
     
-    await window.arena.multiplayer.joinRoom(roomCode, name, joinRole);
+    await window.arena.multiplayer.joinRoom(codeToJoin, name, joinRole);
     closeModal('join-modal');
   };
 

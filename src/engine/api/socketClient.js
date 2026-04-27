@@ -12,7 +12,11 @@ function generateRoomCode() {
 }
 
 function generatePlayerId() {
-    return Math.random().toString(36).substring(2, 9);
+    const saved = localStorage.getItem('pba_playerId');
+    if (saved) return saved;
+    const newId = Math.random().toString(36).substring(2, 10);
+    localStorage.setItem('pba_playerId', newId);
+    return newId;
 }
 
 export class MultiplayerManager {
@@ -84,7 +88,12 @@ export class MultiplayerManager {
     connect() {
         console.log('[MULTIPLAYER] Initialized Firebase connection');
         this.isConnected = true;
-        this.listenToRecentRooms();
+        authManager.subscribe((user) => {
+            if (user) {
+                this.listenToRecentRooms();
+                this.loadSavedGames();
+            }
+        });
     }
 
     disconnect() {
@@ -182,7 +191,12 @@ export class MultiplayerManager {
         }
 
         this.roomCode = roomCode;
-        this.isHost = false;
+        if (roomData.hostId === this.playerId) {
+            this.isHost = true;
+            this.showNotification('Rejoined as Host', 'success');
+        } else {
+            this.isHost = false;
+        }
         this.mode = 'joining';
         this.isSpectator = (selectedRole === 'spectator');
 
@@ -202,7 +216,7 @@ export class MultiplayerManager {
         const playerRef = ref(db, `rooms/${roomCode}/${path}/${this.playerId}`);
         await set(playerRef, {
             name: playerName,
-            isHost: false,
+            isHost: this.isHost,
             isReady: false,
             joinedAt: Date.now()
         });
@@ -915,9 +929,6 @@ export class MultiplayerManager {
                  list.innerHTML = '<div class="text-center text-[10px] text-slate-400 py-4">No recent rooms</div>';
              }
          });
-
-         // Also populate the Load Game modal whenever auth is available
-         this.loadSavedGames();
     }
 
     async saveGameToFirebase() {

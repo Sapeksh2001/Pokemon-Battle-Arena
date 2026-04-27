@@ -88,7 +88,10 @@ export default function LobbyView() {
             <div className="space-y-4">
               {/* Quick Battle */}
               <button id="quick-battle-btn"
-                onClick={() => window.arena?.multiplayer?.quickBattle()}
+                onClick={() => {
+                  const modal = document.getElementById('quick-play-modal');
+                  if (modal) modal.classList.add('active');
+                }}
                 className="w-full bg-tertiary-container text-on-tertiary-container p-4 border-2 border-white flex items-center gap-4 step-animation hover:bg-[#5bf083] transition-all hard-shadow-tertiary group">
 
                 <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>

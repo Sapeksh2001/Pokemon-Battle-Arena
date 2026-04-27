@@ -43,6 +43,26 @@ export default function Modals() {
   const [roomCode, setRoomCode] = useState('');
   const [joinRole, setJoinRole] = useState('player');
 
+  // Quick Play State
+  const [quickPlayTiers, setQuickPlayTiers] = useState(['Basic', 'Mid', 'Final', 'Legendary', 'Mythical', 'Ultra Beast', 'Alolan', 'Galarian', 'Hisuian', 'Paldean']);
+
+  const toggleQuickPlayTier = (tierId) => {
+    setQuickPlayTiers(prev => 
+      prev.includes(tierId) 
+        ? prev.filter(t => t !== tierId) 
+        : [...prev, tierId]
+    );
+  };
+
+  const handleStartQuickPlay = () => {
+    if (!window.arena?.multiplayer) {
+        alert('Multiplayer engine not initialized');
+        return;
+    }
+    window.arena.multiplayer.quickBattle({ selectedTiers: quickPlayTiers });
+    closeModal('quick-play-modal');
+  };
+
   useEffect(() => {
     const unsub = authManager.subscribe(setUser);
     return unsub;
@@ -51,7 +71,8 @@ export default function Modals() {
   const closeModal = (id) => {
     const modal = document.getElementById(id);
     if (modal) {
-      modal.classList.remove('visible');
+      modal.classList.remove('active');
+      modal.classList.remove('visible'); // keep visible just in case for backward compatibility
     }
   };
 
@@ -60,15 +81,21 @@ export default function Modals() {
         alert('Multiplayer engine not initialized');
         return;
     }
-    const name = user?.displayName || 'Anonymous';
-    const settings = {
-        roomName,
-        maxPlayers,
-        battleType,
-        selectedTiers
-    };
-    await window.arena.multiplayer.createRoom(name, settings);
-    closeModal('room-modal');
+    try {
+        const name = user?.displayName || 'Anonymous';
+        const settings = {
+            roomName,
+            maxPlayers,
+            battleType,
+            selectedTiers
+        };
+        const code = await window.arena.multiplayer.createRoom(name, settings);
+        console.log('Room created:', code);
+        closeModal('room-modal');
+    } catch (err) {
+        console.error('Create room failed:', err);
+        alert('Failed to create room: ' + err.message);
+    }
   };
 
   const handleJoinRoom = async () => {
@@ -256,6 +283,58 @@ export default function Modals() {
               onClick={handleCreateRoom}
               className="w-full bg-tertiary-container hover:bg-[#5bf083] text-[#004a1d] px-6 py-4 border-2 border-white uppercase font-bold tracking-widest step-animation text-[10px] flex justify-center items-center gap-2 mt-4">
               <span className="material-symbols-outlined text-[18px]">check</span> CREATE ROOM
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Play Modal */}
+      <div id="quick-play-modal" className="modal-overlay">
+        <div className="modal-content max-w-md relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#5bf083]/50 to-transparent" />
+          <div className="flex justify-between items-center mb-4 border-b-2 border-outline-variant pb-2">
+            <h2 className="text-xl font-bold text-[#5bf083] font-headline uppercase tracking-tighter text-glow">Quick Battle Settings</h2>
+            <button onClick={() => closeModal('quick-play-modal')} className="text-secondary hover:text-white transition-colors">
+              <span className="material-symbols-outlined text-[24px]">close</span>
+            </button>
+          </div>
+          <div className="space-y-4 font-body">
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Allowed Tiers:</label>
+              <div className="grid grid-cols-3 gap-2 bg-surface-container-low p-3 border border-outline-variant">
+                {tierOptions.map(tier => (
+                  <button
+                    key={tier.id}
+                    onClick={() => toggleQuickPlayTier(tier.id)}
+                    className={`text-[9px] font-bold uppercase tracking-widest p-2 border transition-all ${
+                      quickPlayTiers.includes(tier.id)
+                        ? 'bg-[#5bf083] text-black border-[#5bf083] shadow-[0_0_10px_rgba(91,240,131,0.5)]'
+                        : 'bg-surface-container-lowest text-slate-400 border-outline-variant hover:border-[#5bf083]/50'
+                    }`}
+                  >
+                    {tier.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2 mt-2">
+                <button 
+                  onClick={() => setQuickPlayTiers(tierOptions.map(t => t.id))}
+                  className="text-[8px] text-[#5bf083]/70 hover:text-[#5bf083] uppercase tracking-tighter"
+                >
+                  Select All
+                </button>
+                <button 
+                  onClick={() => setQuickPlayTiers([])}
+                  className="text-[8px] text-slate-500 hover:text-slate-300 uppercase tracking-tighter"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+            <button 
+              onClick={handleStartQuickPlay}
+              className="w-full bg-tertiary-container hover:bg-[#5bf083] text-[#004a1d] px-6 py-4 border-2 border-white uppercase font-bold tracking-widest step-animation text-[10px] flex justify-center items-center gap-2 mt-4">
+              <span className="material-symbols-outlined text-[18px]">bolt</span> START QUICK BATTLE
             </button>
           </div>
         </div>

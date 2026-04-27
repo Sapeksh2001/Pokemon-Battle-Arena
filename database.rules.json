@@ -1,0 +1,12 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "rooms": {
+      "$room_id": {
+        ".read": true,
+        ".write": "auth != null"
+      }
+    }
+  }
+}

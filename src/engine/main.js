@@ -1379,15 +1379,16 @@ export class PokemonBattleArena {
 
     // ── Prepopulate ───────────────────────────────────────────────────────
 
-    _prepopulate() {
+    _prepopulate(tiers = null) {
         this.gs.players = []; // Clear current players to avoid duplicates
         this._toggleLoading(true, 'Loading Pokémon teams...');
         const names = ['Ash', 'Misty', 'Brock', 'Gary', 'Jessie', 'James'];
-        const pool = [...this.db.filteredNames].sort(() => 0.5 - Math.random());
+        const filteredPool = tiers ? this.db._buildFiltered(tiers) : this.db.filteredNames;
+        const pool = [...filteredPool].sort(() => 0.5 - Math.random());
 
         names.forEach((name, i) => {
             const teamNames = pool.splice(0, 6);
-            if (pool.length < 6) pool.push(...this.db.filteredNames);
+            if (pool.length < 6) pool.push(...filteredPool);
 
             const team = teamNames.map(n => {
                 const r = this.db.find(n);

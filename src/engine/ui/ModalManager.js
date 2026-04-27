@@ -19,16 +19,16 @@ export class ModalManager {
         if (!el) return;
         this._zCounter++;
         el.style.zIndex = this._zCounter;
-        el.classList.add('visible');
+        el.classList.add('active');
     }
 
-    close(name) { this._registry.get(name)?.classList.remove('visible'); }
+    close(name) { this._registry.get(name)?.classList.remove('active'); }
 
     /** Close all open modals. Used by the Escape key handler. */
     closeAll() {
-        for (const el of this._registry.values()) el.classList.remove('visible');
+        for (const el of this._registry.values()) el.classList.remove('active');
     }
 
-    isOpen(name) { return this._registry.get(name)?.classList.contains('visible') ?? false; }
-    anyOpen() { return [...this._registry.values()].some(el => el.classList.contains('visible')); }
+    isOpen(name) { return this._registry.get(name)?.classList.contains('active') ?? false; }
+    anyOpen() { return [...this._registry.values()].some(el => el.classList.contains('active')); }
 }

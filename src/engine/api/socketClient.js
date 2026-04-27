@@ -44,13 +44,13 @@ export class MultiplayerManager {
      * Instantly starts a local battle with 6 prepopulated teams (Ash, Misty, etc.)
      * This bypasses the multiplayer room creation for testing and quick play.
      */
-    quickBattle() {
-        console.log('[MULTIPLAYER] Starting Quick Battle...');
+    quickBattle(settings = {}) {
+        console.log('[MULTIPLAYER] Starting Quick Battle...', settings);
         this.mode = 'offline';
         
         // 1. Prepopulate the arena with dummy data
         if (typeof this.arena._prepopulate === 'function') {
-            this.arena._prepopulate();
+            this.arena._prepopulate(settings.selectedTiers);
         } else {
             console.error('[MULTIPLAYER] Error: _prepopulate not found on arena instance.');
             return;
@@ -156,8 +156,11 @@ export class MultiplayerManager {
 
         this.showNotification(`Room created: ${roomCode}`, 'success');
         this.saveRecentRoom(roomCode, 'host');
+        this.isHost = true;
+        this.mode = 'lobby';
         this.showRoomLobby();
         this._listenToLobby();
+        return roomCode;
     }
 
     async joinRoom(roomCode, playerName, role = 'player') {

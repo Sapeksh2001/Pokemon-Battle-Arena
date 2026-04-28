@@ -822,6 +822,8 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 
 /* --- BATTLE LOG ENHANCEMENTS (NEW) --- */
 #battle-log {
+    max-height: 250px;
+    overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #475569 #1e293b;
 }

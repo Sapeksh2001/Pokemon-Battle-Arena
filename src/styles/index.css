@@ -179,11 +179,11 @@ button, input, select {
     padding: 1rem;
 }
 
-/* Cards grow equally — min 200px so stats never crunch, max 350px */
+/* Cards grow to fill space but maintain aspect ratio, constrained by container height */
 .player-card {
-    flex: 1 1 200px;
-    min-width: 200px;
-    max-width: 350px;
+    flex: 1 1 150px;
+    min-width: 0;
+    max-width: 100%;
 }
 
 
@@ -213,10 +213,10 @@ button, input, select {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: clamp(0.75rem, 2vw, 1.25rem);
+    padding: clamp(0.5rem, 1.5vw, 1.25rem);
     height: auto;
     aspect-ratio: 10 / 16;
-    max-height: 90vh;
+    max-height: 100%; /* Constrain to the actual container height, not viewport */
     
     /* Font Legibility: Black Border/Outline */
     text-shadow: 

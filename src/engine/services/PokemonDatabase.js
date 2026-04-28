@@ -74,8 +74,7 @@ export class PokemonDatabase {
         this.allNames = [...this._index.values()].map(v => v.foundNode.Name || v.foundNode.name);
         this.filteredNames = this._buildFiltered([
             'Basic', 'Mid', 'Final', 
-            'Legendary', 'Mythical', 'Ultra Beast', 
-            'Alolan', 'Galarian', 'Hisuian', 'Paldean'
+            'Legendary', 'Mythical', 'Ultra Beast'
         ]);
     }
 
@@ -135,9 +134,11 @@ export class PokemonDatabase {
 
     /** Build the tier-filtered name list used for team generation. */
     _buildFiltered(allowedTiers) {
+        const regionalPrefixRe = /^(Alolan|Galarian|Hisuian|Paldean)\s+/i;
+        const normalizeTier = (t) => t ? t.replace(regionalPrefixRe, '').trim() : t;
         const names = [];
         for (const { foundNode } of this._index.values()) {
-            if (foundNode.tier && allowedTiers.includes(foundNode.tier)) {
+            if (foundNode.tier && allowedTiers.includes(normalizeTier(foundNode.tier))) {
                 names.push(foundNode.Name);
             }
         }

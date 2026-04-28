@@ -11,6 +11,17 @@ function generateRoomCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+/**
+ * Strip regional form prefixes so they collapse to their base tier.
+ * e.g. "Galarian Basic" → "Basic", "Hisuian Final" → "Final"
+ */
+function normalizeTier(tier) {
+    if (!tier) return tier;
+    return tier
+        .replace(/^(Alolan|Galarian|Hisuian|Paldean)\s+/i, '')
+        .trim();
+}
+
 function generatePlayerId() {
     const saved = localStorage.getItem('pba_playerId');
     if (saved) return saved;
@@ -114,7 +125,7 @@ export class MultiplayerManager {
             const tier = obj.Tier || obj.tier || parentTier;
             if (name) {
                 if (!flat.some(p => (p.Name || p.name) === name)) {
-                    flat.push({ ...obj, _computedTier: tier });
+                    flat.push({ ...obj, _computedTier: normalizeTier(tier) });
                 }
             }
             if (obj.evolutions && Array.isArray(obj.evolutions)) {

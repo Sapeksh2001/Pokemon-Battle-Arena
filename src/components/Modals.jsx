@@ -25,10 +25,6 @@ export default function Modals() {
     { id: 'Ultra Beast', label: 'Ultra' },
     { id: 'Mega', label: 'Mega' },
     { id: 'G-Max', label: 'G-Max' },
-    { id: 'Alolan', label: 'Alolan' },
-    { id: 'Galarian', label: 'Galar' },
-    { id: 'Hisuian', label: 'Hisui' },
-    { id: 'Paldean', label: 'Paldea' }
   ];
 
   const toggleTier = (tierId) => {

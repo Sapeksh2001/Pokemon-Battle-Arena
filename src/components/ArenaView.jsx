@@ -266,10 +266,11 @@ export default function ArenaView() {
                         <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>swap_horiz</span>SWITCH
                       </button>
                     </div>
-                    <div className="grid grid-cols-3 gap-1 mt-1">
-                      <button id="evolve-btn" onClick={act('handleEvolve')} className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">EVO</button>
-                      <button id="change-form-btn" onClick={act('openFormChangeModal')} className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">FORM</button>
-                      <button id="revive-btn" onClick={act('handleRevive')} className="bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">REV</button>
+                    <div className="grid grid-cols-4 gap-1 mt-1">
+                      <button id="evolve-btn" onClick={act('handleEvolve')} className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">EVO</button>
+                      <button id="devolve-btn" onClick={act('handleDevolve')} className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">DEVO</button>
+                      <button id="change-form-btn" onClick={act('openFormChangeModal')} className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">FORM</button>
+                      <button id="revive-btn" onClick={act('handleRevive')} className="bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">REV</button>
                     </div>
                   </div>
                 </div>
@@ -304,6 +305,7 @@ export default function ArenaView() {
                       <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">P</kbd> Physical Atk</span></div>
                       <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">S</kbd> Special Atk</span></div>
                       <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">E</kbd> Evolve</span></div>
+                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">D</kbd> Devolve</span></div>
                       <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">F</kbd> Form Change</span></div>
                       <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">R</kbd> Random #</span></div>
                       <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">T</kbd> Toggle Timer</span></div>

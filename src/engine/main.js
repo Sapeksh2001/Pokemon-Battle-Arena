@@ -1732,6 +1732,7 @@ export class PokemonBattleArena {
                 'p': 'physical-attack-btn',
                 's': 'special-attack-btn',
                 'e': 'evolve-btn',
+                'd': 'devolve-btn',
                 'f': 'change-form-btn',
                 'r': 'generate-number-btn',
             };

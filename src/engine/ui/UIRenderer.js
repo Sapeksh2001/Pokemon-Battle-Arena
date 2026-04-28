@@ -355,11 +355,13 @@ export class UIRenderer {
     _updateManagementButtons() {
         const sel = document.getElementById('management-pokemon-select');
         const evolveBtn = document.getElementById('evolve-btn');
+        const devolveBtn = document.getElementById('devolve-btn');
         const formBtn = document.getElementById('change-form-btn');
         const reviveBtn = document.getElementById('revive-btn');
-        if (!sel || !evolveBtn || !formBtn || !reviveBtn) return;
+        if (!sel || !evolveBtn || !devolveBtn || !formBtn || !reviveBtn) return;
 
         evolveBtn.disabled = true;
+        devolveBtn.disabled = true;
         formBtn.disabled = true;
         reviveBtn.disabled = true;
 
@@ -398,6 +400,11 @@ export class UIRenderer {
                 }
             }
             evolveBtn.disabled = !canEvolve;
+            
+            // Devolution check
+            const preEvolutions = this._arena.db.getPreEvolutions(pokemon.fullName);
+            devolveBtn.disabled = preEvolutions.length === 0;
+
             const base = pokemon.baseData || pokemon.data;
             // Form entries in the dataset use lowercase `name` (not `Name`).
             // Check both to correctly detect forms like Diglett-Alola, Meowth-Alola, etc.

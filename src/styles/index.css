@@ -81,13 +81,13 @@
     --tier-color-mythical: #F95587; /* Psychic */
     --tier-color-ultra-beast: #705746; /* Dark */
 
-    /* Fluid Font Sizes using clamp(MIN, IDEAL, MAX). This makes text scale smoothly with the viewport size. */
-    --font-size-xs: clamp(0.6rem, 1.5vw, 1rem);
-    --font-size-sm: clamp(0.75rem, 2vw, 1.1rem);
-    --font-size-base: clamp(0.875rem, 2.5vw, 1.4rem);
-    --font-size-lg: clamp(1rem, 3vw, 1.8rem);
-    --font-size-xl: clamp(1.125rem, 4vw, 2.2rem);
-    --font-size-2xl: clamp(1.25rem, 5vw, 2.5rem);
+    /* Fluid Font Sizes using clamp(MIN, IDEAL, MAX). Uses min(vw,vh) so text scales on both narrow AND short screens. */
+    --font-size-xs: clamp(0.5rem, min(1.5vw, 1.4vh), 1rem);
+    --font-size-sm: clamp(0.6rem, min(2vw, 1.8vh), 1.1rem);
+    --font-size-base: clamp(0.7rem, min(2.5vw, 2.2vh), 1.4rem);
+    --font-size-lg: clamp(0.85rem, min(3vw, 2.6vh), 1.8rem);
+    --font-size-xl: clamp(1rem, min(4vw, 3.2vh), 2.2rem);
+    --font-size-2xl: clamp(1.1rem, min(5vw, 4vh), 2.5rem);
 }
 
 /* --- ANIMATED ARENA BACKGROUNDS --- */
@@ -374,7 +374,7 @@ button, input, select {
     max-height: 3em;
 }
 .player-card h3 { font-size: var(--font-size-lg); }
-.pokemon-tier { text-align: center; color: #cbd5e1; font-size: var(--font-size-xs); font-weight: normal; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem; text-shadow: 1px 1px 0 #000; }
+.pokemon-tier { text-align: center; color: #cbd5e1; font-size: var(--font-size-xs); font-weight: normal; letter-spacing: 0.05em; margin-top: 0; margin-bottom: clamp(0.25rem, 1vh, 1rem); text-shadow: 1px 1px 0 #000; }
 .pokemon-tier .tier-label { color: #94a3b8; }
 
 .player-card .grid-cols-5 { font-size: var(--font-size-base); column-gap: 0.75rem; row-gap: 0.5rem; margin-top: 0.5rem; }
@@ -433,13 +433,13 @@ button, input, select {
     filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.2)); 
     transition: transform 0.3s ease;
     object-fit: contain;
-    width: clamp(8rem, 18vw, 16rem);
-    height: clamp(8rem, 18vw, 16rem);
+    width: clamp(5rem, min(18vw, 16vh), 14rem);
+    height: clamp(5rem, min(18vw, 16vh), 14rem);
 }
 
 /* --- SEGMENTED HP METER STYLES --- */
 /* This is a complex component built from several layered elements to create a radial gauge. */
-.hp-gauge-container { position: relative; width: clamp(120px, 20vw, 220px); height: clamp(120px, 20vw, 220px); display: flex; justify-content: center; align-items: center; margin-top: 1rem; }
+.hp-gauge-container { position: relative; width: clamp(90px, min(20vw, 16vh), 200px); height: clamp(90px, min(20vw, 16vh), 200px); display: flex; justify-content: center; align-items: center; margin-top: 0.5rem; }
 .hp-gauge-segments-container { position: absolute; width: 100%; height: 100%; border-radius: 50%; }
 /* Each segment is a small bar inside a rotated container. */
 .hp-segment-rotator { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
@@ -447,7 +447,7 @@ button, input, select {
 /* The needle's rotation is controlled by an inline style set by JavaScript. */
 .hp-gauge-needle { position: absolute; bottom: 50%; left: calc(50% - 3px); width: 6px; height: 50px; background: #e2e8f0; clip-path: polygon(20% 0, 80% 0, 100% 100%, 0% 100%); transform-origin: bottom center; transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); z-index: 10; }
 /* The center circle displays the numeric HP. */
-.hp-gauge-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: clamp(85px, 16vw, 140px); height: clamp(85px, 16vw, 140px); background: #1e293b; border-radius: 50% !important; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #ffffff; z-index: 12; border: 4px solid #475569; cursor: pointer; box-sizing: border-box; }
+.hp-gauge-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: clamp(65px, min(16vw, 13vh), 130px); height: clamp(65px, min(16vw, 13vh), 130px); background: #1e293b; border-radius: 50% !important; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #ffffff; z-index: 12; border: 4px solid #475569; cursor: pointer; box-sizing: border-box; }
 .hp-gauge-center .current-hp { font-size: var(--font-size-xl); font-weight: bold; line-height: 1.2; }
 .hp-gauge-center .max-hp { font-size: var(--font-size-base); color: #94a3b8; line-height: 1; margin-top: 2px; }
 /* The decorative pivot point in the very center. */
@@ -475,8 +475,8 @@ button, input, select {
     justify-content: space-evenly; 
     align-items: center; 
     width: 100%; 
-    height: 32px; 
-    margin-top: 0.5rem;
+    height: clamp(20px, 3vh, 32px); 
+    margin-top: 0.25rem;
     padding: 0 1rem;
 }
 
@@ -591,11 +591,11 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
  *   <680px   : Phone portrait                  → 1 player column
  */
 
-/* --- Arena control footer (replaces fixed style="height:380px") --- */
+/* --- Arena control footer — vh-based so it scales on short screens (MacBook) --- */
 .arena-control-footer {
-    height: 400px;
+    height: clamp(280px, 42vh, 400px);
     flex-shrink: 0;
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 /* --- Battle log panel (replaces fixed w-[640px]) --- */
@@ -619,7 +619,7 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 @media (max-width: 1400px) {
     #player-grid { grid-template-columns: repeat(3, 1fr); }
     .battle-log-panel { width: 300px; }
-    .arena-control-footer { height: 380px; }
+    .arena-control-footer { height: clamp(260px, 40vh, 380px); }
 }
 
 /* ── TABLET LANDSCAPE / LARGE PHONE (680–1024px) ── 2 columns, footer auto-height */

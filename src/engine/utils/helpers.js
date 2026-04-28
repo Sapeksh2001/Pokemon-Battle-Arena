@@ -33,3 +33,17 @@ export function escapeHTML(str) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 }
+
+/**
+ * Strip regional form prefixes so they collapse to their base tier.
+ * e.g. "Galarian Basic" → "Basic", "Hisuian Final" → "Final"
+ */
+export function normalizeTier(tier) {
+    if (!tier) return '';
+    const regionalNames = /^(Alolan|Galarian|Hisuian|Paldean|Paladian|Alola|Galar|Hisui|Paldea)$/i;
+    if (regionalNames.test(tier.trim())) return '';
+    
+    return tier
+        .replace(/^(Alolan|Galarian|Hisuian|Paldean|Paladian|Alola|Galar|Hisui|Paldea)\s+/i, '')
+        .trim();
+}

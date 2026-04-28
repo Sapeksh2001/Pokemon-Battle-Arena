@@ -6,21 +6,13 @@ import {
 } from "firebase/database";
 import { db } from '../../firebase.js';
 import { authManager } from './authManager.js';
+import { normalizeTier } from '../utils/helpers.js';
 
 function generateRoomCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-/**
- * Strip regional form prefixes so they collapse to their base tier.
- * e.g. "Galarian Basic" → "Basic", "Hisuian Final" → "Final"
- */
-function normalizeTier(tier) {
-    if (!tier) return tier;
-    return tier
-        .replace(/^(Alolan|Galarian|Hisuian|Paldean)\s+/i, '')
-        .trim();
-}
+
 
 function generatePlayerId() {
     const saved = localStorage.getItem('pba_playerId');
@@ -122,10 +114,10 @@ export class MultiplayerManager {
         const recurse = (obj, parentTier) => {
             // Data uses 'Name' (capital N)
             const name = obj.Name || obj.name;
-            const tier = obj.Tier || obj.tier || parentTier;
+            const tier = normalizeTier(obj.Tier || obj.tier) || parentTier;
             if (name) {
                 if (!flat.some(p => (p.Name || p.name) === name)) {
-                    flat.push({ ...obj, _computedTier: normalizeTier(tier) });
+                    flat.push({ ...obj, _computedTier: tier });
                 }
             }
             if (obj.evolutions && Array.isArray(obj.evolutions)) {

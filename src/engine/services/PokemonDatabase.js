@@ -1,5 +1,6 @@
 import { Trie } from '../utils/Trie.js';
 import { Pokemon } from '../models/Pokemon.js';
+import { normalizeTier } from '../utils/helpers.js';
 
 // ==========================================
 // POKÉMON DATABASE SERVICE (O(1) / O(k) lookups)
@@ -24,7 +25,7 @@ export class PokemonDatabase {
     buildIndex() {
         if (!this._raw || Object.keys(this._raw).length === 0) return;
 
-        const traverse = (node, baseNode) => {
+        const traverse = (node, baseNode, parentTier = null) => {
             // Support both capitalized Name (base/evolution nodes) and lowercase name (form nodes)
             const nodeName = node?.Name || node?.name;
             if (!node || typeof node !== 'object' || !nodeName) return;
@@ -36,6 +37,9 @@ export class PokemonDatabase {
             if (!existing || (!existingHasEvos && hasEvos)) {
                 // Normalise: ensure .Name is always set so rest of code can use .Name
                 if (!node.Name && node.name) node.Name = node.name;
+                
+                // Normalise tier with inheritance
+                node.tier = normalizeTier(node.tier) || parentTier;
                 
                 // Preserve the most comprehensive baseNode (the one with the most forms)
                 const existingFormsCount = existing?.baseNode?.forms ? Object.keys(existing.baseNode.forms).length : 0;
@@ -50,7 +54,7 @@ export class PokemonDatabase {
             // Recurse into forms (may use lowercase `name` in dataset)
             if (node.forms) {
                 for (const f of Object.values(node.forms)) {
-                    if (f && (f.Name || f.name)) traverse(f, node);
+                    if (f && (f.Name || f.name)) traverse(f, node, node.tier);
                 }
             }
             // Recurse into evolutions.
@@ -64,12 +68,12 @@ export class PokemonDatabase {
                         }
                         this._preEvoMap.get(evoKey).add(nodeName);
                     }
-                    traverse(evo, evo);
+                    traverse(evo, evo, node.tier);
                 }
             }
         };
 
-        for (const pokemon of Object.values(this._raw)) traverse(pokemon, pokemon);
+        for (const pokemon of Object.values(this._raw)) traverse(pokemon, pokemon, pokemon.tier);
 
         this.allNames = [...this._index.values()].map(v => v.foundNode.Name || v.foundNode.name);
         this.filteredNames = this._buildFiltered([
@@ -134,11 +138,9 @@ export class PokemonDatabase {
 
     /** Build the tier-filtered name list used for team generation. */
     _buildFiltered(allowedTiers) {
-        const regionalPrefixRe = /^(Alolan|Galarian|Hisuian|Paldean)\s+/i;
-        const normalizeTier = (t) => t ? t.replace(regionalPrefixRe, '').trim() : t;
         const names = [];
         for (const { foundNode } of this._index.values()) {
-            if (foundNode.tier && allowedTiers.includes(normalizeTier(foundNode.tier))) {
+            if (foundNode.tier && allowedTiers.includes(foundNode.tier)) {
                 names.push(foundNode.Name);
             }
         }

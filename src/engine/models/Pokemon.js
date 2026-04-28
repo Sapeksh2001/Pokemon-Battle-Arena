@@ -1,4 +1,4 @@
-import { applyModification } from '../utils/helpers.js';
+import { applyModification, normalizeTier } from '../utils/helpers.js';
 import { spriteOverrides } from '../data/sprite_overrides.js';
 
 // ==========================================
@@ -18,7 +18,7 @@ export class Pokemon {
         // Manual override check
         this.sprite = spriteOverrides[this.fullName] || data.sprite;
         this.cry = data.cry;
-        this.tier = data.tier;
+        this.tier = normalizeTier(data.tier);
         this.data = data;       // raw data for the current form
         this.baseData = baseData;   // raw data for the base form (needed for form changes)
         this.statModifiers = {};         // key → delta from base stat
@@ -123,7 +123,7 @@ export class Pokemon {
         this.types = newData.types.flatMap(t => t.split(' '));
         this.sprite = newData.sprite;
         this.cry = newData.cry;
-        this.tier = newData.tier || newBaseData.tier;
+        this.tier = normalizeTier(newData.tier || newBaseData.tier);
         this.data = newData;
         this.baseData = newBaseData;
         

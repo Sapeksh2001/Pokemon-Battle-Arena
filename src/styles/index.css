@@ -467,8 +467,8 @@ button, input, select {
 
 /* --- SEGMENTED HP METER STYLES --- */
 /* This is a complex component built from several layered elements to create a radial gauge. */
-/* Step 4: Gauge container — 80% of card width, square */
-.hp-gauge-container { position: relative; width: 80%; aspect-ratio: 1 / 1; flex-shrink: 0; display: flex; justify-content: center; align-items: center; margin: 0.5rem auto 0; }
+/* Step 4: Gauge container — proportional, capped so it doesn't overpower the sprite */
+.hp-gauge-container { position: relative; width: 70%; max-width: 160px; aspect-ratio: 1 / 1; flex-shrink: 0; display: flex; justify-content: center; align-items: center; margin: 0.25rem auto 0; }
 
 /* SVG fills the entire container */
 .hp-gauge-svg {

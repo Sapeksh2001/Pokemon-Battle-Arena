@@ -36,14 +36,18 @@ export class UIRenderer {
         const fillGap   = circumference - fillLength;
 
         // Unique IDs so multiple cards on the same page don't clash
-        const gradId   = `hpGrad-${playerId}`;
-        const glowId   = `hpGlow-${playerId}`;
+        const gradId = `hpGrad-${playerId}`;
+        const glowId = `hpGlow-${playerId}`;
 
         return `
         <svg class="hp-gauge-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <!-- Gradient: red (low) → orange → yellow → green (full) -->
-                <linearGradient id="${gradId}" x1="0%" y1="50%" x2="100%" y2="50%">
+                <!-- gradientUnits=userSpaceOnUse anchors gradient to GLOBAL SVG coords,
+                     bypassing the rotate(135) local-space mapping.
+                     Arc start (7:30, global x≈10) = red. Arc end (4:30, global x≈90) = green. -->
+                <linearGradient id="${gradId}"
+                    gradientUnits="userSpaceOnUse"
+                    x1="10" y1="50" x2="90" y2="50">
                     <stop offset="0%"   stop-color="#e63946"/>
                     <stop offset="20%"  stop-color="#f77f00"/>
                     <stop offset="40%"  stop-color="#fcbf49"/>
@@ -71,7 +75,7 @@ export class UIRenderer {
                 stroke-dasharray="${arcLength.toFixed(2)} ${trackGap.toFixed(2)}"
                 transform="rotate(135, ${cx}, ${cy})"/>
 
-            <!-- HP fill arc: grows from red end as HP increases -->
+            <!-- HP fill arc: grows from red end (bottom-left) as HP increases -->
             <circle
                 class="hp-gauge-fill-arc"
                 cx="${cx}" cy="${cy}" r="${r}"

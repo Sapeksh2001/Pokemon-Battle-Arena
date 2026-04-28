@@ -18,32 +18,71 @@ export class UIRenderer {
         };
     }
 
-    // ── Gauge generation ─────────────────────────────────────────────
+    // ── Gauge generation (SVG arc) ───────────────────────────────────
 
     /**
-     * Generate 60 gauge-segment HTML with HP-aware dimming.
-     * Segments at or below the active threshold render at full opacity;
-     * segments above it (lost HP) render dim so the arc visually shrinks.
-     * @param {number} pct - HP percentage 0.0 to 1.0
+     * Build a smooth SVG arc gauge for HP display.
+     * 270° arc, red→green linearGradient, glowing stroke.
+     * @param {number} pct      - HP percentage 0.0 to 1.0
+     * @param {string} playerId - Unique player ID for gradient/filter IDs
      */
-    _buildGaugeHTML(pct) {
-        const colors = [
-            'var(--hp-color-red)', 'var(--hp-color-orange)', 'var(--hp-color-yellow-orange)',
-            'var(--hp-color-yellow)', 'var(--hp-color-yellow-green)', 'var(--hp-color-green)'
-        ];
-        const total = 60, span = 270, start = -135;
-        const activeCount = Math.max(1, Math.round(pct * total));
-        let html = '';
-        for (let i = 0; i < total; i++) {
-            const color = colors[Math.floor(i / (total / colors.length))];
-            const rotation = start + (i / (total - 1)) * span;
-            const active = i < activeCount;
-            const opacity = active ? '1' : '0.12';
-            html += '<div class="hp-segment-rotator" style="transform:rotate(' + rotation + 'deg);">'
-                + '<div class="hp-segment-visual" style="background-color:' + color + ';opacity:' + opacity + ';"></div>'
-                + '</div>';
-        }
-        return html;
+    _buildSVGGauge(pct, playerId) {
+        const r = 40, cx = 50, cy = 50;
+        const circumference = 2 * Math.PI * r; // ≈ 251.33
+        const arcLength = circumference * (270 / 360); // ≈ 188.5  (the 270° track)
+        const trackGap = circumference - arcLength;     // ≈ 62.83  (hidden 90° gap)
+        const safePct = Math.max(0, Math.min(1, pct));
+        const fillLength = safePct * arcLength;
+        const fillGap   = circumference - fillLength;
+
+        // Unique IDs so multiple cards on the same page don't clash
+        const gradId   = `hpGrad-${playerId}`;
+        const glowId   = `hpGlow-${playerId}`;
+
+        return `
+        <svg class="hp-gauge-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <!-- Gradient: red (low) → orange → yellow → green (full) -->
+                <linearGradient id="${gradId}" x1="0%" y1="50%" x2="100%" y2="50%">
+                    <stop offset="0%"   stop-color="#e63946"/>
+                    <stop offset="20%"  stop-color="#f77f00"/>
+                    <stop offset="40%"  stop-color="#fcbf49"/>
+                    <stop offset="60%"  stop-color="#ffdd00"/>
+                    <stop offset="80%"  stop-color="#a9dc4c"/>
+                    <stop offset="100%" stop-color="#4caf50"/>
+                </linearGradient>
+                <!-- Glow filter for the active arc -->
+                <filter id="${glowId}" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
+                    <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+            </defs>
+
+            <!-- Background track: dimmed 270° arc -->
+            <circle
+                cx="${cx}" cy="${cy}" r="${r}"
+                fill="none"
+                stroke="rgba(255,255,255,0.12)"
+                stroke-width="7"
+                stroke-linecap="round"
+                stroke-dasharray="${arcLength.toFixed(2)} ${trackGap.toFixed(2)}"
+                transform="rotate(135, ${cx}, ${cy})"/>
+
+            <!-- HP fill arc: grows from red end as HP increases -->
+            <circle
+                class="hp-gauge-fill-arc"
+                cx="${cx}" cy="${cy}" r="${r}"
+                fill="none"
+                stroke="url(#${gradId})"
+                stroke-width="7"
+                stroke-linecap="round"
+                stroke-dasharray="${fillLength.toFixed(2)} ${fillGap.toFixed(2)}"
+                transform="rotate(135, ${cx}, ${cy})"
+                filter="url(#${glowId})"/>
+        </svg>`;
     }
 
     // ── Full re-render ───────────────────────────────────────────────
@@ -133,8 +172,6 @@ export class UIRenderer {
         if (pokemon.isFainted()) card.classList.add('opacity-50', 'bg-red-900/30');
 
         const pct = pokemon.getHPPercent();
-        const span = 270, startAngle = -135;
-        const needleAngle = Math.max(startAngle, Math.min(startAngle + span, startAngle + pct * span));
 
         card.innerHTML = `
             <div class="entry-animation-container"></div>
@@ -171,11 +208,9 @@ export class UIRenderer {
                 ? '<div class="absolute inset-0 flex items-center justify-center"><span class="text-red-500 text-2xl font-bold -rotate-12 bg-black/50 px-2">FAINTED</span></div>'
                 : ''}
                 </div>
-                <!-- Dynamic Floating Text Container inserted locally in later features -->
+                <!-- SVG Arc HP Gauge -->
                 <div class="hp-gauge-container">
-                    <div class="hp-gauge-segments-container">${this._buildGaugeHTML(pct)}</div>
-                    <div class="hp-gauge-pivot"></div>
-                    <div class="hp-gauge-needle" style="transform:rotate(${needleAngle}deg);"></div>
+                    ${this._buildSVGGauge(pct, player.id)}
                     <div class="hp-gauge-center" onclick="window.editHP('${player.id}')">
                         <div class="current-hp">${pokemon.currentHP}</div>
                         <div class="max-hp">${pokemon.maxHp}</div>

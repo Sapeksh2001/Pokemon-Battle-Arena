@@ -467,26 +467,20 @@ button, input, select {
 
 /* --- SEGMENTED HP METER STYLES --- */
 /* This is a complex component built from several layered elements to create a radial gauge. */
-/* Step 4: Gauge container — proportional, capped so it doesn't overpower the sprite */
-.hp-gauge-container { position: relative; width: 70%; max-width: 160px; aspect-ratio: 1 / 1; flex-shrink: 0; display: flex; justify-content: center; align-items: center; margin: 0.25rem auto 0; }
-
-/* SVG fills the entire container */
-.hp-gauge-svg {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    overflow: visible; /* allow glow filter to bleed outside */
-}
-
-/* Smooth transition when HP changes (arc length animates) */
-.hp-gauge-fill-arc {
-    transition: stroke-dasharray 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Center circle: numeric HP display */
-.hp-gauge-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 62%; height: 62%; background: radial-gradient(circle at 40% 40%, #1e3a5f, #0f172a); border-radius: 50% !important; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #ffffff; z-index: 12; border: 3px solid #475569; cursor: pointer; box-sizing: border-box; box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 0 12px rgba(99,102,241,0.2); }
+/* Step 4: Gauge is 80% of card width, square via aspect-ratio */
+.hp-gauge-container { position: relative; width: 80%; aspect-ratio: 1 / 1; flex-shrink: 0; display: flex; justify-content: center; align-items: center; margin: 0.5rem auto 0; }
+.hp-gauge-segments-container { position: absolute; width: 100%; height: 100%; border-radius: 50%; }
+/* Each segment is a small bar inside a rotated container. */
+.hp-segment-rotator { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.hp-segment-visual { position: absolute; top: 0; left: calc(50% - 4px); width: 8px; height: 16px; background-color: white; border-radius: 4px; }
+/* The needle's rotation is controlled by an inline style set by JavaScript. */
+.hp-gauge-needle { position: absolute; bottom: 50%; left: calc(50% - 3px); width: 6px; height: 45%; background: #e2e8f0; clip-path: polygon(20% 0, 80% 0, 100% 100%, 0% 100%); transform-origin: bottom center; transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); z-index: 10; }
+/* The center circle displays the numeric HP. */
+.hp-gauge-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 70%; background: #1e293b; border-radius: 50% !important; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #ffffff; z-index: 12; border: 4px solid #475569; cursor: pointer; box-sizing: border-box; }
 .hp-gauge-center .current-hp { font-size: var(--font-size-xl); font-weight: bold; line-height: 1.2; }
 .hp-gauge-center .max-hp { font-size: var(--font-size-base); color: #94a3b8; line-height: 1; margin-top: 2px; }
+/* The decorative pivot point in the very center. */
+.hp-gauge-pivot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 15%; height: 15%; max-width: 15px; max-height: 15px; background: #475569; border-radius: 50%; z-index: 11; border: 2px solid #94a3b8; }
 
 .player-card {
     transition: transform 0.3s ease, opacity 0.3s ease;

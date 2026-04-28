@@ -23,8 +23,6 @@ export default function Modals() {
     { id: 'Legendary', label: 'Legendary' },
     { id: 'Mythical', label: 'Mythical' },
     { id: 'Ultra Beast', label: 'Ultra' },
-    { id: 'Mega', label: 'Mega' },
-    { id: 'G-Max', label: 'G-Max' },
   ];
 
   const toggleTier = (tierId) => {

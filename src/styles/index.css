@@ -166,24 +166,24 @@ button, input, select {
 
 /* --- ADAPTIVE PLAYER GRID --- */
 #player-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    align-content: center;
+    display: grid;
+    /* By default, we use grid, let media queries override columns */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1.5rem;
     width: 100%;
     height: 100%;
     position: relative;
     z-index: 10;
     padding: 1rem;
+    /* Ensure rows can stretch to fill available space evenly */
+    grid-auto-rows: 1fr;
 }
 
-/* Cards grow to fill space but maintain aspect ratio, constrained by container height */
+/* Cards grow to fill space inside their grid cells */
 .player-card {
-    flex: 1 1 150px;
     min-width: 0;
-    max-width: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 
@@ -214,9 +214,9 @@ button, input, select {
     flex-direction: column;
     justify-content: space-between;
     padding: clamp(0.5rem, 1.5vw, 1.25rem);
-    height: auto;
-    aspect-ratio: 10 / 16;
-    max-height: 100%; /* Constrain to the actual container height, not viewport */
+    height: 100%;
+    /* Let the grid handle the layout entirely */
+    max-height: 100%;
     
     /* Font Legibility: Black Border/Outline */
     text-shadow: 
@@ -594,11 +594,10 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
  *   <680px   : Phone portrait                  → 1 player column
  */
 
-/* --- Arena control footer — vh-based so it scales on short screens (MacBook) --- */
+/* --- Arena control footer --- */
 .arena-control-footer {
-    height: clamp(240px, 35vh, 320px);
+    height: auto;
     flex-shrink: 0;
-    overflow-y: auto;
 }
 
 /* --- Battle log panel (replaces fixed w-[640px]) --- */
@@ -622,7 +621,7 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 @media (max-width: 1400px) {
     #player-grid { grid-template-columns: repeat(3, 1fr); }
     .battle-log-panel { width: 300px; }
-    .arena-control-footer { height: clamp(260px, 40vh, 380px); }
+    /* Height is auto */
 }
 
 /* ── TABLET LANDSCAPE / LARGE PHONE (680–1024px) ── 2 columns, footer auto-height */
@@ -630,8 +629,6 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
     #player-grid { grid-template-columns: repeat(2, 1fr); }
     .arena-control-footer {
         height: auto;
-        max-height: 50vh;
-        overflow-y: auto;
     }
     .battle-log-panel {
         width: 220px;
@@ -648,8 +645,6 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
     .battle-log-panel { display: none; }
     .arena-control-footer {
         height: auto;
-        max-height: 45vh;
-        overflow-y: auto;
     }
     .arena-control-footer .grid.lg\:grid-cols-5 {
         grid-template-columns: repeat(2, 1fr) !important;
@@ -662,8 +657,6 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
     .battle-log-panel { display: none; }
     .arena-control-footer {
         height: auto;
-        max-height: 40vh;
-        overflow-y: auto;
     }
     .arena-control-footer .grid.lg\:grid-cols-5 {
         grid-template-columns: 1fr !important;

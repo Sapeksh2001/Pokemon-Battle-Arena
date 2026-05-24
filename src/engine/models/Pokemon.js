@@ -23,6 +23,53 @@ export class Pokemon {
         this.baseData = baseData;   // raw data for the base form (needed for form changes)
         this.statModifiers = {};         // key → delta from base stat
         this.statuses = {};         // e.g. { poison: true, burn: true }
+        
+        this.moves = [];
+        this.ability = null;
+        this.hiddenAbility = null;
+        
+        if (typeof window !== 'undefined' && window.MovesetsData) {
+            let moveset = window.MovesetsData[this.fullName] || window.MovesetsData[this.baseName] || [];
+            if (moveset.length > 0) {
+                let shuffled = [...moveset].sort(() => 0.5 - Math.random());
+                this.moves = shuffled.slice(0, 4);
+            }
+        }
+        
+        if (typeof window !== 'undefined' && window.PokemonAbilitiesMap) {
+            const normalize = (n) => n ? n.replace(/-/g, ' ').replace(/\s+/g, ' ').trim() : '';
+            const normFull = normalize(this.fullName);
+            const normBase = normalize(this.baseName);
+            let abilities = window.PokemonAbilitiesMap[normFull] || window.PokemonAbilitiesMap[this.fullName] || window.PokemonAbilitiesMap[normBase] || window.PokemonAbilitiesMap[this.baseName] || [];
+            if (abilities.length > 0) {
+                let regularAbilities = abilities.filter(a => !a.hidden);
+                let hiddenAbilities = abilities.filter(a => a.hidden);
+                
+                if (regularAbilities.length > 0) {
+                    let randomRegular = regularAbilities[Math.floor(Math.random() * regularAbilities.length)];
+                    this.ability = randomRegular.name;
+                } else if (abilities.length > 0) {
+                    // Fallback to any if no non-hidden abilities exist
+                    this.ability = abilities[0].name;
+                }
+                
+                if (hiddenAbilities.length > 0) {
+                    this.hiddenAbility = hiddenAbilities[0].name;
+                }
+            }
+        }
+    }
+
+    refreshMoveset() {
+        if (typeof window !== 'undefined' && window.MovesetsData) {
+            let moveset = window.MovesetsData[this.fullName] || window.MovesetsData[this.baseName] || [];
+            if (moveset.length > 0) {
+                let shuffled = [...moveset].sort(() => 0.5 - Math.random());
+                this.moves = shuffled.slice(0, 4);
+                return true;
+            }
+        }
+        return false;
     }
 
     get name() { return this.fullName; }
@@ -151,25 +198,53 @@ export class Pokemon {
             currentHP: this.currentHP,
             stats: { ...this.stats },
             statModifiers: { ...this.statModifiers },
-            statuses: { ...this.statuses }
+            statuses: { ...this.statuses },
+            moves: [...this.moves],
+            ability: this.ability,
+            hiddenAbility: this.hiddenAbility,
+            types: [...this.types],
+            sprite: this.sprite,
+            cry: this.cry,
+            tier: this.tier,
+            data: this.data,
+            baseData: this.baseData
         };
     }
 
     /**
      * Restore a Pokemon instance from a serialised snapshot.
      */
-    static fromJSON(json, db) {
-        const result = db.find(json.fullName);
-        if (!result) {
-            console.warn(`Pokemon.fromJSON: "${json.fullName}" not found in database.`);
+    static fromJSON(json, db = null) {
+        if (!json) return null;
+
+        let result = null;
+        if (db && typeof db.find === 'function' && db._raw && Object.keys(db._raw).length > 0) {
+            result = db.find(json.fullName);
+        }
+
+        let p;
+        if (result) {
+            p = new Pokemon(result.foundNode, result.baseNode);
+        } else if (json.data && json.baseData) {
+            // Restore completely from self-contained JSON
+            p = new Pokemon(json.data, json.baseData);
+        } else {
+            console.warn(`Pokemon.fromJSON: Cannot restore "${json.fullName}". No database and no serialized fallback data.`);
             return null;
         }
-        const p = new Pokemon(result.foundNode, result.baseNode);
+
         if (json.maxHp !== undefined) p.maxHp = json.maxHp;
         if (json.stats) p.stats = { ...json.stats };
         p.currentHP = json.currentHP;
         p.statModifiers = { ...json.statModifiers };
         p.statuses = { ...json.statuses };
+        if (json.moves) p.moves = [...json.moves];
+        if (json.ability !== undefined) p.ability = json.ability;
+        if (json.hiddenAbility !== undefined) p.hiddenAbility = json.hiddenAbility;
+        if (json.types) p.types = [...json.types];
+        if (json.sprite) p.sprite = json.sprite;
+        if (json.cry) p.cry = json.cry;
+        if (json.tier) p.tier = json.tier;
         return p;
     }
 }

@@ -18,32 +18,10 @@ export class UIRenderer {
         };
     }
 
-    // ── Gauge generation ─────────────────────────────────────────────
-
-    /**
-     * Generate 60 gauge-segment HTML with HP-aware dimming.
-     * Segments at or below the active threshold render at full opacity;
-     * segments above it (lost HP) render dim so the arc visually shrinks.
-     * @param {number} pct - HP percentage 0.0 to 1.0
-     */
-    _buildGaugeHTML(pct) {
-        const colors = [
-            'var(--hp-color-red)', 'var(--hp-color-orange)', 'var(--hp-color-yellow-orange)',
-            'var(--hp-color-yellow)', 'var(--hp-color-yellow-green)', 'var(--hp-color-green)'
-        ];
-        const total = 60, span = 270, start = -135;
-        const activeCount = Math.max(1, Math.round(pct * total));
-        let html = '';
-        for (let i = 0; i < total; i++) {
-            const color = colors[Math.floor(i / (total / colors.length))];
-            const rotation = start + (i / (total - 1)) * span;
-            const active = i < activeCount;
-            const opacity = active ? '1' : '0.12';
-            html += '<div class="hp-segment-rotator" style="transform:rotate(' + rotation + 'deg);">'
-                + '<div class="hp-segment-visual" style="background-color:' + color + ';opacity:' + opacity + ';"></div>'
-                + '</div>';
-        }
-        return html;
+    _getHPColor(pct) {
+        if (pct > 0.5) return 'var(--hp-color-green)';
+        if (pct > 0.2) return 'var(--hp-color-yellow)';
+        return 'var(--hp-color-red)';
     }
 
     // ── Full re-render ───────────────────────────────────────────────
@@ -133,8 +111,6 @@ export class UIRenderer {
         if (pokemon.isFainted()) card.classList.add('opacity-50', 'bg-red-900/30');
 
         const pct = pokemon.getHPPercent();
-        const span = 270, startAngle = -135;
-        const needleAngle = Math.max(startAngle, Math.min(startAngle + span, startAngle + pct * span));
 
         card.innerHTML = `
             <div class="entry-animation-container"></div>
@@ -172,19 +148,19 @@ export class UIRenderer {
                 : ''}
                 </div>
                 <!-- Dynamic Floating Text Container inserted locally in later features -->
-                <div class="hp-gauge-container">
-                    <div class="hp-gauge-segments-container">${this._buildGaugeHTML(pct)}</div>
-                    <div class="hp-gauge-pivot"></div>
-                    <div class="hp-gauge-needle" style="transform:rotate(${needleAngle}deg);"></div>
-                    <div class="hp-gauge-center" onclick="window.editHP('${player.id}')">
-                        <div class="current-hp">${pokemon.currentHP}</div>
-                        <div class="max-hp">${pokemon.maxHp}</div>
+                <div class="hp-bar-container" onclick="window.editHP('${player.id}')">
+                    <div class="hp-text-row">
+                        <span class="hp-values">${pokemon.currentHP}/${pokemon.maxHp}</span>
+                    </div>
+                    <div class="hp-bar-track">
+                        <div class="hp-bar-fill" style="width: ${pct * 100}%; background-color: ${this._getHPColor(pct)};"></div>
                     </div>
                 </div>
                 <div class="status-alignment-row">
                     ${this._renderStatusIcons(pokemon)}
                 </div>
             </div>
+            ${this._renderMovesAndAbilities(pokemon, player)}
             <div class="grid grid-cols-5 grid-rows-2 text-center w-full card-stat-grid flex-shrink-0">
                 ${this._renderStatHeaders(pokemon)}
                 ${this._renderStatValues(pokemon)}
@@ -202,6 +178,119 @@ export class UIRenderer {
             `<span class="type-badge" style="background-color:var(--type-${t.toLowerCase()})">${t.toUpperCase()}</span>`
         ).join('');
     }
+
+    /** Render moves and abilities section. */
+    _renderMovesAndAbilities(pokemon, player) {
+        const escapeHTML = window.escapeHTML || (str => String(str).replace(/[&<>'"]/g, match => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        }[match])));
+
+        const moves = pokemon.moves || [];
+        const movesRows = moves.map((m, i) => {
+            const moveData = window.MovesData && window.MovesData[m] ? window.MovesData[m] : {};
+            const type = moveData.type || 'NORMAL';
+            const cat = moveData.category || 'Physical';
+            const power = moveData.power || '—';
+            const acc = moveData.accuracy || '—';
+            
+            const bgClass = i % 2 === 0 ? 'bg-[#f1f5f9]' : 'bg-[#e2e8f0]';
+            
+            let catIcon = '';
+            if (cat === 'Special') {
+                catIcon = `<svg width="20" height="14" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg" class="inline-block"><g transform="translate(12,8) rotate(-20)"><ellipse cx="0" cy="0" rx="9" ry="4.5" fill="none" stroke="#1d4ed8" stroke-width="1.5"/><ellipse cx="0" cy="0" rx="4.5" ry="2" fill="none" stroke="#1d4ed8" stroke-width="1.5"/><circle cx="0" cy="0" r="1" fill="#1d4ed8"/></g></svg>`;
+            } else if (cat === 'Status') {
+                catIcon = `<svg width="20" height="14" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg" class="inline-block"><g transform="translate(12,8) scale(1.1, 0.9)"><circle cx="0" cy="0" r="7" fill="none" stroke="#71717a" stroke-width="1.5"/><path d="M 0 -7 A 3.5 3.5 0 0 1 0 0 A 3.5 3.5 0 0 0 0 7 A 7 7 0 0 0 0 -7 Z" fill="#71717a"/><circle cx="0" cy="-3.5" r="1.2" fill="#fff"/><circle cx="0" cy="3.5" r="1.2" fill="#71717a"/></g></svg>`;
+            } else {
+                catIcon = `<svg width="20" height="14" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg" class="inline-block"><path d="M12 1 L15 5 L21 3 L17 8 L22 13 L15 12 L13 17 L10 12 L3 13 L8 8 L2 3 L9 5 Z" fill="#fff" stroke="#ea580c" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+            }
+
+            const moveDesc = moveData.effect ? `<span class="mc-tooltip-desc">${escapeHTML(moveData.effect)}</span>` : '';
+
+            return `
+                <tr class="${bgClass} text-slate-800 border-b border-gray-300 last:border-0 align-middle">
+                    <td class="p-0.5 pl-1 text-[#0f172a] text-[9px] sm:text-[10px] tracking-tight mc-tooltip align-middle">
+                        <span class="truncate block max-w-[80px]" title="${escapeHTML(m)}">${escapeHTML(m)}</span>
+                        <div class="mc-tooltip-content">
+                            <span class="mc-tooltip-title">${escapeHTML(m)}</span>
+                            <span>Type: ${escapeHTML(type)}</span><br>
+                            <span>Power: ${escapeHTML(String(power))}</span><br>
+                            <span>Accuracy: ${escapeHTML(String(acc))}</span>
+                            ${moveDesc}
+                        </div>
+                    </td>
+                    <td class="p-0.5 text-center align-middle">
+                        <span class="type-badge" style="background-color:var(--type-${type.toLowerCase()}); font-size: 10px; font-weight: 800; font-family: sans-serif; padding: 3px 8px; border-radius: 4px !important; border: 1.5px solid white; box-shadow: 0 0 0 1px black; display: inline-block; vertical-align: middle; line-height: 1; text-shadow: 1px 1px 0 rgba(0,0,0,0.5); letter-spacing: 0.5px;">
+                            ${escapeHTML(type.toUpperCase())}
+                        </span>
+                    </td>
+                    <td class="p-0.5 text-center align-middle">${catIcon}</td>
+                    <td class="p-0.5 text-center text-[9px] sm:text-[10px] align-middle">${escapeHTML(String(power))}</td>
+                    <td class="p-0.5 text-center pr-1 text-[9px] sm:text-[10px] align-middle">${escapeHTML(String(acc))}</td>
+                </tr>
+            `;
+        }).join('');
+
+        const noMovesRow = `<tr><td colspan="5" class="p-1 text-center text-gray-500 italic text-[10px]">No moves available</td></tr>`;
+
+        const abilityData = pokemon.ability && window.AbilitiesData && window.AbilitiesData[pokemon.ability] 
+            ? window.AbilitiesData[pokemon.ability] : null;
+        const abilityDesc = abilityData && abilityData.description ? abilityData.description : '';
+
+        const hiddenAbilityData = pokemon.hiddenAbility && window.AbilitiesData && window.AbilitiesData[pokemon.hiddenAbility] 
+            ? window.AbilitiesData[pokemon.hiddenAbility] : null;
+        const hiddenAbilityDesc = hiddenAbilityData && hiddenAbilityData.description ? hiddenAbilityData.description : '';
+
+        const refreshBtn = player ? `
+            <button onclick="window.arena.refreshPokemonMoveset('${player.id}', ${player.activePokemonIndex})" class="ml-1 text-yellow-400 hover:text-white transition-colors" title="Refresh Moveset">
+                <span class="material-symbols-outlined text-[12px] align-middle">refresh</span>
+            </button>` : '';
+
+        return `
+            <div class="w-full flex-shrink-0 mt-1 mb-1 bg-[#f8f9fa] text-black rounded-xl border-2 border-[#1e293b]" style="text-shadow: none;">
+                <table class="w-full text-left border-collapse" style="table-layout: fixed;">
+                    <thead>
+                        <tr class="bg-black text-white text-[8px] sm:text-[9px] uppercase tracking-wider">
+                            <th class="p-0.5 pl-1 w-[35%] rounded-tl-[10px]">Move ${refreshBtn}</th>
+                            <th class="p-0.5 text-center w-[25%]">Type</th>
+                            <th class="p-0.5 text-center w-[12%]">Cat.</th>
+                            <th class="p-0.5 text-center w-[14%]">Power</th>
+                            <th class="p-0.5 text-center pr-1 w-[14%] rounded-tr-[10px]">Acc.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${moves.length > 0 ? movesRows : noMovesRow}
+                    </tbody>
+                </table>
+                <div class="flex border-t-2 border-[#1e293b] bg-gray-300 p-0.5 gap-0.5 rounded-b-[10px]">
+                    <div class="w-1/2 bg-white rounded-bl-lg rounded-tl-sm rounded-r-sm border-2 border-[#1e293b] p-0.5 text-center flex flex-col justify-start ${pokemon.ability ? 'mc-tooltip' : ''}">
+                        <div class="uppercase text-[8px] mb-0.5 text-[#334155] tracking-widest leading-none">Ability</div>
+                        ${pokemon.ability ? `
+                            <div class="text-[10px] sm:text-xs tracking-wide text-[#0f172a] leading-none mb-0.5">${escapeHTML(pokemon.ability)}</div>
+                            ${abilityDesc ? `
+                                <div class="mc-tooltip-content">
+                                    <span class="mc-tooltip-title">${escapeHTML(pokemon.ability)}</span>
+                                    <span class="mc-tooltip-desc">${escapeHTML(abilityDesc)}</span>
+                                </div>
+                            ` : ''}
+                        ` : `<div class="text-gray-400 italic text-[9px] mt-0.5">None</div>`}
+                    </div>
+                    <div class="w-1/2 bg-white rounded-br-lg rounded-tr-sm rounded-l-sm border-2 border-[#1e293b] p-0.5 text-center flex flex-col justify-start ${pokemon.hiddenAbility ? 'mc-tooltip' : ''}">
+                        <div class="uppercase text-[8px] mb-0.5 text-[#334155] tracking-widest leading-none">Hidden Ability</div>
+                        ${pokemon.hiddenAbility ? `
+                            <div class="text-[10px] sm:text-xs tracking-wide text-[#0f172a] leading-none mb-0.5">${escapeHTML(pokemon.hiddenAbility)}</div>
+                            ${hiddenAbilityDesc ? `
+                                <div class="mc-tooltip-content">
+                                    <span class="mc-tooltip-title">${escapeHTML(pokemon.hiddenAbility)}</span>
+                                    <span class="mc-tooltip-desc">${escapeHTML(hiddenAbilityDesc)}</span>
+                                </div>
+                            ` : ''}
+                        ` : `<div class="text-gray-400 italic text-[9px] mt-0.5">None</div>`}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
 
     /** DRY: Renders status condition icons from the Pokemon's statuses object. */
     _renderStatusIcons(pokemon) {

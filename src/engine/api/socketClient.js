@@ -411,19 +411,24 @@ export class MultiplayerManager {
 
     _listenToGameState() {
         const stateRef = ref(db, `rooms/${this.roomCode}/state`);
+        this.hasLoadedInitialState = false;
         const unsubState = onValue(stateRef, (snapshot) => {
             if (snapshot.exists()) {
                 const state = snapshot.val();
-                if (state._sender !== this.playerId) { 
+                if (state._sender === this.playerId) {
+                    this.hasLoadedInitialState = true;
+                } else if (!this.hasLoadedInitialState) {
                     this.receiveGameState(state);
+                    this.hasLoadedInitialState = true;
                 }
             }
         });
 
+        const listenTime = Date.now();
         const actionsRef = ref(db, `rooms/${this.roomCode}/actions`);
         const unsubActions = onChildAdded(actionsRef, (snapshot) => {
             const data = snapshot.val();
-            if (data.sender !== this.playerId) {
+            if (data && data.sender !== this.playerId && data.timestamp > listenTime) {
                 this.handleRemoteAction(data.action, data.payload);
             }
         });
@@ -469,6 +474,90 @@ export class MultiplayerManager {
                 if (payload) {
                     this.arena.log._buffer.push(payload);
                     this.arena.log._render();
+                }
+                break;
+            case 'attack':
+                if (payload) {
+                    this.arena.battleController.handleAttack(payload.attackType, payload);
+                }
+                break;
+            case 'hp_change':
+                if (payload) {
+                    const p = this.arena.gs.players.find(pl => pl.id === payload.playerId);
+                    const poke = p?.team[payload.slotId];
+                    if (poke) {
+                        this.arena.battleController._applyHPChange(poke, payload.playerId, payload.newHP, payload.source, true);
+                    }
+                }
+                break;
+            case 'refresh_moveset':
+                if (payload) {
+                    this.arena.refreshPokemonMoveset(payload.playerId, payload.slotId, true);
+                }
+                break;
+            case 'status_toggle':
+                if (payload) {
+                    this.arena.toggleStatus(null, payload);
+                }
+                break;
+            case 'stat_update':
+                if (payload) {
+                    this.arena.handleStatUpdate(payload);
+                }
+                break;
+            case 'switch_pokemon':
+                if (payload) {
+                    this.arena._switchActivePokemon(payload.playerId, payload.slotId, payload.fromModal, true);
+                }
+                break;
+            case 'evolve':
+                if (payload) {
+                    this.arena._confirmEvolution(payload.evolutionName, payload.playerId, payload.slotId, true);
+                }
+                break;
+            case 'devolve':
+                if (payload) {
+                    this.arena._confirmDevolution(payload.parentName, payload.playerId, payload.slotId, true);
+                }
+                break;
+            case 'form_change':
+                if (payload) {
+                    this.arena._confirmFormChange(payload.formName, payload.playerId, payload.slotId, true);
+                }
+                break;
+            case 'cycle_weather':
+                if (payload) {
+                    this.arena.cycleWeather(true);
+                }
+                break;
+            case 'end_round':
+                this.arena.battleController.endRound(true);
+                break;
+            case 'player_add':
+                if (payload) {
+                    const alreadyInGame = this.arena.gs.players.find(sp => sp.id === payload.id);
+                    if (!alreadyInGame) {
+                        const newPlayer = new Player(payload.id, payload.name);
+                        if (payload.serializedPokemon) {
+                            newPlayer.team[0] = Pokemon.fromJSON(payload.serializedPokemon, this.arena.db);
+                        }
+                        this.arena.gs.players.push(newPlayer);
+                        this.arena.log.add(`⚡ ${payload.name} entered the battle!`, 'system');
+                        this.arena.renderer.renderAll();
+                    }
+                }
+                break;
+            case 'player_remove':
+                if (payload) {
+                    const exists = this.arena.gs.players.find(sp => sp.id === payload.playerId);
+                    if (exists) {
+                        this.arena.gs.players = this.arena.gs.players.filter(sp => sp.id !== payload.playerId);
+                        ['activeTurnPlayerId', 'selectedAttackTargetId', 'selectedStatusTargetId'].forEach(key => {
+                            if (this.arena.gs[key] === payload.playerId) this.arena.gs[key] = null;
+                        });
+                        this.arena.log.add(`${exists.name} has been removed from the battle.`, 'system');
+                        this.arena.renderer.renderAll();
+                    }
                 }
                 break;
             default: console.warn('[MULTIPLAYER] Unknown action:', action);
@@ -593,6 +682,13 @@ export class MultiplayerManager {
                 this.arena.gs.players.push(newPlayer);
                 this.arena.log.add(`⚡ ${playerData.name} joined as wildcard with ${rolled.Name || rolled.name}!`, 'system');
                 this.arena.renderer.renderAll();
+                if (newPlayer.team[0]) {
+                    this.sendAction('player_add', {
+                        id: targetPlayerId,
+                        name: playerData.name,
+                        serializedPokemon: newPlayer.team[0].toJSON()
+                    });
+                }
                 this.sendGameState();
             }
         } else {
@@ -746,6 +842,13 @@ export class MultiplayerManager {
                             this.arena.gs.players.push(newPlayer);
                             this.arena.log.add(`⚡ ${playerData.name} joined as wildcard with ${pokeName}!`, 'system');
                             this.arena.renderer.renderAll();
+                            if (newPlayer.team[0]) {
+                                this.sendAction('player_add', {
+                                    id: targetPlayerId,
+                                    name: playerData.name,
+                                    serializedPokemon: newPlayer.team[0].toJSON()
+                                });
+                            }
                             this.sendGameState();
                         }
                     } else {

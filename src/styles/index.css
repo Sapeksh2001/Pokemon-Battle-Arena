@@ -21,6 +21,58 @@
   --font-label: "Press Start 2P", cursive;
 }
 
+/* --- TOOLTIPS (MINECRAFT STYLE) --- */
+.mc-tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.mc-tooltip .mc-tooltip-content {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background-color: rgba(16, 0, 16, 0.95);
+    border: 2px solid #5c1b9b;
+    border-radius: 4px;
+    padding: 6px 8px;
+    width: 140px;
+    color: #a8a8a8;
+    font-family: var(--font-pixel);
+    font-size: 8px;
+    text-shadow: 1px 1px 0 #000;
+    z-index: 100; /* High z-index to stay above other elements */
+    transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
+    pointer-events: none;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+    text-align: left;
+    white-space: normal;
+}
+
+.mc-tooltip:hover .mc-tooltip-content {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(-50%) translateY(-4px);
+}
+
+.mc-tooltip-title {
+    color: #fff;
+    font-size: 10px;
+    margin-bottom: 4px;
+    display: block;
+    border-bottom: 1px solid #333;
+    padding-bottom: 2px;
+}
+
+.mc-tooltip-desc {
+    color: #55FF55; /* Minecraft light green */
+    display: block;
+    line-height: 1.3;
+    margin-top: 4px;
+}
+
 /*
  * POKÉMON BATTLE ARENA - STYLESHEET
  * This file defines the entire visual appearance of the application.
@@ -468,19 +520,46 @@ button, input, select {
 /* --- SEGMENTED HP METER STYLES --- */
 /* This is a complex component built from several layered elements to create a radial gauge. */
 /* Step 4: Gauge is 80% of card width, square via aspect-ratio */
-.hp-gauge-container { position: relative; width: 80%; aspect-ratio: 1 / 1; flex-shrink: 0; display: flex; justify-content: center; align-items: center; margin: 0.5rem auto 0; }
-.hp-gauge-segments-container { position: absolute; width: 100%; height: 100%; border-radius: 50%; }
-/* Each segment is a small bar inside a rotated container. */
-.hp-segment-rotator { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-.hp-segment-visual { position: absolute; top: 0; left: calc(50% - 4px); width: 8px; height: 16px; background-color: white; border-radius: 4px; }
-/* The needle's rotation is controlled by an inline style set by JavaScript. */
-.hp-gauge-needle { position: absolute; bottom: 50%; left: calc(50% - 3px); width: 6px; height: 45%; background: #e2e8f0; clip-path: polygon(20% 0, 80% 0, 100% 100%, 0% 100%); transform-origin: bottom center; transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); z-index: 10; }
-/* The center circle displays the numeric HP. */
-.hp-gauge-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 70%; background: #1e293b; border-radius: 50% !important; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #ffffff; z-index: 12; border: 4px solid #475569; cursor: pointer; box-sizing: border-box; }
-.hp-gauge-center .current-hp { font-size: var(--font-size-xl); font-weight: bold; line-height: 1.2; }
-.hp-gauge-center .max-hp { font-size: var(--font-size-base); color: #94a3b8; line-height: 1; margin-top: 2px; }
-/* The decorative pivot point in the very center. */
-.hp-gauge-pivot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 15%; height: 15%; max-width: 15px; max-height: 15px; background: #475569; border-radius: 50%; z-index: 11; border: 2px solid #94a3b8; }
+/* --- HP BAR STYLES --- */
+.hp-bar-container {
+    width: 100%;
+    margin: 0.5rem auto;
+    background: #000;
+    border: 3px solid #000;
+    cursor: pointer;
+    position: relative;
+    box-sizing: border-box;
+    clip-path: polygon(4px 0%, 100% 0%, 100% 100%, 0% 100%);
+}
+
+.hp-text-row {
+    display: flex;
+    justify-content: flex-end;
+    padding: 2px 6px;
+    background: #222;
+    min-height: 18px;
+    align-items: center;
+}
+
+.hp-values {
+    font-size: 10px;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+.hp-bar-track {
+    height: 6px;
+    background: #444;
+    margin: 2px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hp-bar-fill {
+    height: 100%;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.8s ease;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,0.3);
+}
 
 .player-card {
     transition: transform 0.3s ease, opacity 0.3s ease;

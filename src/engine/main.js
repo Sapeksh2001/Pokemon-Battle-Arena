@@ -11,10 +11,12 @@ import { ModalManager } from './ui/ModalManager.js';
 import { Timer } from './ui/Timer.js';
 import { UIRenderer } from './ui/UIRenderer.js';
 import { MultiplayerManager } from './api/socketClient.js';
+import { BattleController } from './services/BattleController.js';
 
 export class PokemonBattleArena {
     constructor() {
         // Services
+        this.battleController = new BattleController(this);
         this.audio = new AudioManager();
         this.db = new PokemonDatabase(window.MergedPokemonData || {});
         this.engine = new BattleEngine(typeChart);
@@ -46,21 +48,52 @@ export class PokemonBattleArena {
     // ── Bootstrap ─────────────────────────────────────────────────────────
 
     init() {
-        if (Object.keys(this.db._raw).length === 0) {
-            this._announce('Error: Pokémon data file not found or empty.', true);
+        // Try to load state from localStorage first
+        const hasSavedState = this.loadLocalState();
+
+        if (Object.keys(this.db._raw).length === 0 && !hasSavedState) {
+            // No database and no saved state -> Must load database
+            this.ensureDatabaseLoaded().then(() => this._initRemaining());
             return;
         }
 
+        this._initRemaining();
+    }
+
+    async ensureDatabaseLoaded() {
+        if (Object.keys(this.db._raw).length > 0) return;
+
+        this._toggleLoading(true, 'Loading database (one-time fetch)...');
+        try {
+            const { loadGameData } = await import('./services/DataLoader.js');
+            await loadGameData();
+
+            this.db._raw = window.MergedPokemonData || {};
+            this.db.buildIndex();
+            this._populateMoveTypeSelector();
+            this._populateAbilitiesMap();
+
+            console.log('[DATABASE] Lazy loaded successfully.');
+        } catch (err) {
+            this._announce('Failed to load database!', true);
+            console.error(err);
+        } finally {
+            this._toggleLoading(false);
+        }
+    }
+
+    _initRemaining() {
         document.body.addEventListener('click', () => Tone.start(), { once: true });
         document.body.addEventListener('click', () => this.audio.init(), { once: true });
 
-        this.db.buildIndex();
-        // gauge now generated dynamically per-render
-        this.log.linkGameState(this.gs);
+        if (Object.keys(this.db._raw).length > 0) {
+            this.db.buildIndex();
+            this._populateMoveTypeSelector();
+            this._populateAbilitiesMap();
+        }
 
+        this.log.linkGameState(this.gs);
         this._registerModals();
-        // this._prepopulate(); // Moved to MultiplayerManager.quickBattle()
-        this._populateMoveTypeSelector();
         this._setupEventListeners();
         this._setupKeyboardShortcuts();
         this._setupMultiplayerUI();
@@ -69,7 +102,12 @@ export class PokemonBattleArena {
         lucide.createIcons();
         this._setArena('Normal');
         this.history._updateButtons();
-        this.log.add('Battle arena initialised. 6 trainers ready!', 'system');
+
+        if (this.gs.players.length === 0) {
+            this.log.add('Battle arena initialised. Create rooms or start quick battle!', 'system');
+        } else {
+            this.log.add('Battle arena state restored from localStorage.', 'system');
+        }
 
         // Expose callbacks used by inline HTML onclick attributes.
         window.openTeamManager = id => this.openTeamManager(id);
@@ -84,6 +122,42 @@ export class PokemonBattleArena {
             const [pid] = val.split('|');
             this.openTeamManager(pid);
         };
+    }
+
+    saveLocalState() {
+        try {
+            const state = {
+                players: this.gs.players.map(p => p.toJSON()),
+                round: this.gs.round,
+                weather: this.gs.weather,
+                activeTurnPlayerId: this.gs.activeTurnPlayerId,
+                selectedAttackTargetId: this.gs.selectedAttackTargetId,
+                selectedStatusTargetId: this.gs.selectedStatusTargetId,
+                logs: this.log._buffer.toArray()
+            };
+            localStorage.setItem('pba_active_battle_state', JSON.stringify(state));
+        } catch (err) {
+            console.error('[Arena] Local save failed:', err);
+        }
+    }
+
+    loadLocalState() {
+        try {
+            const saved = localStorage.getItem('pba_active_battle_state');
+            if (!saved) return false;
+            const state = JSON.parse(saved);
+            this.gs.players = (state.players || []).map(p => Player.fromJSON(p, this.db));
+            this.gs.round = state.round || 1;
+            this.gs.weather = state.weather || 'none';
+            this.gs.activeTurnPlayerId = state.activeTurnPlayerId || null;
+            this.gs.selectedAttackTargetId = state.selectedAttackTargetId || null;
+            this.gs.selectedStatusTargetId = state.selectedStatusTargetId || null;
+            if (state.logs) this.log.loadLogs(state.logs);
+            return true;
+        } catch (err) {
+            console.error('[Arena] Local load failed:', err);
+            return false;
+        }
     }
 
     _setupMultiplayerUI() {
@@ -139,27 +213,8 @@ export class PokemonBattleArena {
      * @param {number}  newHP     - The target HP value (will be clamped)
      * @param {string}  [source]  - Label for the log entry (e.g. "sandstorm")
      */
-    _applyHPChange(pokemon, playerId, newHP, source = '') {
-        const clamped = Math.max(0, Math.min(pokemon.maxHp, newHP));
-        const delta = clamped - pokemon.currentHP;
-        pokemon.currentHP = clamped;
-        this.renderer.renderAll(); // Immediate sync
-
-        if (delta === 0) return;
-
-        const isHeal = delta > 0;
-        const isFaint = clamped === 0 && delta < 0;
-        const label = source ? ` (${source})` : '';
-
-        this._showDamageNumber(playerId, Math.abs(delta), isHeal ? 'heal' : 'damage');
-        this._notify(
-            `${pokemon.fullName}: ${isHeal ? '+' : ''}${delta} HP${label} (${clamped}/${pokemon.maxHp})`,
-            isHeal ? 'heal' : 'damage'
-        );
-
-        const animType = isFaint ? 'faint' : isHeal ? 'heal' : 'damage';
-        if (isFaint) this.audio.playCry(pokemon);
-        this._animateSprite(playerId, animType, () => this.renderer.renderAll());
+    _applyHPChange(pokemon, playerId, newHP, source = '', preventSync = false) {
+        this.battleController._applyHPChange(pokemon, playerId, newHP, source, preventSync);
     }
 
     // ── Player management ─────────────────────────────────────────────────
@@ -180,6 +235,9 @@ export class PokemonBattleArena {
         input.value = '';
         this.renderer.renderAll();
         this.openTeamManager(player.id);
+
+        // Autosave Local State
+        this.saveLocalState();
 
         // Sync game state in multiplayer
         if (this.multiplayer && this.multiplayer.mode === 'playing') {
@@ -209,8 +267,12 @@ export class PokemonBattleArena {
                 this._notify(`${player.name} has been removed from the battle.`, 'system');
                 this.renderer.renderAll();
 
+                // Autosave Local State
+                this.saveLocalState();
+
                 // Sync game state in multiplayer
                 if (this.multiplayer && this.multiplayer.mode === 'playing') {
+                    this.multiplayer.sendAction('player_remove', { playerId });
                     this.multiplayer.sendGameState();
                 }
             }
@@ -220,108 +282,13 @@ export class PokemonBattleArena {
     // ── Round ─────────────────────────────────────────────────────────────
 
     endRound() {
-        this.audio.play('confirm');
-        this.history.snapshot(this.gs);
-        this.gs.round++;
-        this._applyWeatherDamage();
-        this._applyStatusDamage();
-        this.renderer.renderAll();
-        this._notify(`========== ROUND ${this.gs.round} BEGINS ==========`, 'round');
-
-        // Sync game state in multiplayer
-        if (this.multiplayer && this.multiplayer.mode === 'playing') {
-            this.multiplayer.sendGameState();
-        }
+        this.battleController.endRound();
     }
 
     // ── Attack ────────────────────────────────────────────────────────────
 
     handleAttack(attackType) {
-        this.audio.play('attack');
-        const attackerSel = document.getElementById('attacker-select');
-        const targetSel = document.getElementById('attack-target-select');
-        const typeSel = document.getElementById('move-type-select');
-        const powerInput = document.getElementById('move-power-input');
-
-        const attackerId = attackerSel?.dataset?.value || attackerSel?.value;
-        const targetId = targetSel?.dataset?.value || targetSel?.value;
-        const moveType = typeSel?.value;
-        let movePower = parseInt(powerInput?.value);
-
-        if (movePower > 1000) { movePower = 1000; if (powerInput) powerInput.value = 1000; }
-        if (movePower < 1) { movePower = 0; }
-
-        if (!attackerId || !targetId || !moveType || isNaN(movePower)) {
-            this._announce('Attacker, Target, Move Type, and Power are required!', true);
-            this.audio.play('error');
-            return;
-        }
-
-        const attackerPlayer = this.gs.players.find(p => p.id === attackerId);
-        const targetPlayer = this.gs.players.find(p => p.id === targetId);
-        if (!attackerPlayer || !targetPlayer) return;
-
-        const attacker = attackerPlayer.getActivePokemon();
-        const target = targetPlayer.getActivePokemon();
-
-        if (attacker.isFainted()) {
-            this._announce(`${attacker.fullName} is fainted and cannot attack!`, true);
-            return;
-        }
-        if (target.isFainted()) {
-            this._announce(`${target.fullName} is already fainted!`, true);
-            return;
-        }
-
-        if (attacker.hasStatus('paralysis') && Math.random() < 0.5) {
-            this._notify(`${attacker.fullName} is paralyzed and couldn't move!`, 'damage');
-            this.audio.playCry(attacker);
-            return;
-        }
-
-        this.history.snapshot(this.gs);
-        this.audio.playCry(attacker);
-
-        const { damage, effectiveness } = this.engine.calculateDamage(
-            attacker, target, movePower, moveType, attackType
-        );
-
-        // Build the announcement message.
-        let msg = `${attacker.fullName} used a ${attackType} ${moveType} attack on ${target.fullName} for ${damage} damage!`;
-        if (effectiveness > 1) msg += " It's super effective!";
-        if (effectiveness < 1 && effectiveness > 0) msg += " It's not very effective...";
-        if (effectiveness === 0) msg = `${target.fullName} is immune!`;
-
-        this.log.add(msg, effectiveness === 0 ? 'action' : 'damage');
-        this._announce(msg);
-
-        if (damage > 0) {
-            this._showDamageNumber(targetId, damage, effectiveness >= 2 ? 'critical' : 'damage');
-        }
-
-        const newHP = target.currentHP - damage;
-        target.currentHP = Math.max(0, newHP);
-
-        // Immediate visual sync for health bars/gauges
-        this.renderer.renderAll();
-        if (this.multiplayer && this.multiplayer.mode === 'playing') {
-            this.multiplayer.sendGameState();
-        }
-
-        const onDone = () => {
-            if (target.isFainted()) {
-                this.audio.playCry(target);
-                this._announce(`${target.fullName} fainted!`);
-                this._animateSprite(targetId, 'faint', () => this.renderer.renderAll());
-            } else {
-                // Secondary render catch-all
-                this.renderer.renderAll();
-            }
-        };
-
-        damage > 0
-            ? this._animateSprite(targetId, 'damage', onDone)
-            : onDone();
+        this.battleController.handleAttack(attackType);
     }
 
     _handleTimeout() {
@@ -422,10 +389,17 @@ export class PokemonBattleArena {
 
     // ── Status & stats ────────────────────────────────────────────────────
 
-    toggleStatus(event) {
+    toggleStatus(event, remoteData = null) {
         this.audio.play('status');
-        const status = event.target.closest('button')?.dataset.status;
-        const targetId = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
+        let status, targetId;
+
+        if (remoteData) {
+            status = remoteData.status;
+            targetId = remoteData.playerId;
+        } else {
+            status = event.target.closest('button')?.dataset.status;
+            targetId = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
+        }
         if (!status || !targetId) return;
 
         const player = this.gs.players.find(p => p.id === targetId);
@@ -447,25 +421,37 @@ export class PokemonBattleArena {
         }
         this.renderer.renderAll();
 
-        // Sync game state in multiplayer
-        if (this.multiplayer && this.multiplayer.mode === 'playing') {
-            this.multiplayer.sendGameState();
+        // Autosave Local State
+        this.saveLocalState();
+
+        // Sync Action
+        if (!remoteData && this.multiplayer && this.multiplayer.mode === 'playing') {
+            const slot = player.team.indexOf(pokemon);
+            this.multiplayer.sendAction('status_toggle', { playerId: targetId, slotId: slot, status, wasActive });
         }
     }
 
-    handleStatUpdate() {
-        const statusTargetSel = document.getElementById('status-target-select');
-        const statSel = document.getElementById('stat-select');
-        const statValInput = document.getElementById('stat-value-input');
-        const modTypeSel = document.getElementById('stat-mod-type');
+    handleStatUpdate(remoteData = null) {
+        let targetId, statName, value, modType;
+        if (remoteData) {
+            targetId = remoteData.targetId;
+            statName = remoteData.statName;
+            value = remoteData.value;
+            modType = remoteData.modType;
+        } else {
+            const statusTargetSel = document.getElementById('status-target-select');
+            const statSel = document.getElementById('stat-select');
+            const statValInput = document.getElementById('stat-value-input');
+            const modTypeSel = document.getElementById('stat-mod-type');
 
-        const targetId = statusTargetSel?.value;
-        const statName = statSel?.value;
-        const value = parseInt(statValInput?.value);
-        const modType = modTypeSel?.value;
+            targetId = statusTargetSel?.value;
+            statName = statSel?.value;
+            value = parseInt(statValInput?.value);
+            modType = modTypeSel?.value;
+        }
 
         if (!targetId || !statName || isNaN(value)) {
-            this._announce('Please select a target, stat, and value.', true);
+            if (!remoteData) this._announce('Please select a target, stat, and value.', true);
             return;
         }
         const player = this.gs.players.find(p => p.id === targetId);
@@ -492,12 +478,15 @@ export class PokemonBattleArena {
             } else {
                 this.renderer.renderAll();
             }
-        }
-        this.audio.play('confirm');
+            this.audio.play('confirm');
 
-        // Sync game state in multiplayer
-        if (this.multiplayer && this.multiplayer.mode === 'playing') {
-            this.multiplayer.sendGameState();
+            // Autosave Local State
+            this.saveLocalState();
+
+            // Sync Action
+            if (!remoteData && this.multiplayer && this.multiplayer.mode === 'playing') {
+                this.multiplayer.sendAction('stat_update', { targetId, statName, modType, value });
+            }
         }
     }
 
@@ -536,16 +525,12 @@ export class PokemonBattleArena {
         this.audio.play('confirm');
         // DRY: _applyHPChange handles logging, animating, and rendering.
         this._applyHPChange(pokemon, playerId, newHP, 'manual edit');
-
-        // Sync game state in multiplayer
-        if (this.multiplayer && this.multiplayer.mode === 'playing') {
-            this.multiplayer.sendGameState();
-        }
     }
 
     // ── Team Management Modal ─────────────────────────────────────────────
 
-    openTeamManager(playerId) {
+    async openTeamManager(playerId) {
+        await this.ensureDatabaseLoaded();
         this.audio.play('click');
         this.gs.currentEditing.playerId = playerId;
         const player = this.gs.players.find(p => p.id === playerId);
@@ -810,10 +795,11 @@ export class PokemonBattleArena {
         // Try the exact name first, then shrink forme suffixes one word at a time
         let abilities = null;
         if (pokemonName) {
-            abilities = window.PokemonAbilitiesMap[pokemonName];
+            const normalized = pokemonName.replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+            abilities = window.PokemonAbilitiesMap[normalized] || window.PokemonAbilitiesMap[pokemonName];
             if (!abilities) {
                 // Try removing trailing forme word (e.g. "Charizard Mega X" → "Charizard Mega" → "Charizard")
-                const parts = pokemonName.split(' ');
+                const parts = normalized.split(' ');
                 for (let i = parts.length - 1; i >= 1 && !abilities; i--) {
                     abilities = window.PokemonAbilitiesMap[parts.slice(0, i).join(' ')];
                 }
@@ -848,6 +834,9 @@ export class PokemonBattleArena {
         this._renderTeamEditorGrid();
         document.getElementById('pokemon-editor-form')?.classList.add('hidden');
 
+        // Autosave Local State
+        this.saveLocalState();
+
         // Sync game state in multiplayer
         if (this.multiplayer && this.multiplayer.mode === 'playing') {
             this.multiplayer.sendGameState();
@@ -859,6 +848,9 @@ export class PokemonBattleArena {
         if (player) {
             player.clearSlot(slotId);
             this._renderTeamEditorGrid();
+
+            // Autosave Local State
+            this.saveLocalState();
 
             // Sync game state in multiplayer
             if (this.multiplayer && this.multiplayer.mode === 'playing') {
@@ -883,34 +875,8 @@ export class PokemonBattleArena {
         }
     }
 
-    _switchActivePokemon(playerId, slotId, fromModal = false) {
-        const player = this.gs.players.find(p => p.id === playerId);
-        const newPokemon = player?.team[slotId];
-        if (!player || !newPokemon || newPokemon.isFainted()) return;
-        if (player.activePokemonIndex === slotId) return;
-
-        const doSwitch = () => {
-            const old = player.getActivePokemon();
-            const switched = player.switchTo(slotId);
-            if (!switched) return;
-            if (!fromModal) {
-                this.log.add(`${player.name} switched from ${old?.fullName || 'none'} to ${newPokemon.fullName}`, 'action');
-                this.renderer.renderAll();
-                this.audio.playCry(newPokemon);
-                this._playEntryAnimation(playerId, newPokemon.types[0]);
-            } else {
-                this._renderTeamEditorGrid();
-            }
-
-            // Sync game state in multiplayer
-            if (this.multiplayer && this.multiplayer.mode === 'playing') {
-                this.multiplayer.sendGameState();
-            }
-        };
-
-        fromModal
-            ? doSwitch()
-            : this._animateSprite(playerId, 'switch-out', doSwitch);
+    _switchActivePokemon(playerId, slotId, fromModal = false, remote = false) {
+        this.battleController._switchActivePokemon(playerId, slotId, fromModal, remote);
     }
 
     // ── Confirm Modal ─────────────────────────────────────────────────────
@@ -992,7 +958,8 @@ export class PokemonBattleArena {
         return Array.from(evoTargets.values());
     }
 
-    handleEvolve() {
+    async handleEvolve() {
+        await this.ensureDatabaseLoaded();
         const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
         if (!val) { this._announce('Select a Pokémon to evolve.', true); return; }
         const [pid, sid] = val.split('|');
@@ -1018,9 +985,14 @@ export class PokemonBattleArena {
         this.modals.open('selection');
     }
 
-    _confirmEvolution(evolutionName) {
-        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
-        const [pid, sid] = val.split('|');
+    _confirmEvolution(evolutionName, playerId = null, slotId = null, remote = false) {
+        let pid = playerId;
+        let sid = slotId;
+        if (pid === null || sid === null) {
+            const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+            if (!val) { this._announce(`Error evolving to ${evolutionName}.`, true); return; }
+            [pid, sid] = val.split('|');
+        }
         const player = this.gs.players.find(p => p.id === pid);
         const pokemon = player?.team[sid];
         if (!player || !pokemon) { this._announce(`Error evolving to ${evolutionName}.`, true); return; }
@@ -1036,14 +1008,18 @@ export class PokemonBattleArena {
             this.renderer.renderAll();
             this.audio.playCry(player.team[sid]);
 
-            // Sync game state in multiplayer
-            if (this.multiplayer && this.multiplayer.mode === 'playing') {
-                this.multiplayer.sendGameState();
+            // Autosave Local State
+            this.saveLocalState();
+
+            // Sync action in multiplayer
+            if (!remote && this.multiplayer && this.multiplayer.mode === 'playing') {
+                this.multiplayer.sendAction('evolve', { playerId: pid, slotId: sid, evolutionName });
             }
         });
     }
 
-    handleDevolve() {
+    async handleDevolve() {
+        await this.ensureDatabaseLoaded();
         const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
         if (!val) { this._announce('Select a Pokémon to devolve.', true); return; }
         const [pid, sid] = val.split('|');
@@ -1076,9 +1052,14 @@ export class PokemonBattleArena {
         this.modals.open('selection');
     }
 
-    _confirmDevolution(parentName) {
-        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
-        const [pid, sid] = val.split('|');
+    _confirmDevolution(parentName, playerId = null, slotId = null, remote = false) {
+        let pid = playerId;
+        let sid = slotId;
+        if (pid === null || sid === null) {
+            const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+            if (!val) { this._announce(`Error devolving to ${parentName}.`, true); return; }
+            [pid, sid] = val.split('|');
+        }
         const player = this.gs.players.find(p => p.id === pid);
         const pokemon = player?.team[sid];
         if (!player || !pokemon) { this._announce(`Error devolving to ${parentName}.`, true); return; }
@@ -1096,14 +1077,18 @@ export class PokemonBattleArena {
             this.renderer.renderAll();
             this.audio.playCry(player.team[sid]);
 
-            // Sync game state in multiplayer
-            if (this.multiplayer && this.multiplayer.mode === 'playing') {
-                this.multiplayer.sendGameState();
+            // Autosave Local State
+            this.saveLocalState();
+
+            // Sync action in multiplayer
+            if (!remote && this.multiplayer && this.multiplayer.mode === 'playing') {
+                this.multiplayer.sendAction('devolve', { playerId: pid, slotId: sid, parentName });
             }
         });
     }
 
-    openFormChangeModal() {
+    async openFormChangeModal() {
+        await this.ensureDatabaseLoaded();
         const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
         if (!val) return;
         const [pid, sid] = val.split('|');
@@ -1123,10 +1108,14 @@ export class PokemonBattleArena {
         this.modals.open('selection');
     }
 
-    _confirmFormChange(formName) {
-        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
-        if (!val) return;
-        const [pid, sid] = val.split('|');
+    _confirmFormChange(formName, playerId = null, slotId = null, remote = false) {
+        let pid = playerId;
+        let sid = slotId;
+        if (pid === null || sid === null) {
+            const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+            if (!val) return;
+            [pid, sid] = val.split('|');
+        }
         const player = this.gs.players.find(p => p.id === pid);
         const pokemon = player?.team[sid];
         if (!pokemon) return;
@@ -1142,9 +1131,12 @@ export class PokemonBattleArena {
             this.renderer.renderAll();
             this.audio.playCry(player.team[sid]);
 
-            // Sync game state in multiplayer
-            if (this.multiplayer && this.multiplayer.mode === 'playing') {
-                this.multiplayer.sendGameState();
+            // Autosave Local State
+            this.saveLocalState();
+
+            // Sync action in multiplayer
+            if (!remote && this.multiplayer && this.multiplayer.mode === 'playing') {
+                this.multiplayer.sendAction('form_change', { playerId: pid, slotId: sid, formName });
             }
         });
     }
@@ -1181,17 +1173,23 @@ export class PokemonBattleArena {
         this.history.snapshot(this.gs);
         const revivedHP = Math.floor(pokemon.maxHp / 2);
         this._applyHPChange(pokemon, pid, revivedHP, 'revive');
-        this._announce(`${pokemon.fullName} has been revived!`);
-
-        // Sync game state in multiplayer
-        if (this.multiplayer && this.multiplayer.mode === 'playing') {
-            this.multiplayer.sendGameState();
+        
+        if (pokemon.refreshMoveset()) {
+            this._announce(`${pokemon.fullName} has been revived and its moveset was refreshed!`);
+            if (this.multiplayer && this.multiplayer.mode === 'playing') {
+                this.multiplayer.sendAction('refresh_moveset', { playerId: pid, slotId: sid });
+            }
+        } else {
+            this._announce(`${pokemon.fullName} has been revived!`);
         }
+
+        // Autosave Local State
+        this.saveLocalState();
     }
 
     // ── Weather ───────────────────────────────────────────────────────────
 
-    cycleWeather() {
+    cycleWeather(remote = false) {
         this.history.snapshot(this.gs);
         const cycle = ['none', 'sandstorm', 'hail'];
         const next = cycle[(cycle.indexOf(this.gs.weather) + 1) % cycle.length];
@@ -1201,93 +1199,21 @@ export class PokemonBattleArena {
         this.renderer.renderAll();
         this.audio.play('click');
 
-        // Sync game state in multiplayer
-        if (this.multiplayer && this.multiplayer.mode === 'playing') {
-            this.multiplayer.sendGameState();
+        // Autosave Local State
+        this.saveLocalState();
+
+        // Sync action in multiplayer
+        if (!remote && this.multiplayer && this.multiplayer.mode === 'playing') {
+            this.multiplayer.sendAction('cycle_weather', { weather: next, old });
         }
     }
 
     _applyStatusDamage() {
-        const affected = [];
-        const cured = [];
-        this.gs.players.forEach(player => {
-            const pokemon = player.getActivePokemon();
-            if (!pokemon || pokemon.isFainted()) return;
-
-            let totalDmg = 0;
-            let curedStatus = [];
-
-            if (pokemon.hasStatus('poison')) {
-                const rounds = pokemon.statuses['poison'].duration;
-                const multipliers = [0.05, 0.10, 0.15];
-                const mult = multipliers[Math.min(rounds, 2)];
-                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * mult));
-                pokemon.statuses['poison'].duration++;
-                if (pokemon.statuses['poison'].duration >= 3) curedStatus.push('poison');
-            }
-
-            if (pokemon.hasStatus('bad_poison') || pokemon.hasStatus('toxic')) {
-                const sName = pokemon.hasStatus('bad_poison') ? 'bad_poison' : 'toxic';
-                const rounds = pokemon.statuses[sName].duration;
-                const mult = 0.10 + (0.02 * rounds); // 10%, 12%, 14%...
-                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * mult));
-                pokemon.statuses[sName].duration++;
-            }
-
-            if (pokemon.hasStatus('burn')) {
-                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * 0.10));
-                pokemon.statuses['burn'].duration++;
-                if (pokemon.statuses['burn'].duration >= 3) curedStatus.push('burn');
-            }
-
-            if (pokemon.hasStatus('curse')) {
-                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * 0.30));
-                pokemon.statuses['curse'].duration++;
-            }
-
-            if (pokemon.hasStatus('paralysis')) {
-                pokemon.statuses['paralysis'].duration++;
-                if (pokemon.statuses['paralysis'].duration >= 3) curedStatus.push('paralysis');
-            }
-
-            if (totalDmg > 0) {
-                pokemon.takeDamage(totalDmg);
-                affected.push(pokemon.fullName);
-            }
-
-            curedStatus.forEach(s => pokemon.removeStatus(s));
-            if (curedStatus.length > 0) cured.push(pokemon.fullName);
-        });
-
-        if (affected.length > 0) {
-            this._notify(`${affected.join(', ')} took damage from their status conditions!`, 'damage');
-        }
-        if (cured.length > 0) {
-            this._notify(`${cured.join(', ')} recovered from their status conditions!`, 'heal');
-        }
+        this.battleController._applyStatusDamage();
     }
 
     _applyWeatherDamage() {
-        if (this.gs.weather === 'none') return;
-        const affected = [];
-        this.gs.players.forEach(player => {
-            const pokemon = player.getActivePokemon();
-            if (!pokemon || pokemon.isFainted()) return;
-            const immune = this.gs.weather === 'sandstorm'
-                ? pokemon.types.some(t => ['Rock', 'Ground', 'Steel'].includes(t))
-                : pokemon.types.includes('Ice'); // hail
-            if (!immune) {
-                const dmg = Math.floor(pokemon.maxHp / 16);
-                pokemon.takeDamage(dmg);
-                affected.push(pokemon.fullName);
-            }
-        });
-        if (affected.length > 0) {
-            this._notify(
-                `${affected.join(', ')} ${affected.length === 1 ? 'is' : 'are'} buffeted by the ${this.gs.weather}!`,
-                'damage'
-            );
-        }
+        this.battleController._applyWeatherDamage();
     }
 
     // ── Arena background ──────────────────────────────────────────────────
@@ -1377,6 +1303,26 @@ export class PokemonBattleArena {
         }, 2500);
     }
 
+    // ── Moveset Refresh ───────────────────────────────────────────────────
+
+    refreshPokemonMoveset(playerId, slotIndex, remote = false) {
+        const player = this.gs.players.find(p => p.id === playerId);
+        const pokemon = player?.team[slotIndex];
+        if (!pokemon) return;
+
+        if (!remote) this.history.snapshot(this.gs);
+        
+        if (pokemon.refreshMoveset()) {
+            this.renderer.renderAll();
+            this._announce(`${pokemon.fullName}'s moveset was refreshed!`);
+            this.saveLocalState();
+
+            if (!remote && this.multiplayer && this.multiplayer.mode === 'playing') {
+                this.multiplayer.sendAction('refresh_moveset', { playerId, slotId: slotIndex });
+            }
+        }
+    }
+
     // ── Prepopulate ───────────────────────────────────────────────────────
 
     _prepopulate(tiers = null) {
@@ -1388,7 +1334,7 @@ export class PokemonBattleArena {
 
         names.forEach((name, i) => {
             const teamNames = pool.splice(0, 6);
-            if (pool.length < 6) pool.push(...filteredPool);
+            if (pool.length < 6) pool.push(...[...filteredPool].sort(() => 0.5 - Math.random()));
 
             const team = teamNames.map(n => {
                 const r = this.db.find(n);
@@ -1488,7 +1434,9 @@ export class PokemonBattleArena {
         // Build map for every known Pokémon in the database.
         for (const { foundNode } of this.db._index.values()) {
             const name = foundNode.Name || foundNode.name;
-            if (!name || window.PokemonAbilitiesMap[name]) continue;
+            if (!name) continue;
+            const normName = name.replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+            if (window.PokemonAbilitiesMap[normName] || window.PokemonAbilitiesMap[name]) continue;
             const types = (foundNode.types || []).flatMap(t => t.split(' '));
             const abilities = new Set();
             types.forEach(t => {
@@ -1496,7 +1444,9 @@ export class PokemonBattleArena {
                     if (AbilitiesData[a]) abilities.add(a);
                 });
             });
-            window.PokemonAbilitiesMap[name] = [...abilities].slice(0, 4);
+            const mappedAbilities = [...abilities].slice(0, 4);
+            window.PokemonAbilitiesMap[normName] = mappedAbilities;
+            window.PokemonAbilitiesMap[name] = mappedAbilities;
         }
     }
 

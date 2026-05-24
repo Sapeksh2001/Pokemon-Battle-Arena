@@ -1,0 +1,628 @@
+{
+  "communities": {
+    "0": [
+      "api_socketclient_multiplayermanager_sendgamestate",
+      "js_main_pokemonbattlearena",
+      "js_main_pokemonbattlearena_addplayer",
+      "js_main_pokemonbattlearena_animatesprite",
+      "js_main_pokemonbattlearena_announce",
+      "js_main_pokemonbattlearena_applyhpchange",
+      "js_main_pokemonbattlearena_applystatusdamage",
+      "js_main_pokemonbattlearena_applyweatherdamage",
+      "js_main_pokemonbattlearena_buildabilityoptionshtml",
+      "js_main_pokemonbattlearena_confirmevolution",
+      "js_main_pokemonbattlearena_confirmformchange",
+      "js_main_pokemonbattlearena_confirmhpedit",
+      "js_main_pokemonbattlearena_confirmpokemonedit",
+      "js_main_pokemonbattlearena_constructor",
+      "js_main_pokemonbattlearena_cycleweather",
+      "js_main_pokemonbattlearena_edithp",
+      "js_main_pokemonbattlearena_endround",
+      "js_main_pokemonbattlearena_handleattack",
+      "js_main_pokemonbattlearena_handleevolve",
+      "js_main_pokemonbattlearena_handlerevive",
+      "js_main_pokemonbattlearena_handlestatupdate",
+      "js_main_pokemonbattlearena_handleteamiconclick",
+      "js_main_pokemonbattlearena_init",
+      "js_main_pokemonbattlearena_notify",
+      "js_main_pokemonbattlearena_openconfirmmodal",
+      "js_main_pokemonbattlearena_openevolutionchoicemodal",
+      "js_main_pokemonbattlearena_openformchangemodal",
+      "js_main_pokemonbattlearena_openpokemoneditor",
+      "js_main_pokemonbattlearena_openteammanager",
+      "js_main_pokemonbattlearena_populateabilitiesmap",
+      "js_main_pokemonbattlearena_populatemoveselector",
+      "js_main_pokemonbattlearena_populatemovetypeselector",
+      "js_main_pokemonbattlearena_populateselectiongrid",
+      "js_main_pokemonbattlearena_prepopulate",
+      "js_main_pokemonbattlearena_registermodals",
+      "js_main_pokemonbattlearena_removeplayer",
+      "js_main_pokemonbattlearena_removepokemonslot",
+      "js_main_pokemonbattlearena_renderteameditorgrid",
+      "js_main_pokemonbattlearena_setarena",
+      "js_main_pokemonbattlearena_setupkeyboardshortcuts",
+      "js_main_pokemonbattlearena_setupmultiplayerui",
+      "js_main_pokemonbattlearena_showdamagenumber",
+      "js_main_pokemonbattlearena_switchactivepokemon",
+      "js_main_pokemonbattlearena_toggleloading",
+      "js_main_pokemonbattlearena_togglestatus",
+      "js_main_pokemonbattlearena_updateattackpreview",
+      "models_player_player_getactivepokemon",
+      "models_pokemon_pokemon_isfainted",
+      "public_js_main_js",
+      "public_js_services_audiomanager_js",
+      "services_audiomanager_audiomanager",
+      "services_audiomanager_audiomanager_constructor",
+      "services_audiomanager_audiomanager_play",
+      "services_audiomanager_audiomanager_playcry",
+      "services_battlelog_battlelog_linkgamestate",
+      "services_historymanager_historymanager_snapshot",
+      "services_pokemondatabase_pokemondatabase_find",
+      "src_engine_services_audiomanager_js",
+      "ui_modalmanager_modalmanager_open",
+      "ui_uirenderer_uirenderer_renderall"
+    ],
+    "1": [
+      "engine_main_pokemonbattlearena",
+      "engine_main_pokemonbattlearena_addplayer",
+      "engine_main_pokemonbattlearena_animatesprite",
+      "engine_main_pokemonbattlearena_announce",
+      "engine_main_pokemonbattlearena_applyhpchange",
+      "engine_main_pokemonbattlearena_applystatusdamage",
+      "engine_main_pokemonbattlearena_applyweatherdamage",
+      "engine_main_pokemonbattlearena_buildabilityoptionshtml",
+      "engine_main_pokemonbattlearena_confirmdevolution",
+      "engine_main_pokemonbattlearena_confirmevolution",
+      "engine_main_pokemonbattlearena_confirmformchange",
+      "engine_main_pokemonbattlearena_confirmhpedit",
+      "engine_main_pokemonbattlearena_confirmpokemonedit",
+      "engine_main_pokemonbattlearena_constructor",
+      "engine_main_pokemonbattlearena_cycleweather",
+      "engine_main_pokemonbattlearena_edithp",
+      "engine_main_pokemonbattlearena_endround",
+      "engine_main_pokemonbattlearena_handleattack",
+      "engine_main_pokemonbattlearena_handledevolve",
+      "engine_main_pokemonbattlearena_handleevolve",
+      "engine_main_pokemonbattlearena_handlequit",
+      "engine_main_pokemonbattlearena_handlerevive",
+      "engine_main_pokemonbattlearena_handlestatupdate",
+      "engine_main_pokemonbattlearena_handleteamiconclick",
+      "engine_main_pokemonbattlearena_handletimeout",
+      "engine_main_pokemonbattlearena_init",
+      "engine_main_pokemonbattlearena_notify",
+      "engine_main_pokemonbattlearena_openconfirmmodal",
+      "engine_main_pokemonbattlearena_opendevolutionchoicemodal",
+      "engine_main_pokemonbattlearena_openevolutionchoicemodal",
+      "engine_main_pokemonbattlearena_openformchangemodal",
+      "engine_main_pokemonbattlearena_openpokemoneditor",
+      "engine_main_pokemonbattlearena_openteammanager",
+      "engine_main_pokemonbattlearena_playentryanimation",
+      "engine_main_pokemonbattlearena_populateabilitiesmap",
+      "engine_main_pokemonbattlearena_populatemoveselector",
+      "engine_main_pokemonbattlearena_populatemovetypeselector",
+      "engine_main_pokemonbattlearena_populateselectiongrid",
+      "engine_main_pokemonbattlearena_prepopulate",
+      "engine_main_pokemonbattlearena_registermodals",
+      "engine_main_pokemonbattlearena_removeplayer",
+      "engine_main_pokemonbattlearena_removepokemonslot",
+      "engine_main_pokemonbattlearena_renderteameditorgrid",
+      "engine_main_pokemonbattlearena_resolveevolutions",
+      "engine_main_pokemonbattlearena_setarena",
+      "engine_main_pokemonbattlearena_setupeventlisteners",
+      "engine_main_pokemonbattlearena_setupkeyboardshortcuts",
+      "engine_main_pokemonbattlearena_setupmultiplayerui",
+      "engine_main_pokemonbattlearena_showdamagenumber",
+      "engine_main_pokemonbattlearena_switchactivepokemon",
+      "engine_main_pokemonbattlearena_toggleloading",
+      "engine_main_pokemonbattlearena_togglestatus",
+      "engine_main_pokemonbattlearena_updateattackpreview",
+      "src_engine_main_js",
+      "utils_helpers_escapehtml"
+    ],
+    "2": [
+      "api_socketclient_multiplayermanager_handleremoteaction",
+      "api_socketclient_multiplayermanager_listentoentryqueue",
+      "api_socketclient_multiplayermanager_listentogamestate",
+      "api_socketclient_multiplayermanager_sendaction",
+      "js_main_pokemonbattlearena_playentryanimation",
+      "public_js_services_battlelog_js",
+      "public_js_services_pokemondatabase_js",
+      "public_js_utils_ringbuffer_js",
+      "scripts_get_unmatched_getslugs",
+      "scripts_get_unmatched_js",
+      "scripts_get_unmatched_loadcsvmapping",
+      "scripts_get_unmatched_main",
+      "scripts_get_unmatched_scandataset",
+      "scripts_verify_and_fix_forms_checkurl",
+      "scripts_verify_and_fix_forms_js",
+      "scripts_verify_and_fix_forms_traverse",
+      "scripts_verify_and_fix_forms_verifyandfix",
+      "services_battlelog_battlelog",
+      "services_battlelog_battlelog_add",
+      "services_battlelog_battlelog_clear",
+      "services_battlelog_battlelog_constructor",
+      "services_battlelog_battlelog_export",
+      "services_battlelog_battlelog_loadlogs",
+      "services_battlelog_battlelog_render",
+      "services_battlelog_battlelog_reset",
+      "services_pokemondatabase_pokemondatabase",
+      "services_pokemondatabase_pokemondatabase_buildfiltered",
+      "services_pokemondatabase_pokemondatabase_buildindex",
+      "services_pokemondatabase_pokemondatabase_constructor",
+      "services_pokemondatabase_pokemondatabase_createpokemoninstance",
+      "services_pokemondatabase_pokemondatabase_getevolutions",
+      "services_pokemondatabase_pokemondatabase_getforms",
+      "services_pokemondatabase_pokemondatabase_getpreevolutions",
+      "services_pokemondatabase_pokemondatabase_search",
+      "src_engine_services_battlelog_js",
+      "src_engine_services_pokemondatabase_js",
+      "src_engine_utils_ringbuffer_js",
+      "utils_ringbuffer_ringbuffer",
+      "utils_ringbuffer_ringbuffer_clear",
+      "utils_ringbuffer_ringbuffer_constructor",
+      "utils_ringbuffer_ringbuffer_push",
+      "utils_ringbuffer_ringbuffer_size",
+      "utils_ringbuffer_ringbuffer_toarray"
+    ],
+    "3": [
+      "api_socketclient_generateplayerid",
+      "api_socketclient_generateroomcode",
+      "api_socketclient_multiplayermanager",
+      "api_socketclient_multiplayermanager_assignrandompokemon",
+      "api_socketclient_multiplayermanager_assignspecificpokemon",
+      "api_socketclient_multiplayermanager_connect",
+      "api_socketclient_multiplayermanager_constructor",
+      "api_socketclient_multiplayermanager_createroom",
+      "api_socketclient_multiplayermanager_deserializegamestate",
+      "api_socketclient_multiplayermanager_disconnect",
+      "api_socketclient_multiplayermanager_enforcerecentroomslimit",
+      "api_socketclient_multiplayermanager_getflattenedpool",
+      "api_socketclient_multiplayermanager_joinroom",
+      "api_socketclient_multiplayermanager_leaveroom",
+      "api_socketclient_multiplayermanager_listentolobby",
+      "api_socketclient_multiplayermanager_listentorecentrooms",
+      "api_socketclient_multiplayermanager_loadandresume",
+      "api_socketclient_multiplayermanager_loadsavedgames",
+      "api_socketclient_multiplayermanager_ongamestarted",
+      "api_socketclient_multiplayermanager_quickbattle",
+      "api_socketclient_multiplayermanager_receivegamestate",
+      "api_socketclient_multiplayermanager_renderwildcardqueue",
+      "api_socketclient_multiplayermanager_savegametofirebase",
+      "api_socketclient_multiplayermanager_saverecentroom",
+      "api_socketclient_multiplayermanager_serializegamestate",
+      "api_socketclient_multiplayermanager_shownotification",
+      "api_socketclient_multiplayermanager_showroomlobby",
+      "api_socketclient_multiplayermanager_startgame",
+      "api_socketclient_multiplayermanager_toggleready",
+      "api_socketclient_multiplayermanager_updateroomui",
+      "public_js_api_socketclient_js",
+      "src_engine_api_socketclient_js",
+      "ui_modalmanager_modalmanager_close"
+    ],
+    "4": [
+      "models_pokemon_pokemon",
+      "models_pokemon_pokemon_applystatus",
+      "models_pokemon_pokemon_basespecies",
+      "models_pokemon_pokemon_changeform",
+      "models_pokemon_pokemon_constructor",
+      "models_pokemon_pokemon_evolve",
+      "models_pokemon_pokemon_fromjson",
+      "models_pokemon_pokemon_geteffectivestat",
+      "models_pokemon_pokemon_gethppercent",
+      "models_pokemon_pokemon_heal",
+      "models_pokemon_pokemon_modifystat",
+      "models_pokemon_pokemon_name",
+      "models_pokemon_pokemon_removestatus",
+      "models_pokemon_pokemon_spriteurl",
+      "models_pokemon_pokemon_takedamage",
+      "models_pokemon_pokemon_tojson",
+      "models_pokemon_pokemon_updateformorevolution",
+      "public_js_models_pokemon_js",
+      "public_js_services_battleengine_js",
+      "public_js_utils_helpers_js",
+      "services_battleengine_battleengine",
+      "services_battleengine_battleengine_calculatedamage",
+      "services_battleengine_battleengine_constructor",
+      "services_battleengine_battleengine_gettypeeffectiveness",
+      "src_engine_models_pokemon_js",
+      "src_engine_services_battleengine_js",
+      "src_engine_utils_helpers_js",
+      "utils_helpers_applymodification",
+      "utils_helpers_normalizetier"
+    ],
+    "5": [
+      "models_pokemon_pokemon_hasstatus",
+      "public_js_ui_uirenderer_js",
+      "src_engine_ui_uirenderer_js",
+      "ui_uirenderer_uirenderer",
+      "ui_uirenderer_uirenderer_buildgaugehtml",
+      "ui_uirenderer_uirenderer_constructor",
+      "ui_uirenderer_uirenderer_createemptycard",
+      "ui_uirenderer_uirenderer_createplayercard",
+      "ui_uirenderer_uirenderer_gethpcolor",
+      "ui_uirenderer_uirenderer_populatedropdown",
+      "ui_uirenderer_uirenderer_rendermovesandabilities",
+      "ui_uirenderer_uirenderer_renderplayercards",
+      "ui_uirenderer_uirenderer_renderstatheaders",
+      "ui_uirenderer_uirenderer_renderstatusicons",
+      "ui_uirenderer_uirenderer_renderstatvalues",
+      "ui_uirenderer_uirenderer_renderteamicons",
+      "ui_uirenderer_uirenderer_rendertypebadges",
+      "ui_uirenderer_uirenderer_updatecontrolpanel",
+      "ui_uirenderer_uirenderer_updatemanagementbuttons",
+      "ui_uirenderer_uirenderer_updatestatusbuttonstyles",
+      "ui_uirenderer_uirenderer_updateweatherview"
+    ],
+    "6": [
+      "models_player_player",
+      "models_player_player_canswitchto",
+      "models_player_player_clearslot",
+      "models_player_player_constructor",
+      "models_player_player_fromjson",
+      "models_player_player_haslivingpokemon",
+      "models_player_player_setslot",
+      "models_player_player_switchto",
+      "models_player_player_tojson",
+      "models_pokemon_pokemon_clearstatuses",
+      "public_js_models_player_js",
+      "src_engine_models_player_js"
+    ],
+    "7": [
+      "public_js_services_historymanager_js",
+      "services_historymanager_historymanager",
+      "services_historymanager_historymanager_canredo",
+      "services_historymanager_historymanager_canundo",
+      "services_historymanager_historymanager_clear",
+      "services_historymanager_historymanager_constructor",
+      "services_historymanager_historymanager_redo",
+      "services_historymanager_historymanager_restore",
+      "services_historymanager_historymanager_serialise",
+      "services_historymanager_historymanager_undo",
+      "services_historymanager_historymanager_updatebuttons",
+      "src_engine_services_historymanager_js"
+    ],
+    "8": [
+      "components_arenaview_arenaview",
+      "components_pokemonpicker_pokemoncard",
+      "components_pokemonpicker_pokemonpicker",
+      "contexts_arenacontext_arenaprovider",
+      "contexts_arenacontext_snapshotgs",
+      "contexts_arenacontext_usearena",
+      "src_app_app",
+      "src_app_gameroot",
+      "src_app_jsx",
+      "src_components_arenaview_jsx",
+      "src_components_pokemonpicker_jsx",
+      "src_contexts_arenacontext_jsx"
+    ],
+    "9": [
+      "api_authmanager_authmanager",
+      "api_authmanager_authmanager_constructor",
+      "api_authmanager_authmanager_login",
+      "api_authmanager_authmanager_loginasguest",
+      "api_authmanager_authmanager_loginwithgoogle",
+      "api_authmanager_authmanager_logout",
+      "api_authmanager_authmanager_register",
+      "api_authmanager_authmanager_subscribe",
+      "api_authmanager_authmanager_updatetrainername",
+      "public_js_api_authmanager_js",
+      "src_engine_api_authmanager_js"
+    ],
+    "10": [
+      "js_main_pokemonbattlearena_setupeventlisteners",
+      "public_js_ui_timer_js",
+      "src_engine_ui_timer_js",
+      "ui_timer_timer",
+      "ui_timer_timer_constructor",
+      "ui_timer_timer_linkdisplay",
+      "ui_timer_timer_pause",
+      "ui_timer_timer_reset",
+      "ui_timer_timer_start",
+      "ui_timer_timer_updatedisplay"
+    ],
+    "11": [
+      "public_js_services_dataloader_js",
+      "services_audiomanager_audiomanager_init",
+      "services_dataloader_loadgamedata",
+      "services_dataloader_loadscript",
+      "src_engine_services_dataloader_js",
+      "src_script_hideloadingoverlay",
+      "src_script_js",
+      "src_script_startapp",
+      "src_script_updateloadingoverlay",
+      "src_script_waitforreactandstart"
+    ],
+    "12": [
+      "public_js_ui_modalmanager_js",
+      "src_engine_ui_modalmanager_js",
+      "ui_modalmanager_modalmanager",
+      "ui_modalmanager_modalmanager_anyopen",
+      "ui_modalmanager_modalmanager_closeall",
+      "ui_modalmanager_modalmanager_constructor",
+      "ui_modalmanager_modalmanager_isopen",
+      "ui_modalmanager_modalmanager_register"
+    ],
+    "13": [
+      "public_js_utils_trie_js",
+      "src_engine_utils_trie_js",
+      "utils_trie_trie",
+      "utils_trie_trie_collect",
+      "utils_trie_trie_constructor",
+      "utils_trie_trie_insert",
+      "utils_trie_trie_search"
+    ],
+    "14": [
+      "scripts_inject_missing_forms_calculatelv100maxstats",
+      "scripts_inject_missing_forms_fetchpokedex",
+      "scripts_inject_missing_forms_js",
+      "scripts_inject_missing_forms_normalizeid",
+      "scripts_inject_missing_forms_run"
+    ],
+    "15": [
+      "scripts_fix_final_manual_js",
+      "scripts_fix_final_manual_processrecursive"
+    ],
+    "16": [
+      "components_loadingoverlay_loadingoverlay",
+      "src_components_loadingoverlay_jsx"
+    ],
+    "17": [
+      "components_lobbyview_lobbyview",
+      "src_components_lobbyview_jsx"
+    ],
+    "18": [
+      "components_authview_authview",
+      "src_components_authview_jsx"
+    ],
+    "19": [
+      "components_modals_modals",
+      "src_components_modals_jsx"
+    ],
+    "20": [
+      "scripts_check_sprites_checkurl",
+      "src_engine_scripts_check_sprites_js"
+    ],
+    "21": [
+      "test_db_js"
+    ],
+    "22": [
+      "vite_config_js"
+    ],
+    "23": [
+      "eslint_config_js"
+    ],
+    "24": [
+      "public_js_api_firebase_config_example_js"
+    ],
+    "25": [
+      "public_js_api_firebase_config_js"
+    ],
+    "26": [
+      "public_js_data_constants_js"
+    ],
+    "27": [
+      "scripts_update_env_ps1"
+    ],
+    "28": [
+      "scripts_build_main_mjs"
+    ],
+    "29": [
+      "src_main_jsx"
+    ],
+    "30": [
+      "src_firebase_js"
+    ],
+    "31": [
+      "src_data_pokemon_data_js"
+    ],
+    "32": [
+      "src_data_pokemon_newdataset_js"
+    ],
+    "33": [
+      "src_data_movesets_js"
+    ],
+    "34": [
+      "src_data_ability_js"
+    ],
+    "35": [
+      "src_data_abilities_map_js"
+    ],
+    "36": [
+      "src_data_moves_data_js"
+    ],
+    "37": [
+      "src_engine_scripts_find_broken_gen5_js"
+    ],
+    "38": [
+      "src_engine_scripts_fix_broken_gen5_js"
+    ],
+    "39": [
+      "src_engine_api_firebase_config_example_js"
+    ],
+    "40": [
+      "src_engine_data_constants_js"
+    ],
+    "41": [
+      "src_engine_data_sprite_overrides_js"
+    ]
+  },
+  "cohesion": {
+    "0": 0.1,
+    "1": 0.08,
+    "2": 0.07,
+    "3": 0.11,
+    "4": 0.08,
+    "5": 0.16,
+    "6": 0.17,
+    "7": 0.27,
+    "8": 0.17,
+    "9": 0.18,
+    "10": 0.24,
+    "11": 0.29,
+    "12": 0.25,
+    "13": 0.33,
+    "14": 0.7,
+    "15": 1.0,
+    "16": 1.0,
+    "17": 1.0,
+    "18": 1.0,
+    "19": 1.0,
+    "20": 1.0,
+    "21": 1.0,
+    "22": 1.0,
+    "23": 1.0,
+    "24": 1.0,
+    "25": 1.0,
+    "26": 1.0,
+    "27": 1.0,
+    "28": 1.0,
+    "29": 1.0,
+    "30": 1.0,
+    "31": 1.0,
+    "32": 1.0,
+    "33": 1.0,
+    "34": 1.0,
+    "35": 1.0,
+    "36": 1.0,
+    "37": 1.0,
+    "38": 1.0,
+    "39": 1.0,
+    "40": 1.0,
+    "41": 1.0
+  },
+  "gods": [
+    {
+      "id": "engine_main_pokemonbattlearena",
+      "label": "PokemonBattleArena",
+      "degree": 53
+    },
+    {
+      "id": "js_main_pokemonbattlearena",
+      "label": "PokemonBattleArena",
+      "degree": 47
+    },
+    {
+      "id": "api_socketclient_multiplayermanager",
+      "label": "MultiplayerManager",
+      "degree": 34
+    },
+    {
+      "id": "models_pokemon_pokemon",
+      "label": "Pokemon",
+      "degree": 21
+    },
+    {
+      "id": "ui_uirenderer_uirenderer",
+      "label": "UIRenderer",
+      "degree": 20
+    },
+    {
+      "id": "utils_helpers_escapehtml",
+      "label": "escapeHTML()",
+      "degree": 15
+    },
+    {
+      "id": "services_historymanager_historymanager",
+      "label": "HistoryManager",
+      "degree": 12
+    },
+    {
+      "id": "models_player_player",
+      "label": "Player",
+      "degree": 11
+    },
+    {
+      "id": "services_pokemondatabase_pokemondatabase",
+      "label": "PokemonDatabase",
+      "degree": 11
+    },
+    {
+      "id": "api_authmanager_authmanager",
+      "label": "AuthManager",
+      "degree": 10
+    }
+  ],
+  "surprises": [
+    {
+      "source": "startApp()",
+      "target": "loadGameData()",
+      "source_files": [
+        "src/script.js",
+        "src/engine/services/DataLoader.js"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source"
+    },
+    {
+      "source": "GameRoot()",
+      "target": "useArena()",
+      "source_files": [
+        "src/App.jsx",
+        "src/contexts/ArenaContext.jsx"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source"
+    },
+    {
+      "source": "PokemonPicker()",
+      "target": "useArena()",
+      "source_files": [
+        "src/components/PokemonPicker.jsx",
+        "src/contexts/ArenaContext.jsx"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source"
+    },
+    {
+      "source": "ArenaView()",
+      "target": "useArena()",
+      "source_files": [
+        "src/components/ArenaView.jsx",
+        "src/contexts/ArenaContext.jsx"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `escapeHTML()` connect `Community 1` to `Community 0`, `Community 2`, `Community 4`, `Community 5`?",
+      "why": "High betweenness centrality (0.158) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `PokemonBattleArena` connect `Community 0` to `Community 2`, `Community 10`?",
+      "why": "High betweenness centrality (0.108) - this node is a cross-community bridge."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.1 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.08 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 2` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.07 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 3` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.11 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 4` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.08 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

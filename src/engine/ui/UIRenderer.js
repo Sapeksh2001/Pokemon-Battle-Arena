@@ -51,7 +51,7 @@ export class UIRenderer {
 
     _createEmptyCard() {
         const card = document.createElement('div');
-        card.className = 'player-card p-4 flex flex-col items-center justify-center h-full text-secondary border-dashed border-2 border-outline-variant bg-surface-container-lowest/50';
+        card.className = 'player-card p-4 flex flex-col items-center justify-center h-full text-secondary border-dashed border-2 border-outline-variant bg-surface-container-lowest/50 pointer-events-auto';
         card.innerHTML = `<div class="text-center">
             <span class="material-symbols-outlined text-6xl mx-auto opacity-50">person_add</span>
             <p class="mt-2 text-xs uppercase tracking-widest font-bold">EMPTY SLOT</p>
@@ -61,7 +61,7 @@ export class UIRenderer {
 
     _createPlayerCard(player) {
         const card = document.createElement('div');
-        card.className = 'player-card p-4 flex flex-col items-center justify-between h-full';
+        card.className = 'player-card p-4 flex flex-col items-center justify-between h-full pointer-events-auto';
         card.id = `player-card-${player.id}`;
         card.dataset.playerId = player.id;
 

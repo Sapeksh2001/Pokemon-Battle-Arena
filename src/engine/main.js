@@ -860,7 +860,20 @@ export class PokemonBattleArena {
             this.audio.play('error');
             return;
         }
-        const pokemon = new Pokemon(result.foundNode, result.baseNode);
+
+        const existing = player.team[slotId];
+        let pokemon;
+        if (existing && existing.fullName === name) {
+            pokemon = existing;
+        } else {
+            pokemon = new Pokemon(result.foundNode, result.baseNode);
+        }
+
+        const abilitySelect = document.getElementById('ability-select');
+        if (abilitySelect && abilitySelect.value) {
+            pokemon.ability = abilitySelect.value;
+        }
+
         player.setSlot(slotId, pokemon);
         if (player.team.filter(p => p).length === 1) player.activePokemonIndex = slotId;
         this._renderTeamEditorGrid();
@@ -1231,6 +1244,11 @@ export class PokemonBattleArena {
 
         // Autosave Local State
         this.saveLocalState();
+
+        // Sync game state in multiplayer
+        if (this.multiplayer && this.multiplayer.mode === 'playing') {
+            this.multiplayer.sendGameState();
+        }
     }
 
     openTradeModal() {

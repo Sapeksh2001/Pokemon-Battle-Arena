@@ -20,7 +20,7 @@ A browser-based real-time multiplayer Pokémon battle simulator. Up to 6 players
 ```mermaid
 flowchart TD
     Browser["Browser Client"] --> React["React 19\nApp Shell"]
-    React --> Engine["Vanilla JS Engine\nsrc/js/main.js"]
+    React --> Engine["Vanilla JS Engine\nsrc/engine/main.js"]
     React --> Context["ArenaContext\nstate bridge"]
     Engine -- "window.__arenaNotify()" --> Context
     Context -- "gameState snapshot" --> React
@@ -82,7 +82,7 @@ flowchart TD
 |-------|-----------|
 | Frontend | React 19, Vite 8 |
 | Styling | Tailwind CSS 4, Vanilla CSS |
-| Battle Engine | Vanilla JS (src/js/main.js) |
+| Battle Engine | Vanilla JS (src/engine/main.js) |
 | Real-time sync | Firebase RTDB |
 | Auth | Firebase Auth (Google + Anonymous) |
 | Hosting | Firebase Hosting |
@@ -129,7 +129,7 @@ pokemon-battle-arena-main/
 ├── src/
 │   ├── components/           # React components (PokemonPicker, modals, etc.)
 │   ├── contexts/             # ArenaContext — engine ↔ React bridge
-│   ├── js/
+│   ├── engine/
 │   │   ├── main.js           # PokemonBattleArena class (battle engine)
 │   │   ├── api/
 │   │   │   ├── authManager.js    # Firebase Auth wrapper

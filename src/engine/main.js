@@ -61,7 +61,14 @@ export class PokemonBattleArena {
     }
 
     async ensureDatabaseLoaded() {
-        if (Object.keys(this.db._raw).length > 0) return;
+        if (Object.keys(this.db._raw).length > 0) {
+            if (this.db._index.size === 0) {
+                this.db.buildIndex();
+                this._populateMoveTypeSelector();
+                this._populateAbilitiesMap();
+            }
+            return;
+        }
 
         this._toggleLoading(true, 'Loading database (one-time fetch)...');
         try {
@@ -571,6 +578,9 @@ export class PokemonBattleArena {
                         <button class="edit-pokemon-btn flex-1 bg-yellow-600 hover:bg-yellow-700 p-1 flex justify-center items-center h-7" title="Edit">
                             <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                         </button>
+                        <button class="reshuffle-pokemon-btn flex-1 bg-blue-600 hover:bg-blue-700 p-1 flex justify-center items-center h-7" title="Reshuffle Moves/Ability">
+                            <i data-lucide="shuffle" class="w-3.5 h-3.5"></i>
+                        </button>
                         <button class="remove-pokemon-btn flex-1 bg-red-600 hover:bg-red-700 p-1 flex justify-center items-center h-7" title="Remove">
                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                         </button>
@@ -595,6 +605,9 @@ export class PokemonBattleArena {
                 if (btn?.classList.contains('edit-pokemon-btn')) {
                     this.audio.play('click');
                     this._openPokemonEditor(slotId);
+                } else if (btn?.classList.contains('reshuffle-pokemon-btn')) {
+                    this.audio.play('confirm');
+                    this._reshufflePokemonSlot(slotId);
                 } else if (btn?.classList.contains('remove-pokemon-btn')) {
                     this.audio.play('click');
                     this._removePokemonSlot(slotId);
@@ -654,6 +667,7 @@ export class PokemonBattleArena {
             </div>
             <div class="flex gap-2 mt-4">
                 <button id="confirm-pokemon-edit" class="bg-green-600 hover:bg-green-700 p-2 text-xs w-full font-bold uppercase tracking-wider border border-green-400">Confirm</button>
+                ${pokemon ? `<button id="reshuffle-pokemon-edit" class="bg-blue-600 hover:bg-blue-700 p-2 text-xs w-full font-bold uppercase tracking-wider border border-blue-400">Reshuffle</button>` : ''}
                 <button id="cancel-pokemon-edit"  class="bg-gray-600  hover:bg-gray-700  p-2 text-xs w-full font-bold uppercase tracking-wider border border-gray-500">Cancel</button>
             </div>`;
         form.classList.remove('hidden');
@@ -773,6 +787,23 @@ export class PokemonBattleArena {
             this.audio.play('confirm');
             this._confirmPokemonEdit();
         });
+        const reshuffleBtn = document.getElementById('reshuffle-pokemon-edit');
+        if (reshuffleBtn) {
+            reshuffleBtn.addEventListener('click', () => {
+                this.audio.play('confirm');
+                if (pokemon) {
+                    pokemon.shuffleMoves();
+                    pokemon.shuffleAbility();
+                    // Update form values
+                    const abilitySelect = document.getElementById('ability-select');
+                    if (abilitySelect) {
+                        abilitySelect.value = pokemon.ability || '';
+                        abilitySelect.dispatchEvent(new Event('change'));
+                    }
+                    this._notify(`Shuffled ${pokemon.fullName}'s moves and ability.`, 'status');
+                }
+            });
+        }
         document.getElementById('cancel-pokemon-edit').addEventListener('click', () => {
             this.audio.play('click');
             form.classList.add('hidden');
@@ -848,6 +879,27 @@ export class PokemonBattleArena {
         if (player) {
             player.clearSlot(slotId);
             this._renderTeamEditorGrid();
+
+            // Autosave Local State
+            this.saveLocalState();
+
+            // Sync game state in multiplayer
+            if (this.multiplayer && this.multiplayer.mode === 'playing') {
+                this.multiplayer.sendGameState();
+            }
+        }
+    }
+
+    _reshufflePokemonSlot(slotId) {
+        const player = this.gs.players.find(p => p.id === this.gs.currentEditing.playerId);
+        const pokemon = player?.team[slotId];
+        if (pokemon) {
+            this.history.snapshot(this.gs);
+            pokemon.shuffleMoves();
+            pokemon.shuffleAbility();
+            this._notify(`Shuffled ${pokemon.fullName}'s moves and ability.`, 'status');
+            this._renderTeamEditorGrid();
+            this.renderer.renderAll();
 
             // Autosave Local State
             this.saveLocalState();
@@ -1171,6 +1223,7 @@ export class PokemonBattleArena {
         if (!pokemon?.isFainted()) { this._announce('This Pokémon is not fainted.', true); return; }
 
         this.history.snapshot(this.gs);
+        pokemon.shuffleMoves();
         const revivedHP = Math.floor(pokemon.maxHp / 2);
         this._applyHPChange(pokemon, pid, revivedHP, 'revive');
         this._announce(`${pokemon.fullName} has been revived!`);
@@ -1301,7 +1354,11 @@ export class PokemonBattleArena {
         this.gs.players = []; // Clear current players to avoid duplicates
         this._toggleLoading(true, 'Loading Pokémon teams...');
         const names = ['Ash', 'Misty', 'Brock', 'Gary', 'Jessie', 'James'];
-        const filteredPool = tiers ? this.db._buildFiltered(tiers) : this.db.filteredNames;
+        let filteredPool = tiers ? this.db._buildFiltered(tiers) : this.db.filteredNames;
+        if (!filteredPool || filteredPool.length === 0) {
+            console.warn('[DATABASE] Filtered pool empty, falling back to all names.');
+            filteredPool = this.db.allNames || [];
+        }
         const pool = [...filteredPool].sort(() => 0.5 - Math.random());
 
         names.forEach((name, i) => {

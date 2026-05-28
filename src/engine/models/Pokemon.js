@@ -28,6 +28,11 @@ export class Pokemon {
         this.ability = null;
         this.hiddenAbility = null;
         
+        this.shuffleMoves();
+        this.shuffleAbility();
+    }
+
+    shuffleMoves() {
         if (typeof window !== 'undefined' && window.MovesetsData) {
             let moveset = window.MovesetsData[this.fullName] || window.MovesetsData[this.baseName] || [];
             if (moveset.length > 0) {
@@ -35,7 +40,9 @@ export class Pokemon {
                 this.moves = shuffled.slice(0, 4);
             }
         }
-        
+    }
+
+    shuffleAbility() {
         if (typeof window !== 'undefined' && window.PokemonAbilitiesMap) {
             const normalize = (n) => n ? n.replace(/-/g, ' ').replace(/\s+/g, ' ').trim() : '';
             const normFull = normalize(this.fullName);

@@ -23,7 +23,7 @@ flowchart LR
 
 | Responsibility | Where |
 |----------------|-------|
-| Battle logic (damage, status, terrain, speed tiers) | Client — `src/js/main.js` + `src/js/services/` |
+| Battle logic (damage, status, terrain, speed tiers) | Client — `src/engine/main.js` + `src/engine/services/` |
 | Authoritative state storage | Firebase RTDB — all clients converge on the same snapshot |
 | Save/load persistence | Firebase RTDB — `/users/{uid}/saved_games/` |
 | Authentication | Firebase Auth — Google Sign-In and Anonymous |
@@ -232,7 +232,7 @@ pushLogEntry(attacker.name, move.name, damage, flags);
 
 ## 6. socketClient.js — Key Functions
 
-Located at `src/js/api/socketClient.js`. This is the multiplayer coordination layer.
+Located at `src/engine/api/socketClient.js`. This is the multiplayer coordination layer.
 
 | Function | Action |
 |----------|--------|

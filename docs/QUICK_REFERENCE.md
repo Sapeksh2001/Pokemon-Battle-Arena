@@ -52,7 +52,7 @@ firebase deploy --only hosting
 **Frontend (React/Vite)**
 - `src/components/ArenaView.jsx` (Main Arena UI)
 - `src/components/LobbyView.jsx` (Room/Lobby UI)
-- `js/main.js` (Legacy Engine & Keyboard Listeners)
+- `src/engine/main.js` (Legacy Engine & Keyboard Listeners)
 - `public/Pokemon_NewDataset.js` (Core Pokémon Data)
 
 **Infrastructure**

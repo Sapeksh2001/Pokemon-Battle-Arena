@@ -304,6 +304,6 @@ Or via the Firebase console → Hosting → Release History → Roll back.
 |---------|-------|-----|
 | Blank white screen | JS bundle error | Check browser console; often a missing env var or bad import path |
 | Auth loop | RTDB rules block read on first mount | Check `database.rules.json` is deployed |
-| "Arena failed to initialise within 30s" | `window.arena` not set; large data file timeout | Check `src/js/main.js` bootstrap; increase timeout in `ArenaContext.jsx` if data files are slow |
+| "Arena failed to initialise within 30s" | `window.arena` not set; large data file timeout | Check `src/engine/main.js` bootstrap; increase timeout in `ArenaContext.jsx` if data files are slow |
 | HP changes don't sync | RTDB rule blocks write | Ensure `status === 'active'` is set on the room node before battle starts |
 | Build > 5MB | Large data files | Expected. Lazy-load data modules in future; no fix needed for MVP |

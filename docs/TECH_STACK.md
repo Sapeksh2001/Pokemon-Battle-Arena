@@ -10,7 +10,7 @@
 ```mermaid
 flowchart TD
     Browser["Browser Client"] --> React["React 19\nApp Shell"]
-    React --> Engine["Vanilla JS Engine\nsrc/js/main.js"]
+    React --> Engine["Vanilla JS Engine\nsrc/engine/main.js"]
     React --> Context["ArenaContext\nstate bridge"]
     Engine -- "window.__arenaNotify()" --> Context
     Context -- "gameState snapshot" --> React
@@ -32,7 +32,7 @@ flowchart TD
 | Bundle | Vite ESM build; single HTML entry point |
 | Deploy | Firebase Hosting (CDN) |
 
-The legacy engine (`src/js/main.js`) is a vanilla JS class hierarchy that was wrapped in React during the migration. React components are structural shells; the engine mutates DOM and fires `window.__arenaNotify()` to sync state into React via `ArenaContext`.
+The legacy engine (`src/engine/main.js`) is a vanilla JS class hierarchy that was wrapped in React during the migration. React components are structural shells; the engine mutates DOM and fires `window.__arenaNotify()` to sync state into React via `ArenaContext`.
 
 ---
 
@@ -79,7 +79,7 @@ The legacy engine (`src/js/main.js`) is a vanilla JS class hierarchy that was wr
 
 ### Firebase Auth
 - Providers: Google Sign-In, Anonymous
-- `authManager` service (`src/js/api/authManager.js`) wraps `onAuthStateChanged` and exposes a pub/sub `subscribe()` interface
+- `authManager` service (`src/engine/api/authManager.js`) wraps `onAuthStateChanged` and exposes a pub/sub `subscribe()` interface
 - Display name stored as Firebase Auth `displayName`; LobbyView syncs updates
 
 ### Firebase RTDB
@@ -145,7 +145,7 @@ flowchart TD
 ```
 
 ```
-src/js/
+src/engine/
 ├── main.js              # PokemonBattleArena class — bootstraps all services
 ├── api/
 │   ├── authManager.js   # Firebase Auth wrapper with subscribe pattern

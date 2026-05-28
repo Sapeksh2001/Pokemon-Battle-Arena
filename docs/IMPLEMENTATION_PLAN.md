@@ -15,7 +15,7 @@ This is separate from the live game state at `/rooms/{code}/state`. The snapshot
 
 ---
 
-### 1. `js/api/socketClient.js`
+### 1. `src/engine/api/socketClient.js`
 Summary of changes:
 - Add `saveGameToFirebase()` — serializes the current `gs` and writes to `/users/{uid}/saved_games/{roomCode}` with a timestamp, player names, and Pokemon names for display in the Load menu.
 - Add `loadSavedGames()` — reads `/users/{uid}/saved_games`, sorts by timestamp, and populates `#load-game-list` in the Load modal.

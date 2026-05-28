@@ -118,6 +118,9 @@ flowchart LR
 - Base Power, STAB, 18-type effectiveness, Crit, Burn / Poison / Paralyze resolution
 - Speed-tier ordering per round
 - HP displayed on radial gauge with color gradient (green → orange → red)
+- Evolve, Devolve, Revive, and Form change commands
+- Pokémon Trade command allowing a player to trade their current Pokémon for a random Pokémon of a selected tier (Basic, Mid, Final, Legendary, Mythical, Ultra Beast)
+- Auto-reshuffling of movesets on Revive, plus manual Reshuffle button in slot editor to reroll moves and abilities
 
 #### 6.4 Responsive Pixel / Indigo Plateau UI
 - Retro CRT pixel grid + glassmorphism panels

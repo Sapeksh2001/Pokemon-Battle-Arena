@@ -192,7 +192,8 @@ flowchart TD
     MOD --> M2["#join-modal"]
     MOD --> M3["#load-modal"]
     MOD --> M4["#settings-modal"]
-    MOD --> M5["…other engine modals"]
+    MOD --> M5["#trade-modal"]
+    MOD --> M6["…other engine modals"]
 
     note1["Engine toggles .hidden\non LobbyView/ArenaView\n— React does NOT own\nthis transition"]
     LV -. engine toggle .-> note1

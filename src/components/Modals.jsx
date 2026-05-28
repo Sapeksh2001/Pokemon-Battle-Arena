@@ -39,7 +39,7 @@ export default function Modals() {
 
   // Quick Play State
   const [quickPlayTiers, setQuickPlayTiers] = useState(['Final', 'Legendary', 'Ultra Beast', 'Mythical']);
-  const [tradeSelectedTier, setTradeSelectedTier] = useState('Final');
+  const [tradeSelectedTiers, setTradeSelectedTiers] = useState(['Final']);
 
   const toggleQuickPlayTier = (tierId) => {
     setQuickPlayTiers(prev => 
@@ -47,6 +47,15 @@ export default function Modals() {
         ? prev.filter(t => t !== tierId) 
         : [...prev, tierId]
     );
+  };
+
+  const toggleTradeTier = (tierId) => {
+    setTradeSelectedTiers(prev => {
+      const next = prev.includes(tierId) 
+        ? prev.filter(t => t !== tierId) 
+        : [...prev, tierId];
+      return next.length > 0 ? next : prev; // Prevent completely empty selection
+    });
   };
 
   const handleStartQuickPlay = () => {
@@ -60,7 +69,7 @@ export default function Modals() {
 
   const handleConfirmTrade = () => {
     if (!window.arena) return;
-    window.arena.confirmTrade(tradeSelectedTier);
+    window.arena.confirmTrade(tradeSelectedTiers);
     closeModal('trade-modal');
   };
 
@@ -570,14 +579,14 @@ export default function Modals() {
             </button>
           </div>
           <div className="space-y-4 font-body">
-            <p className="text-xs text-slate-300 uppercase tracking-wider mb-2">Select Target Tier for Trade:</p>
+            <p className="text-xs text-slate-300 uppercase tracking-wider mb-2">Select Target Tiers for Trade:</p>
             <div className="grid grid-cols-3 gap-2 bg-surface-container-low p-3 border border-outline-variant">
               {['Basic', 'Mid', 'Final', 'Legendary', 'Mythical', 'Ultra Beast'].map(tier => (
                 <button
                   key={tier}
-                  onClick={() => setTradeSelectedTier(tier)}
+                  onClick={() => toggleTradeTier(tier)}
                   className={`text-[9px] font-bold uppercase tracking-widest p-2 border transition-all ${
-                    tradeSelectedTier === tier
+                    tradeSelectedTiers.includes(tier)
                       ? 'bg-amber-500 text-black border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]'
                       : 'bg-surface-container-lowest text-slate-400 border-outline-variant hover:border-amber-500/50'
                   }`}

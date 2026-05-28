@@ -1267,7 +1267,7 @@ export class PokemonBattleArena {
         this.modals.open('trade');
     }
 
-    async confirmTrade(selectedTier) {
+    async confirmTrade(selectedTiers) {
         const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
         if (!val) return;
         const [pid, sid] = val.split('|');
@@ -1279,10 +1279,11 @@ export class PokemonBattleArena {
         await this.ensureDatabaseLoaded();
 
         const flatPool = this.multiplayer._getFlattenedPool();
-        const pool = flatPool.filter(p => p._computedTier === selectedTier);
+        const tiersArray = Array.isArray(selectedTiers) ? selectedTiers : [selectedTiers];
+        const pool = flatPool.filter(p => tiersArray.includes(p._computedTier));
 
         if (pool.length === 0) {
-            this._announce(`No Pokémon found in tier: ${selectedTier}!`, true);
+            this._announce(`No Pokémon found in selected tiers!`, true);
             this.audio.play('error');
             return;
         }

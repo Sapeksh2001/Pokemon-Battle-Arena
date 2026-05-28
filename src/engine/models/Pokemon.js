@@ -60,18 +60,6 @@ export class Pokemon {
         }
     }
 
-    refreshMoveset() {
-        if (typeof window !== 'undefined' && window.MovesetsData) {
-            let moveset = window.MovesetsData[this.fullName] || window.MovesetsData[this.baseName] || [];
-            if (moveset.length > 0) {
-                let shuffled = [...moveset].sort(() => 0.5 - Math.random());
-                this.moves = shuffled.slice(0, 4);
-                return true;
-            }
-        }
-        return false;
-    }
-
     get name() { return this.fullName; }
     get baseSpecies() { return this.baseName; }
 

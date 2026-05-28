@@ -51,12 +51,17 @@ export class MultiplayerManager {
      * Instantly starts a local battle with 6 prepopulated teams (Ash, Misty, etc.)
      * This bypasses the multiplayer room creation for testing and quick play.
      */
-    quickBattle(settings = {}) {
+    async quickBattle(settings = {}) {
         console.log('[MULTIPLAYER] Starting Quick Battle...', settings);
         this.mode = 'offline';
         
         if (this.arena?.log) {
             this.arena.log.reset();
+        }
+
+        // Ensure database is fully loaded before trying to prepopulate teams
+        if (this.arena && typeof this.arena.ensureDatabaseLoaded === 'function') {
+            await this.arena.ensureDatabaseLoaded();
         }
 
         // 1. Prepopulate the arena with dummy data
@@ -488,11 +493,6 @@ export class MultiplayerManager {
                     if (poke) {
                         this.arena.battleController._applyHPChange(poke, payload.playerId, payload.newHP, payload.source, true);
                     }
-                }
-                break;
-            case 'refresh_moveset':
-                if (payload) {
-                    this.arena.refreshPokemonMoveset(payload.playerId, payload.slotId, true);
                 }
                 break;
             case 'status_toggle':

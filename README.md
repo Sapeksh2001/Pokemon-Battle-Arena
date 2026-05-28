@@ -48,8 +48,6 @@ flowchart TD
 | STAB + terrain boost multipliers | ✅ |
 | Radial HP gauge with color gradient | ✅ |
 | Evolve / Devolve / Revive / Form Change | ✅ |
-| Manual moveset refresh button | ✅ |
-| Auto-refresh moveset upon revive | ✅ |
 | Dynamic terrain engine (18 terrain types) | ✅ |
 | Save / Load game (Firebase + JSON) | ✅ |
 | Undo / Redo battle history | ✅ |

@@ -1173,15 +1173,7 @@ export class PokemonBattleArena {
         this.history.snapshot(this.gs);
         const revivedHP = Math.floor(pokemon.maxHp / 2);
         this._applyHPChange(pokemon, pid, revivedHP, 'revive');
-        
-        if (pokemon.refreshMoveset()) {
-            this._announce(`${pokemon.fullName} has been revived and its moveset was refreshed!`);
-            if (this.multiplayer && this.multiplayer.mode === 'playing') {
-                this.multiplayer.sendAction('refresh_moveset', { playerId: pid, slotId: sid });
-            }
-        } else {
-            this._announce(`${pokemon.fullName} has been revived!`);
-        }
+        this._announce(`${pokemon.fullName} has been revived!`);
 
         // Autosave Local State
         this.saveLocalState();
@@ -1303,26 +1295,6 @@ export class PokemonBattleArena {
         }, 2500);
     }
 
-    // ── Moveset Refresh ───────────────────────────────────────────────────
-
-    refreshPokemonMoveset(playerId, slotIndex, remote = false) {
-        const player = this.gs.players.find(p => p.id === playerId);
-        const pokemon = player?.team[slotIndex];
-        if (!pokemon) return;
-
-        if (!remote) this.history.snapshot(this.gs);
-        
-        if (pokemon.refreshMoveset()) {
-            this.renderer.renderAll();
-            this._announce(`${pokemon.fullName}'s moveset was refreshed!`);
-            this.saveLocalState();
-
-            if (!remote && this.multiplayer && this.multiplayer.mode === 'playing') {
-                this.multiplayer.sendAction('refresh_moveset', { playerId, slotId: slotIndex });
-            }
-        }
-    }
-
     // ── Prepopulate ───────────────────────────────────────────────────────
 
     _prepopulate(tiers = null) {
@@ -1334,7 +1306,7 @@ export class PokemonBattleArena {
 
         names.forEach((name, i) => {
             const teamNames = pool.splice(0, 6);
-            if (pool.length < 6) pool.push(...[...filteredPool].sort(() => 0.5 - Math.random()));
+            if (pool.length < 6) pool.push(...filteredPool);
 
             const team = teamNames.map(n => {
                 const r = this.db.find(n);
@@ -1364,27 +1336,28 @@ export class PokemonBattleArena {
 
     // ── Move name selector (populated from MovesetsData) ──────────────────
 
-    /**
-     * Populate the Move Name dropdown based on what moves a given Pokémon can learn.
-     * Falls back to showing all moves (alphabetically) if the name isn't in MovesetsData.
-     * @param {string|null} pokemonName
-     */
-    _populateMoveSelector(pokemonName) {
+    _populateMoveSelector(pokemon) {
         const sel = document.getElementById('move-name-select');
         if (!sel) return;
+        const saved = sel.value;
         sel.innerHTML = '<option value="">-- Select Move --</option>';
 
-        if (typeof MovesetsData === 'undefined' || typeof MovesData === 'undefined') return;
+        if (typeof MovesData === 'undefined') return;
 
-        // Retrieve the moveset: try exact name first, then base name without suffixes.
-        let moves = MovesetsData[pokemonName];
-        if (!moves && pokemonName) {
-            // Try base name (e.g. 'Charizard' from 'Charizard Mega X')
-            const baseName = pokemonName.split(' ')[0];
-            moves = MovesetsData[baseName];
+        let moves = [];
+        if (pokemon && typeof pokemon === 'object' && Array.isArray(pokemon.moves)) {
+            moves = pokemon.moves;
+        } else if (typeof pokemon === 'string') {
+            if (typeof MovesetsData !== 'undefined') {
+                moves = MovesetsData[pokemon];
+                if (!moves) {
+                    const baseName = pokemon.split(' ')[0];
+                    moves = MovesetsData[baseName];
+                }
+            }
         }
-        // If still nothing, fall back to all moves sorted
-        const movelist = moves || Object.keys(MovesData).sort();
+
+        const movelist = (moves && moves.length > 0) ? moves : Object.keys(MovesData).sort();
 
         movelist.forEach(moveName => {
             const md = MovesData[moveName];
@@ -1394,6 +1367,10 @@ export class PokemonBattleArena {
                 : `${moveName} (${md.type} · ${md.category})`;
             sel.add(new Option(label, moveName));
         });
+
+        if ([...sel.options].some(o => o.value === saved)) {
+            sel.value = saved;
+        }
     }
 
     // ── PokemonAbilitiesMap population ────────────────────────────────────
@@ -1481,7 +1458,7 @@ export class PokemonBattleArena {
                 const pk = p?.getActivePokemon();
                 if (pk) {
                     this._setArena(pk.types[0]); // first type as primary
-                    this._populateMoveSelector(pk.fullName);
+                    this._populateMoveSelector(pk);
                 }
             } else {
                 this._populateMoveSelector(null);

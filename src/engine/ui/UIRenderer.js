@@ -51,7 +51,7 @@ export class UIRenderer {
 
     _createEmptyCard() {
         const card = document.createElement('div');
-        card.className = 'player-card p-4 flex flex-col items-center justify-center h-full text-secondary border-dashed border-2 border-outline-variant bg-surface-container-lowest/50 pointer-events-auto';
+        card.className = 'player-card p-4 flex flex-col items-center justify-center h-full text-secondary border-dashed border-2 border-outline-variant bg-surface-container-lowest/50';
         card.innerHTML = `<div class="text-center">
             <span class="material-symbols-outlined text-6xl mx-auto opacity-50">person_add</span>
             <p class="mt-2 text-xs uppercase tracking-widest font-bold">EMPTY SLOT</p>
@@ -61,7 +61,7 @@ export class UIRenderer {
 
     _createPlayerCard(player) {
         const card = document.createElement('div');
-        card.className = 'player-card p-4 flex flex-col items-center justify-between h-full pointer-events-auto';
+        card.className = 'player-card p-4 flex flex-col items-center justify-between h-full';
         card.id = `player-card-${player.id}`;
         card.dataset.playerId = player.id;
 
@@ -87,7 +87,7 @@ export class UIRenderer {
         if (pokemon.types && pokemon.types.length > 0) {
             const type1 = pokemon.types[0].toLowerCase();
             const type2 = pokemon.types[1] ? pokemon.types[1].toLowerCase() : type1;
-            
+
             card.style.setProperty('--type-1-color', `var(--type-${type1})`);
             card.style.setProperty('--type-2-color', `var(--type-${type2})`);
         }
@@ -160,7 +160,7 @@ export class UIRenderer {
                     ${this._renderStatusIcons(pokemon)}
                 </div>
             </div>
-            ${this._renderMovesAndAbilities(pokemon, player)}
+            ${this._renderMovesAndAbilities(pokemon)}
             <div class="grid grid-cols-5 grid-rows-2 text-center w-full card-stat-grid flex-shrink-0">
                 ${this._renderStatHeaders(pokemon)}
                 ${this._renderStatValues(pokemon)}
@@ -180,7 +180,7 @@ export class UIRenderer {
     }
 
     /** Render moves and abilities section. */
-    _renderMovesAndAbilities(pokemon, player) {
+    _renderMovesAndAbilities(pokemon) {
         const escapeHTML = window.escapeHTML || (str => String(str).replace(/[&<>'"]/g, match => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
         }[match])));
@@ -191,10 +191,20 @@ export class UIRenderer {
             const type = moveData.type || 'NORMAL';
             const cat = moveData.category || 'Physical';
             const power = moveData.power || '—';
-            const acc = moveData.accuracy || '—';
             
+            const rawAcc = moveData.accuracy;
+            let displayAcc = '—';
+            if (rawAcc !== undefined && rawAcc !== null) {
+                const accStr = String(rawAcc);
+                if (rawAcc === true || rawAcc === 'true' || accStr.toLowerCase().includes('infin') || accStr.includes('∞')) {
+                    displayAcc = '∞';
+                } else {
+                    displayAcc = accStr;
+                }
+            }
+
             const bgClass = i % 2 === 0 ? 'bg-[#f1f5f9]' : 'bg-[#e2e8f0]';
-            
+
             let catIcon = '';
             if (cat === 'Special') {
                 catIcon = `<svg width="20" height="14" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg" class="inline-block"><g transform="translate(12,8) rotate(-20)"><ellipse cx="0" cy="0" rx="9" ry="4.5" fill="none" stroke="#1d4ed8" stroke-width="1.5"/><ellipse cx="0" cy="0" rx="4.5" ry="2" fill="none" stroke="#1d4ed8" stroke-width="1.5"/><circle cx="0" cy="0" r="1" fill="#1d4ed8"/></g></svg>`;
@@ -214,7 +224,7 @@ export class UIRenderer {
                             <span class="mc-tooltip-title">${escapeHTML(m)}</span>
                             <span>Type: ${escapeHTML(type)}</span><br>
                             <span>Power: ${escapeHTML(String(power))}</span><br>
-                            <span>Accuracy: ${escapeHTML(String(acc))}</span>
+                            <span>Accuracy: ${escapeHTML(displayAcc)}</span>
                             ${moveDesc}
                         </div>
                     </td>
@@ -225,32 +235,27 @@ export class UIRenderer {
                     </td>
                     <td class="p-0.5 text-center align-middle">${catIcon}</td>
                     <td class="p-0.5 text-center text-[9px] sm:text-[10px] align-middle">${escapeHTML(String(power))}</td>
-                    <td class="p-0.5 text-center pr-1 text-[9px] sm:text-[10px] align-middle">${escapeHTML(String(acc))}</td>
+                    <td class="p-0.5 text-center pr-1 text-[9px] sm:text-[10px] align-middle">${escapeHTML(displayAcc)}</td>
                 </tr>
             `;
         }).join('');
 
         const noMovesRow = `<tr><td colspan="5" class="p-1 text-center text-gray-500 italic text-[10px]">No moves available</td></tr>`;
 
-        const abilityData = pokemon.ability && window.AbilitiesData && window.AbilitiesData[pokemon.ability] 
+        const abilityData = pokemon.ability && window.AbilitiesData && window.AbilitiesData[pokemon.ability]
             ? window.AbilitiesData[pokemon.ability] : null;
         const abilityDesc = abilityData && abilityData.description ? abilityData.description : '';
 
-        const hiddenAbilityData = pokemon.hiddenAbility && window.AbilitiesData && window.AbilitiesData[pokemon.hiddenAbility] 
+        const hiddenAbilityData = pokemon.hiddenAbility && window.AbilitiesData && window.AbilitiesData[pokemon.hiddenAbility]
             ? window.AbilitiesData[pokemon.hiddenAbility] : null;
         const hiddenAbilityDesc = hiddenAbilityData && hiddenAbilityData.description ? hiddenAbilityData.description : '';
-
-        const refreshBtn = player ? `
-            <button onclick="window.arena.refreshPokemonMoveset('${player.id}', ${player.activePokemonIndex})" class="ml-1 text-yellow-400 hover:text-white transition-colors" title="Refresh Moveset">
-                <span class="material-symbols-outlined text-[12px] align-middle">refresh</span>
-            </button>` : '';
 
         return `
             <div class="w-full flex-shrink-0 mt-1 mb-1 bg-[#f8f9fa] text-black rounded-xl border-2 border-[#1e293b]" style="text-shadow: none;">
                 <table class="w-full text-left border-collapse" style="table-layout: fixed;">
                     <thead>
                         <tr class="bg-black text-white text-[8px] sm:text-[9px] uppercase tracking-wider">
-                            <th class="p-0.5 pl-1 w-[35%] rounded-tl-[10px]">Move ${refreshBtn}</th>
+                            <th class="p-0.5 pl-1 w-[35%] rounded-tl-[10px]">Move</th>
                             <th class="p-0.5 text-center w-[25%]">Type</th>
                             <th class="p-0.5 text-center w-[12%]">Cat.</th>
                             <th class="p-0.5 text-center w-[14%]">Power</th>
@@ -262,28 +267,24 @@ export class UIRenderer {
                     </tbody>
                 </table>
                 <div class="flex border-t-2 border-[#1e293b] bg-gray-300 p-0.5 gap-0.5 rounded-b-[10px]">
-                    <div class="w-1/2 bg-white rounded-bl-lg rounded-tl-sm rounded-r-sm border-2 border-[#1e293b] p-0.5 text-center flex flex-col justify-start ${pokemon.ability ? 'mc-tooltip' : ''}">
+                    <div class="w-1/2 bg-white rounded-bl-lg rounded-tl-sm rounded-r-sm border-2 border-[#1e293b] p-1 text-center flex flex-col justify-center items-center ${pokemon.ability ? 'mc-tooltip' : ''}">
                         <div class="uppercase text-[8px] mb-0.5 text-[#334155] tracking-widest leading-none">Ability</div>
                         ${pokemon.ability ? `
-                            <div class="text-[10px] sm:text-xs tracking-wide text-[#0f172a] leading-none mb-0.5">${escapeHTML(pokemon.ability)}</div>
-                            ${abilityDesc ? `
-                                <div class="mc-tooltip-content">
-                                    <span class="mc-tooltip-title">${escapeHTML(pokemon.ability)}</span>
-                                    <span class="mc-tooltip-desc">${escapeHTML(abilityDesc)}</span>
-                                </div>
-                            ` : ''}
+                            <div class="text-[10px] sm:text-xs tracking-wide text-[#0f172a] leading-none font-bold">${escapeHTML(pokemon.ability)}</div>
+                            <div class="mc-tooltip-content">
+                                <span class="mc-tooltip-title">${escapeHTML(pokemon.ability)}</span>
+                                <span class="mc-tooltip-desc">${escapeHTML(abilityDesc || 'No description available.')}</span>
+                            </div>
                         ` : `<div class="text-gray-400 italic text-[9px] mt-0.5">None</div>`}
                     </div>
-                    <div class="w-1/2 bg-white rounded-br-lg rounded-tr-sm rounded-l-sm border-2 border-[#1e293b] p-0.5 text-center flex flex-col justify-start ${pokemon.hiddenAbility ? 'mc-tooltip' : ''}">
+                    <div class="w-1/2 bg-white rounded-br-lg rounded-tr-sm rounded-l-sm border-2 border-[#1e293b] p-1 text-center flex flex-col justify-center items-center ${pokemon.hiddenAbility ? 'mc-tooltip' : ''}">
                         <div class="uppercase text-[8px] mb-0.5 text-[#334155] tracking-widest leading-none">Hidden Ability</div>
                         ${pokemon.hiddenAbility ? `
-                            <div class="text-[10px] sm:text-xs tracking-wide text-[#0f172a] leading-none mb-0.5">${escapeHTML(pokemon.hiddenAbility)}</div>
-                            ${hiddenAbilityDesc ? `
-                                <div class="mc-tooltip-content">
-                                    <span class="mc-tooltip-title">${escapeHTML(pokemon.hiddenAbility)}</span>
-                                    <span class="mc-tooltip-desc">${escapeHTML(hiddenAbilityDesc)}</span>
-                                </div>
-                            ` : ''}
+                            <div class="text-[10px] sm:text-xs tracking-wide text-[#0f172a] leading-none font-bold">${escapeHTML(pokemon.hiddenAbility)}</div>
+                            <div class="mc-tooltip-content">
+                                <span class="mc-tooltip-title">${escapeHTML(pokemon.hiddenAbility)} (Hidden)</span>
+                                <span class="mc-tooltip-desc">${escapeHTML(hiddenAbilityDesc || 'No description available.')}</span>
+                            </div>
                         ` : `<div class="text-gray-400 italic text-[9px] mt-0.5">None</div>`}
                     </div>
                 </div>
@@ -409,6 +410,19 @@ export class UIRenderer {
 
         this._updateStatusButtonStyles();
         this._updateManagementButtons();
+
+        // Keep the Move Name dropdown in sync with currently selected attacker's active Pokémon moves
+        if (attackerSel && attackerSel.value) {
+            const p = gs.players.find(p => p.id === attackerSel.value);
+            const pk = p?.getActivePokemon();
+            if (pk) {
+                this._arena._populateMoveSelector(pk);
+            } else {
+                this._arena._populateMoveSelector(null);
+            }
+        } else {
+            this._arena._populateMoveSelector(null);
+        }
     }
 
     _updateWeatherView() {
@@ -476,7 +490,7 @@ export class UIRenderer {
             // Species-wide evolution check: enable if ANY form in the family has an evolution branch.
             const root = pokemon.baseData;
             let canEvolve = (root.evolutions || []).length > 0;
-            
+
             if (!canEvolve && root.forms) {
                 for (const f of Object.values(root.forms)) {
                     if (!f) continue;
@@ -489,7 +503,7 @@ export class UIRenderer {
                 }
             }
             evolveBtn.disabled = !canEvolve;
-            
+
             // Devolution check
             const preEvolutions = this._arena.db.getPreEvolutions(pokemon.fullName);
             devolveBtn.disabled = preEvolutions.length === 0;

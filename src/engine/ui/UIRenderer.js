@@ -137,19 +137,18 @@ export class UIRenderer {
                     ${this._renderTypeBadges(pokemon.types)}
                 </div>
             </div>
-            <div class="w-full flex-shrink-0 flex flex-col items-center justify-start relative mt-1" style="height: 150px;">
-                <div class="flex items-center justify-center relative" style="height: 90px; width: 100%;">
+            <div class="flex flex-col items-center justify-center flex-grow min-h-0 relative">
+                <div class="relative">
                     <img src="${pokemon.sprite}"
                          onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src=this.src.replace('/ani/','/gen5/').replace('.gif','.png');}else if(this.dataset.tried=='1'){this.dataset.tried=2;this.src=this.src.replace('/gen5/','/dex/');}else{this.onerror=null;this.src='https://placehold.co/96x96/000000/FFFFFF?text=?';}"
                          alt="${escapeHTML(pokemon.fullName)}"
-                         class="pokemon-sprite ${pokemon.isFainted() ? 'grayscale' : ''}"
-                         style="max-height: 90px; max-width: 100%; object-fit: contain;">
+                         class="pokemon-sprite ${pokemon.isFainted() ? 'grayscale' : ''}">
                     ${pokemon.isFainted()
                 ? '<div class="absolute inset-0 flex items-center justify-center"><span class="text-red-500 text-2xl font-bold -rotate-12 bg-black/50 px-2">FAINTED</span></div>'
                 : ''}
                 </div>
                 <!-- Dynamic Floating Text Container inserted locally in later features -->
-                <div class="hp-bar-container w-full" onclick="window.editHP('${player.id}')" style="margin-top: 6px; margin-bottom: 0;">
+                <div class="hp-bar-container" onclick="window.editHP('${player.id}')">
                     <div class="hp-text-row">
                         <span class="hp-values">${pokemon.currentHP}/${pokemon.maxHp}</span>
                     </div>
@@ -157,13 +156,11 @@ export class UIRenderer {
                         <div class="hp-bar-fill" style="width: ${pct * 100}%; background-color: ${this._getHPColor(pct)};"></div>
                     </div>
                 </div>
-                <div class="status-alignment-row w-full" style="margin-top: 4px; height: 18px;">
+                <div class="status-alignment-row">
                     ${this._renderStatusIcons(pokemon)}
                 </div>
             </div>
-            <div class="flex-grow flex flex-col justify-end min-h-0 w-full">
-                ${this._renderMovesAndAbilities(pokemon)}
-            </div>
+            ${this._renderMovesAndAbilities(pokemon)}
             <div class="grid grid-cols-5 grid-rows-2 text-center w-full card-stat-grid flex-shrink-0">
                 ${this._renderStatHeaders(pokemon)}
                 ${this._renderStatValues(pokemon)}
@@ -220,7 +217,7 @@ export class UIRenderer {
             const moveDesc = moveData.effect ? `<span class="mc-tooltip-desc">${escapeHTML(moveData.effect)}</span>` : '';
 
             return `
-                <tr class="${bgClass} text-slate-800 border-b border-gray-300 last:border-0 align-middle h-[21px]" style="height: 21px;">
+                <tr class="${bgClass} text-slate-800 border-b border-gray-300 last:border-0 align-middle">
                     <td class="p-0.5 pl-1 text-[#0f172a] text-[9px] sm:text-[10px] tracking-tight mc-tooltip align-middle">
                         <span class="truncate block max-w-[80px]" title="${escapeHTML(m)}">${escapeHTML(m)}</span>
                         <div class="mc-tooltip-content">
@@ -232,7 +229,7 @@ export class UIRenderer {
                         </div>
                     </td>
                     <td class="p-0.5 text-center align-middle">
-                        <span class="type-badge" style="background-color:var(--type-${type.toLowerCase()}); font-size: 8px; font-weight: 800; font-family: sans-serif; padding: 2px 4px; border-radius: 4px !important; border: 1px solid white; box-shadow: 0 0 0 1px black; display: inline-block; vertical-align: middle; line-height: 1; text-shadow: 1px 1px 0 rgba(0,0,0,0.5); letter-spacing: 0.5px; white-space: nowrap;">
+                        <span class="type-badge" style="background-color:var(--type-${type.toLowerCase()}); font-size: 10px; font-weight: 800; font-family: sans-serif; padding: 3px 8px; border-radius: 4px !important; border: 1.5px solid white; box-shadow: 0 0 0 1px black; display: inline-block; vertical-align: middle; line-height: 1; text-shadow: 1px 1px 0 rgba(0,0,0,0.5); letter-spacing: 0.5px;">
                             ${escapeHTML(type.toUpperCase())}
                         </span>
                     </td>
@@ -257,7 +254,7 @@ export class UIRenderer {
             <div class="w-full flex-shrink-0 mt-1 mb-1 bg-[#f8f9fa] text-black rounded-xl border-2 border-[#1e293b]" style="text-shadow: none;">
                 <table class="w-full text-left border-collapse" style="table-layout: fixed;">
                     <thead>
-                        <tr class="bg-black text-white text-[8px] sm:text-[9px] uppercase tracking-wider h-[18px]" style="height: 18px;">
+                        <tr class="bg-black text-white text-[8px] sm:text-[9px] uppercase tracking-wider">
                             <th class="p-0.5 pl-1 w-[35%] rounded-tl-[10px]">Move</th>
                             <th class="p-0.5 text-center w-[25%]">Type</th>
                             <th class="p-0.5 text-center w-[12%]">Cat.</th>
@@ -269,8 +266,8 @@ export class UIRenderer {
                         ${moves.length > 0 ? movesRows : noMovesRow}
                     </tbody>
                 </table>
-                <div class="flex border-t-2 border-[#1e293b] bg-gray-300 p-0.5 gap-0.5 rounded-b-[10px] h-[36px]" style="height: 36px;">
-                    <div class="w-1/2 bg-white rounded-bl-lg rounded-tl-sm rounded-r-sm border-2 border-[#1e293b] p-1 text-center flex flex-col justify-center items-center h-full ${pokemon.ability ? 'mc-tooltip' : ''}">
+                <div class="flex border-t-2 border-[#1e293b] bg-gray-300 p-0.5 gap-0.5 rounded-b-[10px]">
+                    <div class="w-1/2 bg-white rounded-bl-lg rounded-tl-sm rounded-r-sm border-2 border-[#1e293b] p-1 text-center flex flex-col justify-center items-center ${pokemon.ability ? 'mc-tooltip' : ''}">
                         <div class="uppercase text-[8px] mb-0.5 text-[#334155] tracking-widest leading-none">Ability</div>
                         ${pokemon.ability ? `
                             <div class="text-[10px] sm:text-xs tracking-wide text-[#0f172a] leading-none font-bold">${escapeHTML(pokemon.ability)}</div>
@@ -280,7 +277,7 @@ export class UIRenderer {
                             </div>
                         ` : `<div class="text-gray-400 italic text-[9px] mt-0.5">None</div>`}
                     </div>
-                    <div class="w-1/2 bg-white rounded-br-lg rounded-tr-sm rounded-l-sm border-2 border-[#1e293b] p-1 text-center flex flex-col justify-center items-center h-full ${pokemon.hiddenAbility ? 'mc-tooltip' : ''}">
+                    <div class="w-1/2 bg-white rounded-br-lg rounded-tr-sm rounded-l-sm border-2 border-[#1e293b] p-1 text-center flex flex-col justify-center items-center ${pokemon.hiddenAbility ? 'mc-tooltip' : ''}">
                         <div class="uppercase text-[8px] mb-0.5 text-[#334155] tracking-widest leading-none">Hidden Ability</div>
                         ${pokemon.hiddenAbility ? `
                             <div class="text-[10px] sm:text-xs tracking-wide text-[#0f172a] leading-none font-bold">${escapeHTML(pokemon.hiddenAbility)}</div>

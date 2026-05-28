@@ -137,18 +137,19 @@ export class UIRenderer {
                     ${this._renderTypeBadges(pokemon.types)}
                 </div>
             </div>
-            <div class="flex flex-col items-center justify-center flex-grow min-h-0 relative">
-                <div class="relative">
+            <div class="w-full flex-shrink-0 flex flex-col items-center justify-start relative mt-1" style="height: 150px;">
+                <div class="flex items-center justify-center relative" style="height: 90px; width: 100%;">
                     <img src="${pokemon.sprite}"
                          onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src=this.src.replace('/ani/','/gen5/').replace('.gif','.png');}else if(this.dataset.tried=='1'){this.dataset.tried=2;this.src=this.src.replace('/gen5/','/dex/');}else{this.onerror=null;this.src='https://placehold.co/96x96/000000/FFFFFF?text=?';}"
                          alt="${escapeHTML(pokemon.fullName)}"
-                         class="pokemon-sprite ${pokemon.isFainted() ? 'grayscale' : ''}">
+                         class="pokemon-sprite ${pokemon.isFainted() ? 'grayscale' : ''}"
+                         style="max-height: 90px; max-width: 100%; object-fit: contain;">
                     ${pokemon.isFainted()
                 ? '<div class="absolute inset-0 flex items-center justify-center"><span class="text-red-500 text-2xl font-bold -rotate-12 bg-black/50 px-2">FAINTED</span></div>'
                 : ''}
                 </div>
                 <!-- Dynamic Floating Text Container inserted locally in later features -->
-                <div class="hp-bar-container" onclick="window.editHP('${player.id}')">
+                <div class="hp-bar-container w-full" onclick="window.editHP('${player.id}')" style="margin-top: 6px; margin-bottom: 0;">
                     <div class="hp-text-row">
                         <span class="hp-values">${pokemon.currentHP}/${pokemon.maxHp}</span>
                     </div>
@@ -156,11 +157,13 @@ export class UIRenderer {
                         <div class="hp-bar-fill" style="width: ${pct * 100}%; background-color: ${this._getHPColor(pct)};"></div>
                     </div>
                 </div>
-                <div class="status-alignment-row">
+                <div class="status-alignment-row w-full" style="margin-top: 4px; height: 18px;">
                     ${this._renderStatusIcons(pokemon)}
                 </div>
             </div>
-            ${this._renderMovesAndAbilities(pokemon)}
+            <div class="flex-grow flex flex-col justify-end min-h-0 w-full">
+                ${this._renderMovesAndAbilities(pokemon)}
+            </div>
             <div class="grid grid-cols-5 grid-rows-2 text-center w-full card-stat-grid flex-shrink-0">
                 ${this._renderStatHeaders(pokemon)}
                 ${this._renderStatValues(pokemon)}

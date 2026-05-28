@@ -461,12 +461,14 @@ export class UIRenderer {
         const devolveBtn = document.getElementById('devolve-btn');
         const formBtn = document.getElementById('change-form-btn');
         const reviveBtn = document.getElementById('revive-btn');
-        if (!sel || !evolveBtn || !devolveBtn || !formBtn || !reviveBtn) return;
+        const tradeBtn = document.getElementById('trade-btn');
+        if (!sel || !evolveBtn || !devolveBtn || !formBtn || !reviveBtn || !tradeBtn) return;
 
         evolveBtn.disabled = true;
         devolveBtn.disabled = true;
         formBtn.disabled = true;
         reviveBtn.disabled = true;
+        tradeBtn.disabled = true;
 
         const rawVal = sel.dataset.value || sel.value;
         if (!rawVal) return;
@@ -475,6 +477,7 @@ export class UIRenderer {
         const player = this._gs.players.find(p => p.id === pid);
         const pokemon = player?.team[sid];
         if (!pokemon) return;
+        tradeBtn.disabled = false;
 
         // Safety: ensure data and baseData are linked (important for Quick Play)
         if (!pokemon.data || !pokemon.baseData) {

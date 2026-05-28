@@ -520,6 +520,18 @@ export class MultiplayerManager {
                     this.arena._confirmDevolution(payload.parentName, payload.playerId, payload.slotId, true);
                 }
                 break;
+            case 'trade_pokemon':
+                if (payload) {
+                    const p = this.arena.gs.players.find(pl => pl.id === payload.playerId);
+                    const result = this.arena.db.find(payload.newPokemonName);
+                    if (p && result) {
+                        const newPoke = new Pokemon(result.foundNode, result.baseNode);
+                        p.setSlot(payload.slotId, newPoke);
+                        this.arena.log.add(`${p.name} traded ${payload.oldPokemonName} for ${newPoke.fullName}!`, 'system');
+                        this.arena.renderer.renderAll();
+                    }
+                }
+                break;
             case 'form_change':
                 if (payload) {
                     this.arena._confirmFormChange(payload.formName, payload.playerId, payload.slotId, true);

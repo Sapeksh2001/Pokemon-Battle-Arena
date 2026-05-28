@@ -39,6 +39,7 @@ export default function Modals() {
 
   // Quick Play State
   const [quickPlayTiers, setQuickPlayTiers] = useState(['Final', 'Legendary', 'Ultra Beast', 'Mythical']);
+  const [tradeSelectedTier, setTradeSelectedTier] = useState('Final');
 
   const toggleQuickPlayTier = (tierId) => {
     setQuickPlayTiers(prev => 
@@ -55,6 +56,12 @@ export default function Modals() {
     }
     window.arena.multiplayer.quickBattle({ selectedTiers: quickPlayTiers });
     closeModal('quick-play-modal');
+  };
+
+  const handleConfirmTrade = () => {
+    if (!window.arena) return;
+    window.arena.confirmTrade(tradeSelectedTier);
+    closeModal('trade-modal');
   };
 
   useEffect(() => {
@@ -548,6 +555,44 @@ export default function Modals() {
               onClick={() => closeModal('load-modal')}
               className="bg-surface-variant hover:bg-surface-bright text-secondary px-4 py-2 border border-secondary font-bold text-[9px] uppercase tracking-widest step-animation">
               CLOSE
+            </button>
+          </div>
+        </div>
+      </div>
+      {/* Trade Modal */}
+      <div id="trade-modal" className="modal-overlay">
+        <div className="modal-content max-w-md relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+          <div className="flex justify-between items-center mb-4 border-b-2 border-outline-variant pb-2">
+            <h3 id="trade-modal-title" className="text-xl text-yellow-400 font-headline uppercase tracking-tighter text-glow">Trade Pokémon</h3>
+            <button onClick={() => closeModal('trade-modal')} className="text-secondary hover:text-white transition-colors">
+              <span className="material-symbols-outlined text-[24px]">close</span>
+            </button>
+          </div>
+          <div className="space-y-4 font-body">
+            <p className="text-xs text-slate-300 uppercase tracking-wider mb-2">Select Target Tier for Trade:</p>
+            <div className="grid grid-cols-3 gap-2 bg-surface-container-low p-3 border border-outline-variant">
+              {['Basic', 'Mid', 'Final', 'Legendary', 'Mythical', 'Ultra Beast'].map(tier => (
+                <button
+                  key={tier}
+                  onClick={() => setTradeSelectedTier(tier)}
+                  className={`text-[9px] font-bold uppercase tracking-widest p-2 border transition-all ${
+                    tradeSelectedTier === tier
+                      ? 'bg-amber-500 text-black border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]'
+                      : 'bg-surface-container-lowest text-slate-400 border-outline-variant hover:border-amber-500/50'
+                  }`}
+                >
+                  {tier}
+                </button>
+              ))}
+            </div>
+            
+            <button
+              onClick={handleConfirmTrade}
+              className="w-full bg-amber-600 hover:bg-amber-500 text-white px-6 py-4 border-2 border-white uppercase font-bold tracking-widest step-animation text-[10px] flex justify-center items-center gap-2 mt-4"
+              style={{ boxShadow: '4px 4px 0px 0px #78350f' }}
+            >
+              <span className="material-symbols-outlined text-[18px]">sync_alt</span> CONFIRM TRADE
             </button>
           </div>
         </div>

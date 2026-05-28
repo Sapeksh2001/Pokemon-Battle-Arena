@@ -195,6 +195,7 @@ export class PokemonBattleArena {
             ['confirm', 'confirm-modal'],
             ['multiplayerLobby', 'multiplayer-lobby-modal'],
             ['settings', 'settings-modal'],
+            ['trade', 'trade-modal'],
         ].forEach(([name, id]) => this.modals.register(name, document.getElementById(id)));
     }
 
@@ -1230,6 +1231,71 @@ export class PokemonBattleArena {
 
         // Autosave Local State
         this.saveLocalState();
+    }
+
+    openTradeModal() {
+        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+        if (!val) { this._announce('Select a Pokémon to trade.', true); this.audio.play('error'); return; }
+        const [pid, sid] = val.split('|');
+        const player = this.gs.players.find(p => p.id === pid);
+        const pokemon = player?.team[sid];
+        if (!pokemon) return;
+
+        this.audio.play('click');
+        const titleEl = document.getElementById('trade-modal-title');
+        if (titleEl) {
+            titleEl.textContent = `Trade ${pokemon.fullName}`;
+        }
+        this.modals.open('trade');
+    }
+
+    async confirmTrade(selectedTier) {
+        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+        if (!val) return;
+        const [pid, sid] = val.split('|');
+        const player = this.gs.players.find(p => p.id === pid);
+        const pokemon = player?.team[sid];
+        if (!pokemon) return;
+
+        this.history.snapshot(this.gs);
+        await this.ensureDatabaseLoaded();
+
+        const flatPool = this.multiplayer._getFlattenedPool();
+        const pool = flatPool.filter(p => p._computedTier === selectedTier);
+
+        if (pool.length === 0) {
+            this._announce(`No Pokémon found in tier: ${selectedTier}!`, true);
+            this.audio.play('error');
+            return;
+        }
+
+        const rolled = pool[Math.floor(Math.random() * pool.length)];
+        const rolledName = rolled.Name || rolled.name;
+
+        const result = this.db.find(rolledName);
+        if (!result) {
+            this._announce(`Database error finding rolled Pokémon: ${rolledName}`, true);
+            this.audio.play('error');
+            return;
+        }
+
+        const newPoke = new Pokemon(result.foundNode, result.baseNode);
+        
+        player.setSlot(parseInt(sid), newPoke);
+        this.audio.play('confirm');
+
+        this._notify(`${player.name} traded ${pokemon.fullName} for ${newPoke.fullName}!`, 'system');
+
+        this.renderer.renderAll();
+
+        // Autosave Local State
+        this.saveLocalState();
+
+        // Sync Action for Multiplayer
+        if (this.multiplayer && this.multiplayer.mode === 'playing') {
+            this.multiplayer.sendAction('trade_pokemon', { playerId: pid, slotId: parseInt(sid), newPokemonName: newPoke.fullName, oldPokemonName: pokemon.fullName });
+            this.multiplayer.sendGameState();
+        }
     }
 
     // ── Weather ───────────────────────────────────────────────────────────

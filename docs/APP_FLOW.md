@@ -105,7 +105,7 @@ LobbyView (all players ready + host starts)
        │    ├─ Attacker Picker (PokemonPicker, all active players)
        │    ├─ Target Picker   (PokemonPicker, all active players)
        │    ├─ Move Buttons    (Physical / Special / Status)
-       │    ├─ Management Panel (Evolve / Devolve / Revive / Terrain)
+       │    ├─ Management Panel (Evolve / Devolve / Revive / Terrain / Trade)
        │    └─ Battle Log Panel (scrolling terminal, color-coded entries)
        └─ Modals (always in DOM, toggled by .visible class)
 ```

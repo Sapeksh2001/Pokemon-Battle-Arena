@@ -804,7 +804,7 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 
 /* --- Battle log panel (replaces fixed w-[640px]) --- */
 .battle-log-panel {
-    width: 550px;
+    width: 700px;
     flex-shrink: 0;
 }
 
@@ -814,12 +814,12 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 
 /* ── DESKTOP (1400–1800px) ── */
 @media (max-width: 1800px) {
-    .battle-log-panel { width: 550px; }
+    .battle-log-panel { width: 700px; }
 }
 
 /* ── MACBOOK AIR / SMALL LAPTOP (1024–1400px) ── */
 @media (max-width: 1400px) {
-    .battle-log-panel { width: 450px; }
+    .battle-log-panel { width: 550px; }
 }
 
 /* ── TABLET LANDSCAPE / LARGE PHONE (680–1024px) ── footer auto-height */
@@ -828,10 +828,10 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
         height: auto;
     }
     .battle-log-panel {
-        width: 320px;
+        width: 380px;
     }
     /* Collapse control panel to 2 columns */
-    .arena-control-footer .grid.lg\:grid-cols-4 {
+    .arena-control-footer .grid.lg\:grid-cols-3 {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 }
@@ -842,7 +842,7 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
     .arena-control-footer {
         height: auto;
     }
-    .arena-control-footer .grid.lg\:grid-cols-4 {
+    .arena-control-footer .grid.lg\:grid-cols-3 {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 }
@@ -853,7 +853,7 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
     .arena-control-footer {
         height: auto;
     }
-    .arena-control-footer .grid.lg\:grid-cols-4 {
+    .arena-control-footer .grid.lg\:grid-cols-3 {
         grid-template-columns: 1fr !important;
     }
     /* Compact card padding on phone */

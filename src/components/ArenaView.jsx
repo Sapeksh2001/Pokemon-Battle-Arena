@@ -115,7 +115,7 @@ export default function ArenaView() {
 
             {/* LEFT: Controls Grid */}
             <div className="flex-1 min-w-0">
-              <div className="grid lg:grid-cols-4 gap-3 h-full">
+              <div className="grid lg:grid-cols-3 gap-3 h-full">
 
                 {/* Attack Command */}
                 <div className="control-panel-mesh p-2 group">
@@ -168,33 +168,33 @@ export default function ArenaView() {
                   </div>
                 </div>
 
-                {/* Status & Stats */}
+                {/* Status & Management */}
                 <div className="control-panel-mesh p-2 group">
-                  <h4 className="text-yellow-400 font-label text-sm mb-3 uppercase tracking-widest text-glow">Status &amp; Stats</h4>
+                  <h4 className="text-yellow-400 font-label text-sm mb-3 uppercase tracking-widest text-glow">Status &amp; Management</h4>
                   <div className="space-y-2 text-sm font-body">
-                    <div className="grid grid-cols-3 gap-1">
-                      <button id="curse-btn" data-status="curse" className="status-btn step-animation flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>skull</span>CRS</button>
-                      <button id="poison-btn" data-status="poison" className="status-btn step-animation flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>science</span>PSN</button>
-                      <button id="paralyze-btn" data-status="paralyze" className="status-btn step-animation flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>PAR</button>
+                    {/* Ailments row */}
+                    <div className="grid grid-cols-6 gap-1">
+                      <button id="curse-btn" data-status="curse" className="status-btn step-animation flex items-center justify-center gap-0.5 text-[10px]"><span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>skull</span>CRS</button>
+                      <button id="poison-btn" data-status="poison" className="status-btn step-animation flex items-center justify-center gap-0.5 text-[10px]"><span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>science</span>PSN</button>
+                      <button id="paralyze-btn" data-status="paralyze" className="status-btn step-animation flex items-center justify-center gap-0.5 text-[10px]"><span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>PAR</button>
+                      <button id="weather-btn" className="step-animation text-center text-[10px]">WTH</button>
+                      <button id="burn-btn" data-status="burn" className="status-btn step-animation flex items-center justify-center gap-0.5 text-[10px]"><span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>BRN</button>
+                      <button id="toxic-btn" data-status="bad_poison" className="status-btn step-animation flex items-center justify-center gap-0.5 text-[10px]"><span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>coronavirus</span>TOX</button>
                     </div>
-                    <div className="grid grid-cols-3 gap-1">
-                      <button id="weather-btn" className="step-animation text-center">WTH</button>
-                      <button id="burn-btn" data-status="burn" className="status-btn step-animation flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>BRN</button>
-                      <button id="toxic-btn" data-status="bad_poison" className="status-btn step-animation flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>coronavirus</span>TOX</button>
-                    </div>
-                    <div>
-                      <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-sm">TARGET</label>
+                    
+                    <div className="border-t border-outline-variant pt-2 mt-2">
+                      <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-[10px]">STATUS TARGET</label>
                       <select id="status-target-select" className="sr-only" aria-label="Select Status Target">
                         <option value="">Select Target</option>
                       </select>
                       <PokemonPicker selectId="status-target-select" />
                     </div>
-                    {/* Stat Modification */}
-                    <div className="space-y-1">
+
+                    <div className="border-t border-outline-variant pt-2 mt-2">
                       <div className="grid grid-cols-3 gap-1 mb-1">
-                        <label className="text-on-surface-variant uppercase tracking-wider text-sm">STAT</label>
-                        <label className="text-on-surface-variant uppercase tracking-wider text-sm">TYPE</label>
-                        <label className="text-on-surface-variant uppercase tracking-wider text-sm">VAL</label>
+                        <label className="text-on-surface-variant uppercase tracking-wider text-[10px]">STAT</label>
+                        <label className="text-on-surface-variant uppercase tracking-wider text-[10px]">TYPE</label>
+                        <label className="text-on-surface-variant uppercase tracking-wider text-[10px]">VAL</label>
                       </div>
                       <div className="grid grid-cols-3 gap-1">
                         <select id="stat-select" className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-sm text-on-surface focus:border-yellow-400 focus:ring-0">
@@ -221,6 +221,23 @@ export default function ArenaView() {
                         UPDATE
                       </button>
                     </div>
+
+                    <div className="border-t border-outline-variant pt-2 mt-2">
+                      <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-[10px]">MGMT POKÉMON</label>
+                      <select id="management-pokemon-select" className="sr-only" aria-label="Select Pokémon for Management">
+                        <option value="">Select</option>
+                      </select>
+                      <PokemonPicker selectId="management-pokemon-select" />
+                    </div>
+
+                    <div className="grid grid-cols-5 gap-1 mt-2">
+                      <button id="evolve-btn" onClick={act('handleEvolve')} className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">EVO</button>
+                      <button id="devolve-btn" onClick={act('handleDevolve')} className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">DEVO</button>
+                      <button id="change-form-btn" onClick={act('openFormChangeModal')} className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">FORM</button>
+                      <button id="revive-btn" onClick={act('handleRevive')} className="bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">REV</button>
+                      <button id="trade-btn" onClick={act('openTradeModal')} className="bg-amber-600 hover:bg-amber-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">TRD</button>
+                    </div>
+
                   </div>
                 </div>
 
@@ -281,27 +298,6 @@ export default function ArenaView() {
                         <div className="flex justify-between text-yellow-500/80"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Ctrl+Y</kbd> Redo</span></div>
                         <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Esc</kbd> Close Modal</span></div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Management */}
-                <div className="control-panel-mesh p-2 group">
-                  <h4 className="text-yellow-400 font-label text-sm mb-3 uppercase tracking-widest text-glow">Management</h4>
-                  <div className="space-y-2 text-sm font-body">
-                    <div>
-                      <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-sm">POKÉMON</label>
-                      <select id="management-pokemon-select" className="sr-only" aria-label="Select Pokémon for Management">
-                        <option value="">Select</option>
-                      </select>
-                      <PokemonPicker selectId="management-pokemon-select" />
-                    </div>
-                    <div className="grid grid-cols-5 gap-1 mt-2">
-                      <button id="evolve-btn" onClick={act('handleEvolve')} className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">EVO</button>
-                      <button id="devolve-btn" onClick={act('handleDevolve')} className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">DEVO</button>
-                      <button id="change-form-btn" onClick={act('openFormChangeModal')} className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">FORM</button>
-                      <button id="revive-btn" onClick={act('handleRevive')} className="bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">REV</button>
-                      <button id="trade-btn" onClick={act('openTradeModal')} className="bg-amber-600 hover:bg-amber-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">TRD</button>
                     </div>
                   </div>
                 </div>

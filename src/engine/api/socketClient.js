@@ -940,26 +940,22 @@ export class MultiplayerManager {
             `).join('')}
         `;
 
-        queueContainer.onclick = null;
-
-        // Attach listeners programmatically to bypass any inline onclick/React boundary issues
-        queueContainer.querySelectorAll('.wildcard-rng-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        // Use robust event delegation to bypass any DOM updates or re-render issues
+        queueContainer.onclick = (e) => {
+            const rngBtn = e.target.closest('.wildcard-rng-btn');
+            const pickBtn = e.target.closest('.wildcard-pick-btn');
+            if (rngBtn) {
                 e.preventDefault();
                 e.stopPropagation();
-                const pid = btn.getAttribute('data-pid');
+                const pid = rngBtn.getAttribute('data-pid');
                 this.assignRandomPokemon(pid).catch(err => alert('RNG Error: ' + err.message));
-            });
-        });
-
-        queueContainer.querySelectorAll('.wildcard-pick-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            } else if (pickBtn) {
                 e.preventDefault();
                 e.stopPropagation();
-                const pid = btn.getAttribute('data-pid');
+                const pid = pickBtn.getAttribute('data-pid');
                 this.assignSpecificPokemon(pid).catch(err => alert('PICK Error: ' + err.message));
-            });
-        });
+            }
+        };
     }
 
     updateRoomUI(data) {
@@ -991,28 +987,24 @@ export class MultiplayerManager {
             </div>
         `).join('');
 
-        playerList.onclick = null;
-
-        // Attach listeners programmatically to bypass any inline onclick/React boundary issues
-        playerList.querySelectorAll('.mp-rng-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        // Use robust event delegation to bypass any React DOM updates or re-render issues
+        playerList.onclick = (e) => {
+            const rngBtn = e.target.closest('.mp-rng-btn');
+            const pickBtn = e.target.closest('.mp-pick-btn');
+            if (rngBtn) {
                 e.preventDefault();
                 e.stopPropagation();
-                const pid = btn.getAttribute('data-pid');
-                console.log('[Multiplayer] RNG clicked programmatically', pid);
+                const pid = rngBtn.getAttribute('data-pid');
+                console.log('[Multiplayer] Delegated RNG click', pid);
                 this.assignRandomPokemon(pid).catch(err => alert('RNG Error: ' + err.message));
-            });
-        });
-
-        playerList.querySelectorAll('.mp-pick-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            } else if (pickBtn) {
                 e.preventDefault();
                 e.stopPropagation();
-                const pid = btn.getAttribute('data-pid');
-                console.log('[Multiplayer] PICK clicked programmatically', pid);
+                const pid = pickBtn.getAttribute('data-pid');
+                console.log('[Multiplayer] Delegated PICK click', pid);
                 this.assignSpecificPokemon(pid).catch(err => alert('PICK Error: ' + err.message));
-            });
-        });
+            }
+        };
         
         const startBtn = document.getElementById('start-game-btn');
         if (startBtn) {

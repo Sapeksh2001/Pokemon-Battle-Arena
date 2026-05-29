@@ -48,7 +48,7 @@ flowchart TD
 | STAB + terrain boost multipliers | ✅ |
 | Radial HP gauge with color gradient | ✅ |
 | Evolve / Devolve / Revive / Form Change | ✅ |
-| Trade Pokémon with multi-tier selection | ✅ |
+| Trade Pokémon with tier selection | ✅ |
 | Shuffle moves on revive + Manual reshuffle | ✅ |
 | Dynamic terrain engine (18 terrain types) | ✅ |
 | Save / Load game (Firebase + JSON) | ✅ |

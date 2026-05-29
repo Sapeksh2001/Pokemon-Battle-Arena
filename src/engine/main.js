@@ -1278,8 +1278,8 @@ export class PokemonBattleArena {
         this.history.snapshot(this.gs);
         await this.ensureDatabaseLoaded();
 
-        const flatPool = this.multiplayer._getFlattenedPool();
         const tiersArray = Array.isArray(selectedTiers) ? selectedTiers : [selectedTiers];
+        const flatPool = this.multiplayer._getFlattenedPool();
         const pool = flatPool.filter(p => tiersArray.includes(p._computedTier));
 
         if (pool.length === 0) {

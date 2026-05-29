@@ -49,13 +49,12 @@ export default function Modals() {
     );
   };
 
-  const toggleTradeTier = (tierId) => {
-    setTradeSelectedTiers(prev => {
-      const next = prev.includes(tierId) 
-        ? prev.filter(t => t !== tierId) 
-        : [...prev, tierId];
-      return next.length > 0 ? next : prev; // Prevent completely empty selection
-    });
+  const toggleTradeSelectedTier = (tierId) => {
+    setTradeSelectedTiers(prev => 
+      prev.includes(tierId) 
+        ? (prev.length > 1 ? prev.filter(t => t !== tierId) : prev)
+        : [...prev, tierId]
+    );
   };
 
   const handleStartQuickPlay = () => {
@@ -498,25 +497,11 @@ export default function Modals() {
               <div className="players-section bg-surface-container border-2 border-outline-variant flex-1 flex flex-col">
                 <div className="bg-surface-container-high px-4 py-2 border-b-2 border-outline-variant flex justify-between items-center">
                   <h3 className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Players in Room</h3>
-                  <select 
-                    id="rng-tier-select" 
-                    className="bg-surface-container-lowest text-[8px] text-yellow-400 border border-outline-variant p-1 uppercase tracking-widest outline-none focus:border-yellow-400 font-bold" 
-                    style={{ display: 'none' }}
-                    onChange={async (e) => {
-                      if (window.arena?.multiplayer) {
-                        const val = e.target.value;
-                        const tiers = val === 'any' ? ['any'] : [val];
-                        await window.arena.multiplayer.updateRoomSettings({ selectedTiers: tiers });
-                      }
-                    }}
-                  >
+                  <select id="rng-tier-select" className="bg-surface-container-lowest text-[8px] text-yellow-400 border border-outline-variant p-1 uppercase tracking-widest outline-none focus:border-yellow-400" style={{ display: 'none' }}>
                     <option value="any">Any Tier</option>
-                    <option value="Basic">Basic</option>
-                    <option value="Mid">Mid</option>
-                    <option value="Final">Final</option>
-                    <option value="Legendary">Legendary</option>
-                    <option value="Mythical">Mythical</option>
-                    <option value="Ultra Beast">Ultra Beast</option>
+                    <option value="OU">OU (Overused)</option>
+                    <option value="UU">UU (Underused)</option>
+                    <option value="Uber">Uber</option>
                   </select>
                 </div>
                 <div id="room-player-list" className="p-3 space-y-2 overflow-y-auto flex-1 max-h-[250px] font-body">
@@ -598,7 +583,7 @@ export default function Modals() {
               {['Basic', 'Mid', 'Final', 'Legendary', 'Mythical', 'Ultra Beast'].map(tier => (
                 <button
                   key={tier}
-                  onClick={() => toggleTradeTier(tier)}
+                  onClick={() => toggleTradeSelectedTier(tier)}
                   className={`text-[9px] font-bold uppercase tracking-widest p-2 border transition-all ${
                     tradeSelectedTiers.includes(tier)
                       ? 'bg-amber-500 text-black border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]'

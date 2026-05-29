@@ -218,23 +218,23 @@ button, input, select {
 
 /* --- ADAPTIVE PLAYER GRID --- */
 #player-grid {
-    display: grid;
-    /* By default, we use grid, let media queries override columns */
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
     gap: 1.5rem;
+    flex-wrap: wrap;
     width: 100%;
     height: 100%;
     position: relative;
     z-index: 10;
     padding: 1rem;
-    /* Ensure rows can stretch to fill available space evenly */
-    grid-auto-rows: 1fr;
 }
 
 /* Cards grow to fill space inside their grid cells */
 .player-card {
-    min-width: 0;
-    width: 100%;
+    flex: 1 1 240px;
+    max-width: 320px;
+    min-width: 200px;
     height: 100%;
 }
 

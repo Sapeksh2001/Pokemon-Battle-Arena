@@ -5,10 +5,10 @@ import { Pokemon } from './Pokemon.js';
 // ==========================================
 
 export class Player {
-    constructor(id, name) {
+    constructor(id, name, teamSize = 6) {
         this.id = id;
         this.name = name;
-        this.team = Array(6).fill(null); // Array<Pokemon|null>
+        this.team = Array(teamSize).fill(null); // Array<Pokemon|null>
         this.activePokemonIndex = 0;
     }
 
@@ -60,7 +60,7 @@ export class Player {
     }
 
     static fromJSON(json, db) {
-        const player = new Player(json.id, json.name);
+        const player = new Player(json.id, json.name, json.team ? json.team.length : 6);
         player.team = json.team.map(t => (t ? Pokemon.fromJSON(t, db) : null));
         player.activePokemonIndex = json.activePokemonIndex;
         return player;

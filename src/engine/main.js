@@ -232,11 +232,34 @@ export class PokemonBattleArena {
         const name = input?.value.trim();
         if (!name) return;
 
-        const player = new Player(String(Date.now()), name);
+        const sizeInput = document.getElementById('new-player-team-size');
+        const modeInput = document.getElementById('new-player-team-mode');
+        const count = sizeInput ? parseInt(sizeInput.value) : 6;
+        const mode = modeInput ? modeInput.value : 'manual';
+
+        const player = new Player(String(Date.now()), name, count);
+
+        if (mode === 'random') {
+            let pool = this.db.filteredNames;
+            if (!pool || pool.length === 0) pool = this.db.allNames || [];
+            if (pool.length > 0) {
+                for (let i = 0; i < count; i++) {
+                    const randomName = pool[Math.floor(Math.random() * pool.length)];
+                    const r = this.db.find(randomName);
+                    if (r) {
+                        player.setSlot(i, new Pokemon(r.foundNode, r.baseNode));
+                    }
+                }
+            }
+        }
+
         this.gs.players.push(player);
         input.value = '';
         this.renderer.renderAll();
-        this.openTeamManager(player.id);
+
+        if (mode === 'manual') {
+            this.openTeamManager(player.id);
+        }
 
         // Autosave Local State
         this.saveLocalState();
@@ -554,7 +577,7 @@ export class PokemonBattleArena {
         if (!container) return;
         container.innerHTML = '';
 
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < player.team.length; i++) {
             const pokemon = player.team[i];
             const slot = document.createElement('div');
             slot.className = 'bg-transparent p-2 text-center cursor-pointer transition-all hover:scale-110 relative overflow-visible h-full flex flex-col items-center justify-between min-h-[120px] border border-transparent hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]';

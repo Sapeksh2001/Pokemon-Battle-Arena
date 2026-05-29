@@ -245,15 +245,33 @@ export default function ArenaView() {
                       <button id="generate-number-btn" onClick={handleRNG} className="w-full font-bold uppercase step-animation transition-colors mt-1">ROLL</button>
                     </div>
                     <div className="border-t border-outline-variant pt-2 mt-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-sm">PLAYER</label>
-                          <input id="new-player-name" type="text" placeholder="Name"
-                            className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-sm text-on-surface placeholder:text-[#40485d] focus:border-yellow-400 focus:ring-0" />
+                      <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-[10px]">ADD PLAYER</label>
+                      <div className="space-y-1.5 text-xs">
+                        <input id="new-player-name" type="text" placeholder="Name"
+                          className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-[11px] text-on-surface placeholder:text-[#40485d] focus:border-yellow-400 focus:ring-0" />
+                        
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <div>
+                            <label className="text-on-surface-variant uppercase tracking-wider text-[9px] block">TEAM SIZE</label>
+                            <select id="new-player-team-size" defaultValue="6" className="w-full bg-surface-container-lowest border border-outline-variant p-1 text-[11px] text-on-surface focus:border-yellow-400 focus:ring-0">
+                              <option value="1">1 Pokémon</option>
+                              <option value="2">2 Pokémon</option>
+                              <option value="3">3 Pokémon</option>
+                              <option value="4">4 Pokémon</option>
+                              <option value="5">5 Pokémon</option>
+                              <option value="6">6 Pokémon</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-on-surface-variant uppercase tracking-wider text-[9px] block">ASSIGN</label>
+                            <select id="new-player-team-mode" className="w-full bg-surface-container-lowest border border-outline-variant p-1 text-[11px] text-on-surface focus:border-yellow-400 focus:ring-0">
+                              <option value="manual">Manual (+)</option>
+                              <option value="random">Random</option>
+                            </select>
+                          </div>
                         </div>
-                        <div className="flex items-end">
-                          <button id="add-player-btn" onClick={act('addPlayer')} className="w-full font-bold uppercase step-animation transition-colors">ADD</button>
-                        </div>
+
+                        <button id="add-player-btn" onClick={act('addPlayer')} className="w-full font-bold uppercase step-animation transition-colors mt-1 py-1.5 text-[11px] bg-secondary-container border border-outline-variant hover:bg-[#699cff]">ADD PLAYER</button>
                       </div>
                     </div>
                     <div className="border-t border-outline-variant pt-2 mt-2">

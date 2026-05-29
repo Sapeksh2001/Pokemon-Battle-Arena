@@ -437,12 +437,12 @@ export class UIRenderer {
             const shortNames = { none: 'Wth: None', sun: 'Wth: Sun', rain: 'Wth: Rain', sandstorm: 'Wth: Sand', hail: 'Wth: Hail' };
             btn.textContent = shortNames[w] || 'Wth';
 
-            btn.className = 'p-1 border border-outline-variant text-xs uppercase font-bold tracking-widest transition-colors step-animation ' +
-                (w === 'none' ? 'bg-surface-variant hover:bg-surface-bright text-secondary' :
-                    w === 'sun' ? 'bg-yellow-400 hover:bg-yellow-300 text-black' :
-                        w === 'rain' ? 'bg-[#699cff] hover:bg-[#8bb3ff] text-white' :
-                            w === 'sandstorm' ? 'bg-[#ca8a04] hover:bg-[#a16207] text-white' :
-                                'bg-[#00e5ff] hover:bg-[#00b8d4] text-black');
+            btn.className = 'step-animation ' +
+                (w === 'none' ? 'weather-none' :
+                    w === 'sun' ? 'weather-sun' :
+                        w === 'rain' ? 'weather-rain' :
+                            w === 'sandstorm' ? 'weather-sandstorm' :
+                                'weather-hail');
         }
     }
 

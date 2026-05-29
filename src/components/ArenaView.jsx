@@ -115,7 +115,7 @@ export default function ArenaView() {
 
             {/* LEFT: Controls Grid */}
             <div className="flex-1 min-w-0">
-              <div className="grid lg:grid-cols-5 gap-3 h-full">
+              <div className="grid lg:grid-cols-4 gap-3 h-full">
 
                 {/* Attack Command */}
                 <div className="control-panel-mesh p-2 group">
@@ -173,14 +173,14 @@ export default function ArenaView() {
                   <h4 className="text-yellow-400 font-label text-sm mb-3 uppercase tracking-widest text-glow">Status &amp; Stats</h4>
                   <div className="space-y-2 text-sm font-body">
                     <div className="grid grid-cols-3 gap-1">
-                      <button id="curse-btn" data-status="curse" className="status-btn bg-[#6e5f00] hover:bg-yellow-600 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>skull</span>CRS</button>
-                      <button id="poison-btn" data-status="poison" className="status-btn bg-[#9333ea] hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>science</span>PSN</button>
-                      <button id="paralyze-btn" data-status="paralyze" className="status-btn bg-[#eab308] hover:bg-yellow-400 text-[#342c00] p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>PAR</button>
+                      <button id="curse-btn" data-status="curse" className="status-btn step-animation flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>skull</span>CRS</button>
+                      <button id="poison-btn" data-status="poison" className="status-btn step-animation flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>science</span>PSN</button>
+                      <button id="paralyze-btn" data-status="paralyze" className="status-btn step-animation flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>PAR</button>
                     </div>
                     <div className="grid grid-cols-3 gap-1">
-                      <button id="weather-btn" className="bg-[#2563eb] hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm">WTH</button>
-                      <button id="burn-btn" data-status="burn" className="status-btn bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>BRN</button>
-                      <button id="toxic-btn" data-status="bad_poison" className="status-btn bg-[#581c87] hover:bg-purple-800 text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>coronavirus</span>TOX</button>
+                      <button id="weather-btn" className="step-animation text-center">WTH</button>
+                      <button id="burn-btn" data-status="burn" className="status-btn step-animation flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>BRN</button>
+                      <button id="toxic-btn" data-status="bad_poison" className="status-btn step-animation flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>coronavirus</span>TOX</button>
                     </div>
                     <div>
                       <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-sm">TARGET</label>
@@ -217,7 +217,7 @@ export default function ArenaView() {
                           className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-sm text-on-surface placeholder:text-[#40485d] focus:border-yellow-400 focus:ring-0"
                           placeholder="Val" />
                       </div>
-                      <button id="update-stat-btn" onClick={act('handleStatUpdate')} className="w-full bg-secondary-container text-white hover:bg-[#004da8] p-2 border border-black font-bold uppercase step-animation transition-colors mt-1">
+                      <button id="update-stat-btn" onClick={act('handleStatUpdate')} className="w-full font-bold uppercase step-animation transition-colors mt-1">
                         UPDATE
                       </button>
                     </div>
@@ -231,7 +231,7 @@ export default function ArenaView() {
                     <div className="text-center">
                       <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-sm">RNG (1-100)</label>
                       <div id="random-number-display" className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-2xl font-bold text-yellow-400 text-glow tracking-widest">--</div>
-                      <button id="generate-number-btn" onClick={handleRNG} className="w-full bg-tertiary-container text-[#004a1d] hover:bg-[#5bf083] p-1 border border-white font-bold uppercase step-animation transition-colors mt-1">ROLL</button>
+                      <button id="generate-number-btn" onClick={handleRNG} className="w-full font-bold uppercase step-animation transition-colors mt-1">ROLL</button>
                     </div>
                     <div className="border-t border-outline-variant pt-2 mt-2">
                       <div className="grid grid-cols-2 gap-2">
@@ -241,8 +241,45 @@ export default function ArenaView() {
                             className="w-full bg-surface-container-lowest border border-outline-variant p-2 text-sm text-on-surface placeholder:text-[#40485d] focus:border-yellow-400 focus:ring-0" />
                         </div>
                         <div className="flex items-end">
-                          <button id="add-player-btn" onClick={act('addPlayer')} className="w-full bg-surface-variant text-secondary border border-secondary hover:bg-surface-bright p-2 font-bold uppercase step-animation transition-colors">ADD</button>
+                          <button id="add-player-btn" onClick={act('addPlayer')} className="w-full font-bold uppercase step-animation transition-colors">ADD</button>
                         </div>
+                      </div>
+                    </div>
+                    <div className="border-t border-outline-variant pt-2 mt-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <button id="undo-btn"
+                          onClick={handleUndo}
+                          className="w-full font-bold uppercase step-animation transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1">
+                          <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>undo</span>UNDO
+                        </button>
+                        <button id="redo-btn"
+                          onClick={handleRedo}
+                          className="w-full font-bold uppercase step-animation transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1">
+                          <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>redo</span>REDO
+                        </button>
+                      </div>
+                    </div>
+                    <div className="border-t border-outline-variant pt-2 mt-2">
+                      <button id="toggle-shortcuts"
+                        onClick={() => setShowShortcuts(!showShortcuts)}
+                        className="w-full text-left text-sm transition-colors flex justify-between items-center uppercase tracking-wider font-bold">
+                        <span><span className="material-symbols-outlined text-[18px] align-middle">keyboard</span> Shortcuts</span>
+                        <span className={`material-symbols-outlined text-[18px] transition-transform ${showShortcuts ? 'rotate-180' : ''}`} id="shortcuts-chevron">expand_more</span>
+                      </button>
+                      <div id="shortcuts-list" className={`${showShortcuts ? 'block' : 'hidden'} text-xs font-body text-slate-300 space-y-1.5 pl-2 border-l border-yellow-600 mt-2 max-h-[150px] overflow-y-auto custom-scrollbar pr-2`}>
+                        <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">1-6</kbd> Select Player</span></div>
+                        <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Space</kbd> End Round</span></div>
+                        <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">P</kbd> Physical Atk</span></div>
+                        <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">S</kbd> Special Atk</span></div>
+                        <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">E</kbd> Evolve</span></div>
+                        <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">D</kbd> Devolve</span></div>
+                        <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">F</kbd> Form Change</span></div>
+                        <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">R</kbd> Random #</span></div>
+                        <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">T</kbd> Toggle Timer</span></div>
+                        <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Shift+T</kbd> Reset Timer</span></div>
+                        <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Ctrl+Z</kbd> Undo</span></div>
+                        <div className="flex justify-between text-yellow-500/80"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Ctrl+Y</kbd> Redo</span></div>
+                        <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Esc</kbd> Close Modal</span></div>
                       </div>
                     </div>
                   </div>
@@ -276,53 +313,11 @@ export default function ArenaView() {
                   </div>
                 </div>
 
-                {/* Round & History */}
-                <div className="control-panel-mesh p-2 group">
-                  <h4 className="text-yellow-400 font-label text-sm mb-3 uppercase tracking-widest text-glow">Round &amp; History</h4>
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <button id="undo-btn"
-                      onClick={handleUndo}
-                      className="bg-surface-variant text-yellow-400 hover:bg-surface-bright p-2 border border-[#40485d] font-bold uppercase step-animation transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                      <span className="material-symbols-outlined text-[20px] align-middle" style={{ fontVariationSettings: "'FILL' 1" }}>undo</span> UNDO
-                      <div className="text-[10px] text-on-surface-variant mt-0.5 tracking-wider">Ctrl+Z</div>
-                    </button>
-                    <button id="redo-btn"
-                      onClick={handleRedo}
-                      className="bg-surface-variant text-yellow-400 hover:bg-surface-bright p-2 border border-[#40485d] font-bold uppercase step-animation transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                      <span className="material-symbols-outlined text-[20px] align-middle" style={{ fontVariationSettings: "'FILL' 1" }}>redo</span> REDO
-                      <div className="text-[10px] text-on-surface-variant mt-0.5 tracking-wider">Ctrl+⇧+Z / Ctrl+Y</div>
-                    </button>
-                  </div>
-                  <div className="border-t-2 border-outline-variant pt-2">
-                    <button id="toggle-shortcuts"
-                      onClick={() => setShowShortcuts(!showShortcuts)}
-                      className="w-full text-left text-sm text-on-surface-variant hover:text-white transition-colors flex justify-between items-center uppercase tracking-wider font-bold">
-                      <span><span className="material-symbols-outlined text-[18px] align-middle">keyboard</span> Shortcuts</span>
-                      <span className={`material-symbols-outlined text-[18px] transition-transform ${showShortcuts ? 'rotate-180' : ''}`} id="shortcuts-chevron">expand_more</span>
-                    </button>
-                    <div id="shortcuts-list" className={`${showShortcuts ? 'block' : 'hidden'} text-xs font-body text-slate-300 space-y-1.5 pl-2 border-l-2 border-yellow-600 mt-2 max-h-[250px] overflow-y-auto custom-scrollbar pr-2`}>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">1-6</kbd> Select Player</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Space</kbd> End Round</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">P</kbd> Physical Atk</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">S</kbd> Special Atk</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">E</kbd> Evolve</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">D</kbd> Devolve</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">F</kbd> Form Change</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">R</kbd> Random #</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">T</kbd> Toggle Timer</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Shift+T</kbd> Reset Timer</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Ctrl+Z</kbd> Undo</span></div>
-                      <div className="flex justify-between text-yellow-500/80"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Ctrl+Y</kbd> Redo</span></div>
-                      <div className="flex justify-between"><span><kbd className="bg-surface-variant px-2 py-0.5 rounded border border-outline-variant text-[10px] font-mono text-white">Esc</kbd> Close Modal</span></div>
-                    </div>
-                  </div>
-                </div>
-
               </div>
             </div>
 
             {/* RIGHT: Battle Log */}
-            <div className="battle-log-panel h-full w-full lg:w-[600px] flex-shrink-0">
+            <div className="battle-log-panel h-full w-full lg:w-[800px] flex-shrink-0">
               <div className="control-panel-mesh h-full flex flex-col">
                 <div className="bg-surface-container-high px-3 py-2 border-b-2 border-outline-variant flex justify-between items-center flex-shrink-0">
                   <div className="flex items-center gap-2">

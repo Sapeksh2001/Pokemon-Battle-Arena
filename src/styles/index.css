@@ -633,6 +633,101 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 #trade-btn { background-image: linear-gradient(to bottom, #fdba74, #ea580c); }
 #physical-attack-btn:disabled, #special-attack-btn:disabled, #evolve-btn:disabled, #devolve-btn:disabled, #change-form-btn:disabled, #revive-btn:disabled, #trade-btn:disabled { background-image: linear-gradient(to bottom, #6b7280, #4b5563); cursor: not-allowed; opacity: 0.6; }
 
+/* --- STATUS & UTILITY BUTTON STYLES --- */
+.status-btn, #weather-btn, #update-stat-btn, #generate-number-btn, #add-player-btn, #undo-btn, #redo-btn, #toggle-shortcuts {
+    font-family: sans-serif;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+    border: 3px solid black !important;
+    border-radius: 9999px !important;
+    padding: 0.35rem 0.5rem !important;
+    transition: transform 0.1s ease-out, background 0.15s ease-in-out;
+    cursor: pointer;
+    text-align: center;
+}
+
+.status-btn:active, #weather-btn:active, #update-stat-btn:active, #generate-number-btn:active, #add-player-btn:active, #undo-btn:active, #redo-btn:active, #toggle-shortcuts:active {
+    transform: scale(0.95);
+}
+
+/* Gradients for status buttons */
+#curse-btn { background-image: linear-gradient(to bottom, #a16207, #713f12) !important; }
+#curse-btn:hover { background-image: linear-gradient(to bottom, #ca8a04, #a16207) !important; }
+
+#poison-btn { background-image: linear-gradient(to bottom, #c084fc, #9333ea) !important; }
+#poison-btn:hover { background-image: linear-gradient(to bottom, #e9d5ff, #a855f7) !important; }
+
+#paralyze-btn { background-image: linear-gradient(to bottom, #fde047, #ca8a04) !important; color: white !important; }
+#paralyze-btn:hover { background-image: linear-gradient(to bottom, #fef08a, #eab308) !important; }
+
+#burn-btn { background-image: linear-gradient(to bottom, #f87171, #dc2626) !important; }
+#burn-btn:hover { background-image: linear-gradient(to bottom, #fca5a5, #ef4444) !important; }
+
+#toxic-btn { background-image: linear-gradient(to bottom, #d8b4fe, #581c87) !important; }
+#toxic-btn:hover { background-image: linear-gradient(to bottom, #f3e8ff, #7e22ce) !important; }
+
+/* Weather Button */
+#weather-btn {
+    background-image: linear-gradient(to bottom, #64748b, #334155) !important;
+}
+#weather-btn.weather-sun {
+    background-image: linear-gradient(to bottom, #fde047, #ca8a04) !important;
+}
+#weather-btn.weather-rain {
+    background-image: linear-gradient(to bottom, #60a5fa, #1d4ed8) !important;
+}
+#weather-btn.weather-sandstorm {
+    background-image: linear-gradient(to bottom, #fbbf24, #b45309) !important;
+}
+#weather-btn.weather-hail {
+    background-image: linear-gradient(to bottom, #67e8f9, #0891b2) !important;
+}
+
+/* Update Stat Button */
+#update-stat-btn {
+    background-image: linear-gradient(to bottom, #60a5fa, #2563eb) !important;
+}
+#update-stat-btn:hover {
+    background-image: linear-gradient(to bottom, #93c5fd, #1d4ed8) !important;
+}
+
+/* Utility Buttons */
+#generate-number-btn {
+    background-image: linear-gradient(to bottom, #86efac, #16a34a) !important;
+}
+#generate-number-btn:hover {
+    background-image: linear-gradient(to bottom, #bbf7d0, #15803d) !important;
+}
+
+#add-player-btn {
+    background-image: linear-gradient(to bottom, #94a3b8, #475569) !important;
+}
+#add-player-btn:hover {
+    background-image: linear-gradient(to bottom, #cbd5e1, #334155) !important;
+}
+
+#undo-btn {
+    background-image: linear-gradient(to bottom, #fdba74, #ea580c) !important;
+}
+#undo-btn:hover {
+    background-image: linear-gradient(to bottom, #fed7aa, #c2410c) !important;
+}
+
+#redo-btn {
+    background-image: linear-gradient(to bottom, #fca5a5, #dc2626) !important;
+}
+#redo-btn:hover {
+    background-image: linear-gradient(to bottom, #fecaca, #b91c1c) !important;
+}
+
+#toggle-shortcuts {
+    background-image: linear-gradient(to bottom, #94a3b8, #475569) !important;
+}
+#toggle-shortcuts:hover {
+    background-image: linear-gradient(to bottom, #cbd5e1, #334155) !important;
+}
+
 
 /* --- ANIMATION KEYFRAMES --- */
 /* Defines the animations used throughout the application. */
@@ -709,7 +804,7 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 
 /* --- Battle log panel (replaces fixed w-[640px]) --- */
 .battle-log-panel {
-    width: 400px;
+    width: 550px;
     flex-shrink: 0;
 }
 
@@ -719,12 +814,12 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 
 /* ── DESKTOP (1400–1800px) ── */
 @media (max-width: 1800px) {
-    .battle-log-panel { width: 420px; }
+    .battle-log-panel { width: 550px; }
 }
 
 /* ── MACBOOK AIR / SMALL LAPTOP (1024–1400px) ── */
 @media (max-width: 1400px) {
-    .battle-log-panel { width: 300px; }
+    .battle-log-panel { width: 450px; }
 }
 
 /* ── TABLET LANDSCAPE / LARGE PHONE (680–1024px) ── footer auto-height */
@@ -733,10 +828,10 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
         height: auto;
     }
     .battle-log-panel {
-        width: 220px;
+        width: 320px;
     }
     /* Collapse control panel to 2 columns */
-    .arena-control-footer .grid.lg\:grid-cols-5 {
+    .arena-control-footer .grid.lg\:grid-cols-4 {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 }
@@ -747,7 +842,7 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
     .arena-control-footer {
         height: auto;
     }
-    .arena-control-footer .grid.lg\:grid-cols-5 {
+    .arena-control-footer .grid.lg\:grid-cols-4 {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 }
@@ -758,7 +853,7 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
     .arena-control-footer {
         height: auto;
     }
-    .arena-control-footer .grid.lg\:grid-cols-5 {
+    .arena-control-footer .grid.lg\:grid-cols-4 {
         grid-template-columns: 1fr !important;
     }
     /* Compact card padding on phone */
@@ -968,7 +1063,9 @@ button:disabled:hover {
 
 #undo-btn:disabled,
 #redo-btn:disabled {
-    background-image: linear-gradient(to bottom, #4b5563, #374151);
+    background-image: linear-gradient(to bottom, #6b7280, #4b5563) !important;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 /* ============================================
    MULTIPLAYER LOBBY STYLES

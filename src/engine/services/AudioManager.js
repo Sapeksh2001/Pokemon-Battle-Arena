@@ -22,6 +22,9 @@ export class AudioManager {
         this._ready = true;
     }
 
+    /**
+     * @param {'click'|'attack'|'status'|'confirm'|'error'|'heal'|'faint'|'evolve'} action
+     */
     play(action) {
         if (!this._ready) return;
         const actions = {
@@ -34,11 +37,7 @@ export class AudioManager {
             faint: () => this._synth.triggerAttackRelease('C3', '4n'),
             evolve: () => this._poly.triggerAttackRelease(['C4', 'E4', 'G4', 'C5'], '4n'),
         };
-        try {
-            actions[action]?.();
-        } catch (e) {
-            console.warn('[Audio] Failed to play action:', action, e.message);
-        }
+        actions[action]?.();
     }
 
     /** Play a Pokémon's cry audio file. */

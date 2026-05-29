@@ -15,10 +15,10 @@ function generateRoomCode() {
 
 
 function generatePlayerId() {
-    const saved = localStorage.getItem('pba_playerId');
+    const saved = sessionStorage.getItem('pba_playerId');
     if (saved) return saved;
     const newId = Math.random().toString(36).substring(2, 10);
-    localStorage.setItem('pba_playerId', newId);
+    sessionStorage.setItem('pba_playerId', newId);
     return newId;
 }
 
@@ -113,8 +113,7 @@ export class MultiplayerManager {
     }
 
     _getFlattenedPool() {
-        const rawData = this.arena?.db?._raw || window.MergedPokemonData;
-        if (!rawData || Object.keys(rawData).length === 0) return [];
+        if (typeof window.MergedPokemonData === 'undefined') return [];
         const flat = [];
         
         const recurse = (obj, parentTier) => {
@@ -138,7 +137,7 @@ export class MultiplayerManager {
             }
         };
 
-        Object.values(rawData).forEach(p => recurse(p, p.Tier || p.tier));
+        Object.values(window.MergedPokemonData).forEach(p => recurse(p, p.Tier || p.tier));
         console.log('[Multiplayer] Pool size:', flat.length);
         return flat;
     }
@@ -154,7 +153,6 @@ export class MultiplayerManager {
         this.roomCode = roomCode;
         this.isHost = true;
         this.trainerName = trainerName;
-        this.playerId = Math.random().toString(36).substring(2, 10);
 
         const roomRef = ref(db, `rooms/${roomCode}`);
         const playerRef = ref(db, `rooms/${roomCode}/players/${this.playerId}`);
@@ -301,7 +299,7 @@ export class MultiplayerManager {
             snapshot.forEach(child => {
                 const data = child.val();
                 const p = new Player(child.key, data.name);
-                if (data.assignedPokemonId) {
+                if (data.assignedPokemonId && window.MergedPokemonData) {
                     const result = this.arena.db.find(data.assignedPokemonId);
                     if (result) {
                         p.team[0] = new Pokemon(result.foundNode, result.baseNode);
@@ -636,13 +634,14 @@ export class MultiplayerManager {
         // Read settings from Firebase for multi-tier selection
         const roomSnap = await get(ref(db, `rooms/${this.roomCode}`));
         const settings = roomSnap.exists() ? roomSnap.val().settings : null;
-        const selectedTiersLower = (settings?.selectedTiers || ['any']).map(t => t.toLowerCase());
-        console.log('[MULTIPLAYER] RNG Tiers:', selectedTiersLower);
+        const selectedTiers = settings?.selectedTiers || ['any'];
+
+        console.log('[MULTIPLAYER] RNG Tiers:', selectedTiers);
 
         // Build filtered pool
         let pool = fullPool;
-        if (selectedTiersLower.length > 0 && !selectedTiersLower.includes('any')) {
-            pool = fullPool.filter(p => p._computedTier && selectedTiersLower.includes(p._computedTier.toLowerCase()));
+        if (selectedTiers.length > 0 && !selectedTiers.includes('any')) {
+            pool = fullPool.filter(p => selectedTiers.includes(p._computedTier));
         }
 
         if (pool.length === 0) {
@@ -730,12 +729,9 @@ export class MultiplayerManager {
         const roomSnap = await get(ref(db, `rooms/${this.roomCode}`));
         const settings = roomSnap.exists() ? roomSnap.val().settings : null;
         const selectedTiers = settings?.selectedTiers || [];
-        const selectedTiersLower = selectedTiers.map(t => t.toLowerCase());
-        const useTierFilter = selectedTiersLower.length > 0 && !selectedTiersLower.includes('any');
+        const useTierFilter = selectedTiers.length > 0 && !selectedTiers.includes('any');
         const fullPool = this._getFlattenedPool();
-        const filteredPool = useTierFilter 
-            ? fullPool.filter(p => p._computedTier && selectedTiersLower.includes(p._computedTier.toLowerCase())) 
-            : fullPool;
+        const filteredPool = useTierFilter ? fullPool.filter(p => selectedTiers.includes(p._computedTier)) : fullPool;
         const allowedNames = new Set(filteredPool.map(p => (p.Name || p.name)));
         const tierLabel = useTierFilter ? `Tiers: ${selectedTiers.join(', ')}` : 'All Tiers';
 
@@ -920,42 +916,25 @@ export class MultiplayerManager {
             ${waitingPlayers.map(p => `
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid #1e293b;">
                     <span style="color:#fff;font-size:12px;">${p.name}</span>
-                    <button class="wildcard-rng-btn"
+                    <button
                         style="background:#1e293b;border:1px solid #5bf083;color:#5bf083;font-size:9px;font-weight:700;letter-spacing:.08em;padding:3px 8px;cursor:pointer;text-transform:uppercase;"
                         onmouseover="this.style.background='#5bf083';this.style.color='#020617';"
                         onmouseout="this.style.background='#1e293b';this.style.color='#5bf083';"
-                        data-pid="${p.id}"
-                        onclick="window._mpRng && window._mpRng('${p.id}')">
+                        onclick="window._mpRng('${p.id}')">
                         RNG
                     </button>
-                    <button class="wildcard-pick-btn"
+                    <button
                         style="background:#1e293b;border:1px solid #5bf083;color:#5bf083;font-size:9px;font-weight:700;letter-spacing:.08em;padding:3px 8px;cursor:pointer;text-transform:uppercase;margin-left:4px;"
                         onmouseover="this.style.background='#5bf083';this.style.color='#020617';"
                         onmouseout="this.style.background='#1e293b';this.style.color='#5bf083';"
-                        data-pid="${p.id}"
-                        onclick="window._mpPick && window._mpPick('${p.id}')">
+                        onclick="window._mpPick('${p.id}')">
                         PICK
                     </button>
                 </div>
             `).join('')}
         `;
 
-        // Use robust event delegation to bypass any DOM updates or re-render issues
-        queueContainer.onclick = (e) => {
-            const rngBtn = e.target.closest('.wildcard-rng-btn');
-            const pickBtn = e.target.closest('.wildcard-pick-btn');
-            if (rngBtn) {
-                e.preventDefault();
-                e.stopPropagation();
-                const pid = rngBtn.getAttribute('data-pid');
-                this.assignRandomPokemon(pid).catch(err => alert('RNG Error: ' + err.message));
-            } else if (pickBtn) {
-                e.preventDefault();
-                e.stopPropagation();
-                const pid = pickBtn.getAttribute('data-pid');
-                this.assignSpecificPokemon(pid).catch(err => alert('PICK Error: ' + err.message));
-            }
-        };
+        queueContainer.onclick = null;
     }
 
     updateRoomUI(data) {
@@ -977,8 +956,8 @@ export class MultiplayerManager {
                 </div>
                 ${this.isHost ? `
                 <div class="flex gap-2">
-                    <button class="mp-rng-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}" onclick="window._mpRng && window._mpRng('${p.id}')">RNG</button>
-                    <button class="mp-pick-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}" onclick="window._mpPick && window._mpPick('${p.id}')">PICK</button>
+                    <button class="bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary" onclick="window._mpRng('${p.id}')">RNG</button>
+                    <button class="bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary" onclick="window._mpPick('${p.id}')">PICK</button>
                     ${p.isReady ? '<span class="text-[#5bf083] text-[10px] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-1 flex items-center">READY</span>' : ''}
                 </div>
                 ` : `
@@ -987,24 +966,7 @@ export class MultiplayerManager {
             </div>
         `).join('');
 
-        // Use robust event delegation to bypass any React DOM updates or re-render issues
-        playerList.onclick = (e) => {
-            const rngBtn = e.target.closest('.mp-rng-btn');
-            const pickBtn = e.target.closest('.mp-pick-btn');
-            if (rngBtn) {
-                e.preventDefault();
-                e.stopPropagation();
-                const pid = rngBtn.getAttribute('data-pid');
-                console.log('[Multiplayer] Delegated RNG click', pid);
-                this.assignRandomPokemon(pid).catch(err => alert('RNG Error: ' + err.message));
-            } else if (pickBtn) {
-                e.preventDefault();
-                e.stopPropagation();
-                const pid = pickBtn.getAttribute('data-pid');
-                console.log('[Multiplayer] Delegated PICK click', pid);
-                this.assignSpecificPokemon(pid).catch(err => alert('PICK Error: ' + err.message));
-            }
-        };
+        playerList.onclick = null;
         
         const startBtn = document.getElementById('start-game-btn');
         if (startBtn) {

@@ -5,7 +5,7 @@
     "rooms": {
       "$room_id": {
         ".read": true,
-        ".write": true
+        ".write": "auth != null"
       }
     }
   }

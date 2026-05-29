@@ -22466,7 +22466,46 @@ var MergedPokemonData = {
     ],
     "sprite": "https://play.pokemonshowdown.com/sprites/ani/meltan.gif",
     "cry": "https://play.pokemonshowdown.com/audio/cries/meltan.mp3",
-    "evolutions": [],
+    "evolutions": [
+      {
+        "Name": "Melmetal",
+        "stats": {
+          "hp": 474,
+          "attack": 423,
+          "defence": 423,
+          "specialAttack": 284,
+          "specialDefence": 251,
+          "speed": 183
+        },
+        "types": [
+          "Steel"
+        ],
+        "sprite": "https://play.pokemonshowdown.com/sprites/ani/melmetal.gif",
+        "cry": "https://play.pokemonshowdown.com/audio/cries/melmetal.mp3",
+        "evolutions": [],
+        "forms": {
+          "Gmax": {
+            "name": "Melmetal-Gmax",
+            "stats": {
+              "hp": 474,
+              "attack": 423,
+              "defence": 423,
+              "specialAttack": 284,
+              "specialDefence": 251,
+              "speed": 183
+            },
+            "types": [
+              "Steel"
+            ],
+            "sprite": "https://play.pokemonshowdown.com/sprites/ani/melmetal-gmax.gif",
+            "cry": "https://play.pokemonshowdown.com/audio/cries/melmetal.mp3",
+            "tier": "G-Max",
+            "isSeparateEntry": false
+          }
+        },
+        "tier": "Mythical"
+      }
+    ],
     "forms": {},
     "tier": "Mythical"
   },

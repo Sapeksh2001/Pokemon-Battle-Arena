@@ -554,7 +554,7 @@ export class UIRenderer {
             specialBtn.disabled = false;
         } else if (category === 'status') {
             physicalBtn.disabled = true;
-            physicalBtn.disabled = true;
+            specialBtn.disabled = true;
         } else {
             physicalBtn.disabled = false;
             specialBtn.disabled = false;

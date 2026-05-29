@@ -296,14 +296,7 @@ export default function ArenaView() {
                       </select>
                       <PokemonPicker selectId="management-pokemon-select" />
                     </div>
-                    <div className="grid grid-cols-2 gap-1 mt-2">
-                      <button id="switch-pokemon-btn"
-                        onClick={() => { const a = getArena?.(); if (a) { a.audio?.play('click'); window.switchActivePokemonForMgmt?.(); } }}
-                        className="col-span-2 bg-secondary-container hover:bg-[#699cff] text-white p-2 border border-black font-bold uppercase step-animation transition-colors text-sm flex items-center justify-center gap-1">
-                        <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>swap_horiz</span>SWITCH
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-5 gap-1 mt-1">
+                    <div className="grid grid-cols-5 gap-1 mt-2">
                       <button id="evolve-btn" onClick={act('handleEvolve')} className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">EVO</button>
                       <button id="devolve-btn" onClick={act('handleDevolve')} className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">DEVO</button>
                       <button id="change-form-btn" onClick={act('openFormChangeModal')} className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">FORM</button>

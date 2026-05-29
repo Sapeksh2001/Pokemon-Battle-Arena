@@ -113,7 +113,8 @@ export class MultiplayerManager {
     }
 
     _getFlattenedPool() {
-        if (typeof window.MergedPokemonData === 'undefined') return [];
+        const rawData = this.arena?.db?._raw || window.MergedPokemonData;
+        if (!rawData || Object.keys(rawData).length === 0) return [];
         const flat = [];
         
         const recurse = (obj, parentTier) => {
@@ -137,7 +138,7 @@ export class MultiplayerManager {
             }
         };
 
-        Object.values(window.MergedPokemonData).forEach(p => recurse(p, p.Tier || p.tier));
+        Object.values(rawData).forEach(p => recurse(p, p.Tier || p.tier));
         console.log('[Multiplayer] Pool size:', flat.length);
         return flat;
     }
@@ -300,7 +301,7 @@ export class MultiplayerManager {
             snapshot.forEach(child => {
                 const data = child.val();
                 const p = new Player(child.key, data.name);
-                if (data.assignedPokemonId && window.MergedPokemonData) {
+                if (data.assignedPokemonId) {
                     const result = this.arena.db.find(data.assignedPokemonId);
                     if (result) {
                         p.team[0] = new Pokemon(result.foundNode, result.baseNode);
@@ -635,14 +636,13 @@ export class MultiplayerManager {
         // Read settings from Firebase for multi-tier selection
         const roomSnap = await get(ref(db, `rooms/${this.roomCode}`));
         const settings = roomSnap.exists() ? roomSnap.val().settings : null;
-        const selectedTiers = settings?.selectedTiers || ['any'];
-
-        console.log('[MULTIPLAYER] RNG Tiers:', selectedTiers);
+        const selectedTiersLower = (settings?.selectedTiers || ['any']).map(t => t.toLowerCase());
+        console.log('[MULTIPLAYER] RNG Tiers:', selectedTiersLower);
 
         // Build filtered pool
         let pool = fullPool;
-        if (selectedTiers.length > 0 && !selectedTiers.includes('any')) {
-            pool = fullPool.filter(p => selectedTiers.includes(p._computedTier));
+        if (selectedTiersLower.length > 0 && !selectedTiersLower.includes('any')) {
+            pool = fullPool.filter(p => p._computedTier && selectedTiersLower.includes(p._computedTier.toLowerCase()));
         }
 
         if (pool.length === 0) {
@@ -730,9 +730,12 @@ export class MultiplayerManager {
         const roomSnap = await get(ref(db, `rooms/${this.roomCode}`));
         const settings = roomSnap.exists() ? roomSnap.val().settings : null;
         const selectedTiers = settings?.selectedTiers || [];
-        const useTierFilter = selectedTiers.length > 0 && !selectedTiers.includes('any');
+        const selectedTiersLower = selectedTiers.map(t => t.toLowerCase());
+        const useTierFilter = selectedTiersLower.length > 0 && !selectedTiersLower.includes('any');
         const fullPool = this._getFlattenedPool();
-        const filteredPool = useTierFilter ? fullPool.filter(p => selectedTiers.includes(p._computedTier)) : fullPool;
+        const filteredPool = useTierFilter 
+            ? fullPool.filter(p => p._computedTier && selectedTiersLower.includes(p._computedTier.toLowerCase())) 
+            : fullPool;
         const allowedNames = new Set(filteredPool.map(p => (p.Name || p.name)));
         const tierLabel = useTierFilter ? `Tiers: ${selectedTiers.join(', ')}` : 'All Tiers';
 

@@ -104,7 +104,7 @@ export default function ArenaView() {
 
         {/* Player Grid */}
         <main className="flex-1 relative flex overflow-auto p-4">
-          <div id="player-grid" className="w-full h-full">
+          <div id="player-grid" className="flex justify-evenly items-center w-full h-full pb-1 mt-1 picker-scroll no-scrollbar">
             {/* Populated dynamically by the engine */}
           </div>
         </main>

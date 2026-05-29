@@ -497,12 +497,7 @@ export default function Modals() {
               <div className="players-section bg-surface-container border-2 border-outline-variant flex-1 flex flex-col">
                 <div className="bg-surface-container-high px-4 py-2 border-b-2 border-outline-variant flex justify-between items-center">
                   <h3 className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Players in Room</h3>
-                  <select id="rng-tier-select" className="bg-surface-container-lowest text-[8px] text-yellow-400 border border-outline-variant p-1 uppercase tracking-widest outline-none focus:border-yellow-400" style={{ display: 'none' }}>
-                    <option value="any">Any Tier</option>
-                    <option value="OU">OU (Overused)</option>
-                    <option value="UU">UU (Underused)</option>
-                    <option value="Uber">Uber</option>
-                  </select>
+
                 </div>
                 <div id="room-player-list" className="p-3 space-y-2 overflow-y-auto flex-1 max-h-[250px] font-body">
                   <div className="flex justify-between items-center bg-surface-container-lowest p-3 border border-outline-variant">

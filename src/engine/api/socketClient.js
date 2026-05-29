@@ -15,11 +15,16 @@ function generateRoomCode() {
 
 
 function generatePlayerId() {
-    const saved = sessionStorage.getItem('pba_playerId');
-    if (saved) return saved;
-    const newId = Math.random().toString(36).substring(2, 10);
-    sessionStorage.setItem('pba_playerId', newId);
-    return newId;
+    try {
+        const saved = sessionStorage.getItem('pba_playerId');
+        if (saved) return saved;
+        const newId = Math.random().toString(36).substring(2, 10);
+        sessionStorage.setItem('pba_playerId', newId);
+        return newId;
+    } catch (e) {
+        console.warn('[Multiplayer] sessionStorage not available, using in-memory ID');
+        return Math.random().toString(36).substring(2, 10);
+    }
 }
 
 export class MultiplayerManager {
@@ -941,11 +946,7 @@ export class MultiplayerManager {
         const playerList = document.getElementById('room-player-list');
         if (!playerList || !data.players) return;
         
-        // Also show tier selector if host
-        const tierSelect = document.getElementById('rng-tier-select');
-        if (tierSelect) {
-            tierSelect.style.display = this.isHost ? 'block' : 'none';
-        }
+
 
         playerList.innerHTML = data.players.map(p => `
             <div class="flex justify-between items-center bg-surface-container-lowest p-3 border border-outline-variant ${p.isHost ? 'host' : ''}">

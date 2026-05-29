@@ -95,7 +95,7 @@ export default function PokemonPicker({ selectId }) {
       // Determine value for the select
       // Management select value is playerIdx-pkIdx
       let val;
-      if (selectId === 'management-pokemon-select') {
+      if (selectId === 'management-pokemon-select' || selectId === 'status-target-select') {
         val = `${player.id}|${player.activePokemonIndex}`;
       } else {
         val = player.id.toString();

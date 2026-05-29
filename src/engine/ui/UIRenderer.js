@@ -382,7 +382,6 @@ export class UIRenderer {
         const attackerSel = document.getElementById('attacker-select');
         const attackTargetSel = document.getElementById('attack-target-select');
         const statusTargetSel = document.getElementById('status-target-select');
-        const mgmtSel = document.getElementById('management-pokemon-select');
 
         // Enable/disable controls.
         [
@@ -390,16 +389,14 @@ export class UIRenderer {
             document.getElementById('end-round-btn'),
             document.getElementById('update-stat-btn')
         ].forEach(el => el && (el.disabled = !hasPlayers));
-        if (mgmtSel) mgmtSel.disabled = allActive.length === 0;
 
-        // DRY: four dropdowns built with the same helper.
+        // DRY: dropdowns built with the same helper.
         const pLabel = p => `${p.name} - ${p.getActivePokemon().fullName}`;
         this.populateDropdown(attackerSel, nonFainted, p => p.id, pLabel, '-- Attacker --');
         this.populateDropdown(attackTargetSel, nonFainted, p => p.id, pLabel, '-- Target --');
-        this.populateDropdown(statusTargetSel, nonFainted, p => p.id, pLabel, '-- Player --');
 
-        // Management: includes fainted Pokémon for revive.
-        this.populateDropdown(mgmtSel, allActive,
+        // Merged selector for status/stats & management: includes fainted Pokémon.
+        this.populateDropdown(statusTargetSel, allActive,
             p => `${p.id}|${p.activePokemonIndex}`,
             p => {
                 const pk = p.getActivePokemon();
@@ -447,8 +444,10 @@ export class UIRenderer {
     }
 
     _updateStatusButtonStyles() {
-        const targetId = parseInt(document.getElementById('status-target-select')?.value);
-        const player = this._gs.players.find(p => p.id === targetId);
+        const rawVal = document.getElementById('status-target-select')?.value;
+        const targetId = rawVal && rawVal.includes('|') ? rawVal.split('|')[0] : rawVal;
+        const numericId = parseInt(targetId);
+        const player = this._gs.players.find(p => p.id === targetId || p.id === numericId);
         const statuses = player?.getActivePokemon()?.statuses ?? {};
         document.querySelectorAll('.status-btn').forEach(btn => {
             if (btn.dataset.status) {
@@ -458,7 +457,7 @@ export class UIRenderer {
     }
 
     _updateManagementButtons() {
-        const sel = document.getElementById('management-pokemon-select');
+        const sel = document.getElementById('status-target-select');
         const evolveBtn = document.getElementById('evolve-btn');
         const devolveBtn = document.getElementById('devolve-btn');
         const formBtn = document.getElementById('change-form-btn');

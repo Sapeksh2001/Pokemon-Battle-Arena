@@ -118,7 +118,7 @@ export class PokemonBattleArena {
         window.handleQuit = () => this.handleQuit();
         // Expose switch-pokemon for the management section's Switch button.
         window.switchActivePokemonForMgmt = () => {
-            const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+            const val = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
             if (!val) { this._announce('Select a Pokémon first.', true); return; }
             const [pid] = val.split('|');
             this.openTeamManager(pid);
@@ -400,11 +400,13 @@ export class PokemonBattleArena {
             targetId = remoteData.playerId;
         } else {
             status = event.target.closest('button')?.dataset.status;
-            targetId = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
+            const rawVal = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
+            targetId = rawVal && rawVal.includes('|') ? rawVal.split('|')[0] : rawVal;
         }
         if (!status || !targetId) return;
 
-        const player = this.gs.players.find(p => p.id === targetId);
+        const numericId = parseInt(targetId);
+        const player = this.gs.players.find(p => p.id === targetId || p.id === numericId);
         const pokemon = player?.getActivePokemon();
         if (!pokemon) return;
 
@@ -446,7 +448,8 @@ export class PokemonBattleArena {
             const statValInput = document.getElementById('stat-value-input');
             const modTypeSel = document.getElementById('stat-mod-type');
 
-            targetId = statusTargetSel?.value;
+            const rawVal = statusTargetSel?.value;
+            targetId = rawVal && rawVal.includes('|') ? rawVal.split('|')[0] : rawVal;
             statName = statSel?.value;
             value = parseInt(statValInput?.value);
             modType = modTypeSel?.value;
@@ -456,7 +459,8 @@ export class PokemonBattleArena {
             if (!remoteData) this._announce('Please select a target, stat, and value.', true);
             return;
         }
-        const player = this.gs.players.find(p => p.id === targetId);
+        const numericId = parseInt(targetId);
+        const player = this.gs.players.find(p => p.id === targetId || p.id === numericId);
         const pokemon = player?.getActivePokemon();
         if (!pokemon) return;
 
@@ -1020,7 +1024,7 @@ export class PokemonBattleArena {
 
     async handleEvolve() {
         await this.ensureDatabaseLoaded();
-        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+        const val = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
         if (!val) { this._announce('Select a Pokémon to evolve.', true); return; }
         const [pid, sid] = val.split('|');
         const player = this.gs.players.find(p => p.id === pid);
@@ -1036,7 +1040,7 @@ export class PokemonBattleArena {
     }
 
     _openEvolutionChoiceModal(evolutions) {
-        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+        const val = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
         const [pid, sid] = val.split('|');
         const player = this.gs.players.find(p => p.id === pid);
         const pokemon = player?.team[sid];
@@ -1049,7 +1053,7 @@ export class PokemonBattleArena {
         let pid = playerId;
         let sid = slotId;
         if (pid === null || sid === null) {
-            const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+            const val = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
             if (!val) { this._announce(`Error evolving to ${evolutionName}.`, true); return; }
             [pid, sid] = val.split('|');
         }
@@ -1080,7 +1084,7 @@ export class PokemonBattleArena {
 
     async handleDevolve() {
         await this.ensureDatabaseLoaded();
-        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+        const val = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
         if (!val) { this._announce('Select a Pokémon to devolve.', true); return; }
         const [pid, sid] = val.split('|');
         const player = this.gs.players.find(p => p.id === pid);
@@ -1096,7 +1100,7 @@ export class PokemonBattleArena {
     }
 
     _openDevolutionChoiceModal(parents) {
-        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+        const val = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
         const [pid, sid] = val.split('|');
         const player = this.gs.players.find(p => p.id === pid);
         const pokemon = player?.team[sid];
@@ -1116,7 +1120,7 @@ export class PokemonBattleArena {
         let pid = playerId;
         let sid = slotId;
         if (pid === null || sid === null) {
-            const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+            const val = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
             if (!val) { this._announce(`Error devolving to ${parentName}.`, true); return; }
             [pid, sid] = val.split('|');
         }
@@ -1149,7 +1153,7 @@ export class PokemonBattleArena {
 
     async openFormChangeModal() {
         await this.ensureDatabaseLoaded();
-        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+        const val = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
         if (!val) return;
         const [pid, sid] = val.split('|');
         const player = this.gs.players.find(p => p.id === pid);
@@ -1172,7 +1176,7 @@ export class PokemonBattleArena {
         let pid = playerId;
         let sid = slotId;
         if (pid === null || sid === null) {
-            const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+            const val = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
             if (!val) return;
             [pid, sid] = val.split('|');
         }
@@ -1223,7 +1227,7 @@ export class PokemonBattleArena {
     // ── Revive ────────────────────────────────────────────────────────────
 
     handleRevive() {
-        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+        const val = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
         if (!val) { this._announce('Select a fainted Pokémon to revive.', true); this.audio.play('error'); return; }
         const [pid, sid] = val.split('|');
         const player = this.gs.players.find(p => p.id === pid);
@@ -1246,7 +1250,7 @@ export class PokemonBattleArena {
     }
 
     openTradeModal() {
-        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+        const val = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
         if (!val) { this._announce('Select a Pokémon to trade.', true); this.audio.play('error'); return; }
         const [pid, sid] = val.split('|');
         const player = this.gs.players.find(p => p.id === pid);
@@ -1262,7 +1266,7 @@ export class PokemonBattleArena {
     }
 
     async confirmTrade(selectedTiers) {
-        const val = document.getElementById('management-pokemon-select')?.dataset?.value || document.getElementById('management-pokemon-select')?.value;
+        const val = document.getElementById('status-target-select')?.dataset?.value || document.getElementById('status-target-select')?.value;
         if (!val) return;
         const [pid, sid] = val.split('|');
         const player = this.gs.players.find(p => p.id === pid);
@@ -1644,8 +1648,11 @@ export class PokemonBattleArena {
 
         // Status target select
         document.getElementById('status-target-select')?.addEventListener('change', e => {
-            gs.selectedStatusTargetId = e.target.value || null;
+            const val = e.target.value;
+            const parsedId = val && val.includes('|') ? val.split('|')[0] : val;
+            gs.selectedStatusTargetId = parsedId ? (isNaN(parseInt(parsedId)) ? parsedId : parseInt(parsedId)) : null;
             this.renderer._updateStatusButtonStyles();
+            this.renderer._updateManagementButtons();
             this.renderer.renderAll();
         });
 
@@ -1675,8 +1682,7 @@ export class PokemonBattleArena {
         // Attack buttons
         // Stat update
 
-        // Management
-        document.getElementById('management-pokemon-select')?.addEventListener('change', () => this.renderer._updateManagementButtons());
+        // Management listener merged above
 
         // Timer
         const timerDisplay = document.getElementById('timer-display');

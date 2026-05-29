@@ -183,9 +183,9 @@ export default function ArenaView() {
                     </div>
                     
                     <div className="border-t border-outline-variant pt-2 mt-2">
-                      <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-[10px]">STATUS TARGET</label>
-                      <select id="status-target-select" className="sr-only" aria-label="Select Status Target">
-                        <option value="">Select Target</option>
+                      <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-[10px]">POKÉMON</label>
+                      <select id="status-target-select" className="sr-only" aria-label="Select Pokémon">
+                        <option value="">Select Pokémon</option>
                       </select>
                       <PokemonPicker selectId="status-target-select" />
                     </div>
@@ -223,19 +223,13 @@ export default function ArenaView() {
                     </div>
 
                     <div className="border-t border-outline-variant pt-2 mt-2">
-                      <label className="text-on-surface-variant uppercase tracking-wider block mb-1 text-[10px]">MGMT POKÉMON</label>
-                      <select id="management-pokemon-select" className="sr-only" aria-label="Select Pokémon for Management">
-                        <option value="">Select</option>
-                      </select>
-                      <PokemonPicker selectId="management-pokemon-select" />
-                    </div>
-
-                    <div className="grid grid-cols-5 gap-1 mt-2">
-                      <button id="evolve-btn" onClick={act('handleEvolve')} className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">EVO</button>
-                      <button id="devolve-btn" onClick={act('handleDevolve')} className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">DEVO</button>
-                      <button id="change-form-btn" onClick={act('openFormChangeModal')} className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">FORM</button>
-                      <button id="revive-btn" onClick={act('handleRevive')} className="bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">REV</button>
-                      <button id="trade-btn" onClick={act('openTradeModal')} className="bg-amber-600 hover:bg-amber-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">TRD</button>
+                      <div className="grid grid-cols-5 gap-1">
+                        <button id="evolve-btn" onClick={act('handleEvolve')} className="bg-blue-600 hover:bg-blue-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">EVO</button>
+                        <button id="devolve-btn" onClick={act('handleDevolve')} className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">DEVO</button>
+                        <button id="change-form-btn" onClick={act('openFormChangeModal')} className="bg-purple-600 hover:bg-purple-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">FORM</button>
+                        <button id="revive-btn" onClick={act('handleRevive')} className="bg-[#dc2626] hover:bg-red-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">REV</button>
+                        <button id="trade-btn" onClick={act('openTradeModal')} className="bg-amber-600 hover:bg-amber-500 text-white p-2 border border-black font-bold uppercase step-animation transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]">TRD</button>
+                      </div>
                     </div>
 
                   </div>

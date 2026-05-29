@@ -365,7 +365,20 @@ export class MultiplayerManager {
             }
         });
 
-        this.unsubscribes.push(unsubPlayers, unsubStatus);
+        const settingsRef = ref(db, `rooms/${this.roomCode}/settings`);
+        const unsubSettings = onValue(settingsRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const settings = snapshot.val();
+                const selectedTiers = settings.selectedTiers || ['any'];
+                const tierSelect = document.getElementById('rng-tier-select');
+                if (tierSelect) {
+                    const activeVal = selectedTiers.includes('any') ? 'any' : selectedTiers[0];
+                    tierSelect.value = activeVal;
+                }
+            }
+        });
+
+        this.unsubscribes.push(unsubPlayers, unsubStatus, unsubSettings);
     }
 
     /** Host-only: listens to /entryQueue and renders the wildcard assignment panel. */
@@ -625,6 +638,11 @@ export class MultiplayerManager {
             return;
         }
 
+        // Ensure database is fully loaded before getting pool
+        if (this.arena && typeof this.arena.ensureDatabaseLoaded === 'function') {
+            await this.arena.ensureDatabaseLoaded();
+        }
+
         const fullPool = this._getFlattenedPool();
         if (fullPool.length === 0) {
             console.log('[Multiplayer] fullPool is empty');
@@ -656,12 +674,12 @@ export class MultiplayerManager {
         if (playersSnap.exists()) {
             playersSnap.forEach(snap => {
                 const p = snap.val();
-                if (p.pokemonId) assignedIds.push(p.pokemonId);
+                if (p.assignedPokemonId) assignedIds.push(p.assignedPokemonId);
             });
         }
 
         // Filter out already assigned
-        const availablePool = pool.filter(p => !assignedIds.includes(p.name));
+        const availablePool = pool.filter(p => !assignedIds.includes(p.Name || p.name));
         const selectionSource = availablePool.length > 0 ? availablePool : pool;
         
         const rolled = selectionSource[Math.floor(Math.random() * selectionSource.length)];
@@ -718,6 +736,11 @@ export class MultiplayerManager {
         if (!this.isHost || !this.roomCode) {
             console.log('[Multiplayer] Aborting PICK - Not host or no roomcode');
             return;
+        }
+
+        // Ensure database is fully loaded before getting pool
+        if (this.arena && typeof this.arena.ensureDatabaseLoaded === 'function') {
+            await this.arena.ensureDatabaseLoaded();
         }
         
         const titleEl = document.getElementById('selection-modal-title');
@@ -942,10 +965,18 @@ export class MultiplayerManager {
         const playerList = document.getElementById('room-player-list');
         if (!playerList || !data.players) return;
         
-        // Also show tier selector if host
+        // Always show tier selector for everyone, but disable for non-hosts
         const tierSelect = document.getElementById('rng-tier-select');
         if (tierSelect) {
-            tierSelect.style.display = this.isHost ? 'block' : 'none';
+            tierSelect.style.display = 'block';
+            tierSelect.disabled = !this.isHost;
+            if (!this.isHost) {
+                tierSelect.style.opacity = '0.7';
+                tierSelect.style.cursor = 'not-allowed';
+            } else {
+                tierSelect.style.opacity = '1';
+                tierSelect.style.cursor = 'pointer';
+            }
         }
 
         playerList.innerHTML = data.players.map(p => `
@@ -1172,6 +1203,15 @@ export class MultiplayerManager {
         } catch (err) {
             console.error('[MULTIPLAYER] Error in loadAndResume:', err);
             this.showNotification('Load failed — see console', 'error');
+        }
+    }
+    async updateRoomSettings(settings) {
+        if (!this.isHost || !this.roomCode) return;
+        try {
+            await update(ref(db, `rooms/${this.roomCode}/settings`), settings);
+            this.showNotification('Room settings updated!', 'success');
+        } catch (e) {
+            console.error('[MULTIPLAYER] Error updating room settings:', e);
         }
     }
 }

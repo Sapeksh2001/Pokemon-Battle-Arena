@@ -917,18 +917,20 @@ export class MultiplayerManager {
             ${waitingPlayers.map(p => `
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid #1e293b;">
                     <span style="color:#fff;font-size:12px;">${p.name}</span>
-                    <button
+                    <button class="wildcard-rng-btn"
                         style="background:#1e293b;border:1px solid #5bf083;color:#5bf083;font-size:9px;font-weight:700;letter-spacing:.08em;padding:3px 8px;cursor:pointer;text-transform:uppercase;"
                         onmouseover="this.style.background='#5bf083';this.style.color='#020617';"
                         onmouseout="this.style.background='#1e293b';this.style.color='#5bf083';"
-                        onclick="window._mpRng('${p.id}')">
+                        data-pid="${p.id}"
+                        onclick="window._mpRng && window._mpRng('${p.id}')">
                         RNG
                     </button>
-                    <button
+                    <button class="wildcard-pick-btn"
                         style="background:#1e293b;border:1px solid #5bf083;color:#5bf083;font-size:9px;font-weight:700;letter-spacing:.08em;padding:3px 8px;cursor:pointer;text-transform:uppercase;margin-left:4px;"
                         onmouseover="this.style.background='#5bf083';this.style.color='#020617';"
                         onmouseout="this.style.background='#1e293b';this.style.color='#5bf083';"
-                        onclick="window._mpPick('${p.id}')">
+                        data-pid="${p.id}"
+                        onclick="window._mpPick && window._mpPick('${p.id}')">
                         PICK
                     </button>
                 </div>
@@ -936,6 +938,25 @@ export class MultiplayerManager {
         `;
 
         queueContainer.onclick = null;
+
+        // Attach listeners programmatically to bypass any inline onclick/React boundary issues
+        queueContainer.querySelectorAll('.wildcard-rng-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const pid = btn.getAttribute('data-pid');
+                this.assignRandomPokemon(pid).catch(err => alert('RNG Error: ' + err.message));
+            });
+        });
+
+        queueContainer.querySelectorAll('.wildcard-pick-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const pid = btn.getAttribute('data-pid');
+                this.assignSpecificPokemon(pid).catch(err => alert('PICK Error: ' + err.message));
+            });
+        });
     }
 
     updateRoomUI(data) {
@@ -957,8 +978,8 @@ export class MultiplayerManager {
                 </div>
                 ${this.isHost ? `
                 <div class="flex gap-2">
-                    <button class="bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary" onclick="window._mpRng('${p.id}')">RNG</button>
-                    <button class="bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary" onclick="window._mpPick('${p.id}')">PICK</button>
+                    <button class="mp-rng-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}" onclick="window._mpRng && window._mpRng('${p.id}')">RNG</button>
+                    <button class="mp-pick-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}" onclick="window._mpPick && window._mpPick('${p.id}')">PICK</button>
                     ${p.isReady ? '<span class="text-[#5bf083] text-[10px] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-1 flex items-center">READY</span>' : ''}
                 </div>
                 ` : `
@@ -968,6 +989,27 @@ export class MultiplayerManager {
         `).join('');
 
         playerList.onclick = null;
+
+        // Attach listeners programmatically to bypass any inline onclick/React boundary issues
+        playerList.querySelectorAll('.mp-rng-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const pid = btn.getAttribute('data-pid');
+                console.log('[Multiplayer] RNG clicked programmatically', pid);
+                this.assignRandomPokemon(pid).catch(err => alert('RNG Error: ' + err.message));
+            });
+        });
+
+        playerList.querySelectorAll('.mp-pick-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const pid = btn.getAttribute('data-pid');
+                console.log('[Multiplayer] PICK clicked programmatically', pid);
+                this.assignSpecificPokemon(pid).catch(err => alert('PICK Error: ' + err.message));
+            });
+        });
         
         const startBtn = document.getElementById('start-game-btn');
         if (startBtn) {

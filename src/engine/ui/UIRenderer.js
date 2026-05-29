@@ -219,7 +219,7 @@ export class UIRenderer {
             return `
                 <tr class="${bgClass} text-slate-800 border-b border-gray-300 last:border-0 align-middle">
                     <td class="p-0.5 pl-1 text-[#0f172a] text-[9px] sm:text-[10px] tracking-tight mc-tooltip align-middle">
-                        <span class="truncate block max-w-[80px]" title="${escapeHTML(m)}">${escapeHTML(m)}</span>
+                        <span class="truncate block" title="${escapeHTML(m)}">${escapeHTML(m)}</span>
                         <div class="mc-tooltip-content">
                             <span class="mc-tooltip-title">${escapeHTML(m)}</span>
                             <span>Type: ${escapeHTML(type)}</span><br>
@@ -255,9 +255,9 @@ export class UIRenderer {
                 <table class="w-full text-left border-collapse" style="table-layout: fixed;">
                     <thead>
                         <tr class="bg-black text-white text-[8px] sm:text-[9px] uppercase tracking-wider">
-                            <th class="p-0.5 pl-1 w-[35%] rounded-tl-[10px]">Move</th>
-                            <th class="p-0.5 text-center w-[25%]">Type</th>
-                            <th class="p-0.5 text-center w-[12%]">Cat.</th>
+                            <th class="p-0.5 pl-1 w-[40%] rounded-tl-[10px]">Move</th>
+                            <th class="p-0.5 text-center w-[22%]">Type</th>
+                            <th class="p-0.5 text-center w-[10%]">Cat.</th>
                             <th class="p-0.5 text-center w-[14%]">Power</th>
                             <th class="p-0.5 text-center pr-1 w-[14%] rounded-tr-[10px]">Acc.</th>
                         </tr>
@@ -423,6 +423,8 @@ export class UIRenderer {
         } else {
             this._arena._populateMoveSelector(null);
         }
+
+        this._updateAttackButtonsState();
     }
 
     _updateWeatherView() {
@@ -520,6 +522,42 @@ export class UIRenderer {
                     return fname && fname !== pokemon.fullName;
                 });
             formBtn.disabled = otherForms.length === 0;
+        }
+    }
+
+    _updateAttackButtonsState() {
+        const nameSel = document.getElementById('move-name-select');
+        const physicalBtn = document.getElementById('physical-attack-btn');
+        const specialBtn = document.getElementById('special-attack-btn');
+        if (!physicalBtn || !specialBtn) return;
+
+        if (!nameSel || !nameSel.value) {
+            physicalBtn.disabled = false;
+            specialBtn.disabled = false;
+            return;
+        }
+
+        const moveName = nameSel.value;
+        const moveData = (typeof MovesData !== 'undefined') ? MovesData[moveName] : null;
+        if (!moveData) {
+            physicalBtn.disabled = false;
+            specialBtn.disabled = false;
+            return;
+        }
+
+        const category = (moveData.category || '').toLowerCase();
+        if (category === 'physical') {
+            physicalBtn.disabled = false;
+            specialBtn.disabled = true;
+        } else if (category === 'special') {
+            physicalBtn.disabled = true;
+            specialBtn.disabled = false;
+        } else if (category === 'status') {
+            physicalBtn.disabled = true;
+            physicalBtn.disabled = true;
+        } else {
+            physicalBtn.disabled = false;
+            specialBtn.disabled = false;
         }
     }
 }

@@ -229,13 +229,13 @@ button, input, select {
     position: relative;
     z-index: 10;
     padding: 1rem;
+    overflow: hidden;
 }
 
-/* Cards size themselves within the flex container */
+/* Cards size themselves within the flex container — fixed width like 6-player layout */
 .player-card {
     min-width: 150px;
-    max-width: 280px;
-    flex: 1 1 200px;
+    flex: 0 1 calc((100% - 7.5rem) / 6);
     height: 100%;
 }
 
@@ -631,7 +631,7 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 #change-form-btn { background-image: linear-gradient(to bottom, #c084fc, #a855f7); }
 #revive-btn { background-image: linear-gradient(to bottom, #fde047, #f59e0b); }
 #trade-btn { background-image: linear-gradient(to bottom, #fdba74, #ea580c); }
-#evolve-btn:disabled, #devolve-btn:disabled, #change-form-btn:disabled, #revive-btn:disabled, #trade-btn:disabled { background-image: linear-gradient(to bottom, #6b7280, #4b5563); cursor: not-allowed; opacity: 0.6; }
+#physical-attack-btn:disabled, #special-attack-btn:disabled, #evolve-btn:disabled, #devolve-btn:disabled, #change-form-btn:disabled, #revive-btn:disabled, #trade-btn:disabled { background-image: linear-gradient(to bottom, #6b7280, #4b5563); cursor: not-allowed; opacity: 0.6; }
 
 
 /* --- ANIMATION KEYFRAMES --- */
@@ -715,24 +715,20 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 
 /* ── DESKTOP LARGE (1800px+) ── cards can be wider */
 @media (min-width: 1800px) {
-    .player-card { max-width: 300px; }
 }
 
 /* ── DESKTOP (1400–1800px) ── */
 @media (max-width: 1800px) {
-    .player-card { max-width: 280px; }
     .battle-log-panel { width: 420px; }
 }
 
 /* ── MACBOOK AIR / SMALL LAPTOP (1024–1400px) ── */
 @media (max-width: 1400px) {
-    .player-card { max-width: 260px; }
     .battle-log-panel { width: 300px; }
 }
 
 /* ── TABLET LANDSCAPE / LARGE PHONE (680–1024px) ── footer auto-height */
 @media (max-width: 1024px) {
-    .player-card { max-width: 240px; flex: 1 1 180px; }
     .arena-control-footer {
         height: auto;
     }
@@ -747,7 +743,6 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 
 /* ── TABLET PORTRAIT (600–680px) ── hide battle log */
 @media (max-width: 680px) {
-    .player-card { max-width: 220px; flex: 1 1 160px; }
     .battle-log-panel { display: none; }
     .arena-control-footer {
         height: auto;
@@ -759,7 +754,6 @@ select, input[type="text"], input[type="number"] { -webkit-appearance: none; -mo
 
 /* ── PHONE PORTRAIT (<480px) ── 1 column, minimal footer */
 @media (max-width: 480px) {
-    .player-card { max-width: 100%; flex: 1 1 100%; }
     .battle-log-panel { display: none; }
     .arena-control-footer {
         height: auto;

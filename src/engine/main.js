@@ -1605,7 +1605,15 @@ export class PokemonBattleArena {
         // Move name select — auto-fills power and type
         document.getElementById('move-name-select')?.addEventListener('change', e => {
             const moveName = e.target.value;
-            if (!moveName) return;
+            if (!moveName) {
+                const powerInput = document.getElementById('move-power-input');
+                const typeSelect = document.getElementById('move-type-select');
+                if (powerInput) powerInput.value = '';
+                if (typeSelect) typeSelect.value = '';
+                this.updateAttackPreview();
+                this.renderer._updateAttackButtonsState();
+                return;
+            }
             const moveData = (typeof MovesData !== 'undefined') ? MovesData[moveName] : null;
             if (moveData) {
                 const powerInput = document.getElementById('move-power-input');
@@ -1624,6 +1632,7 @@ export class PokemonBattleArena {
                 }
                 this.updateAttackPreview();
             }
+            this.renderer._updateAttackButtonsState();
         });
 
         // Attack target select

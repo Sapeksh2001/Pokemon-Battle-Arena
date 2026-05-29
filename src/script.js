@@ -25,22 +25,16 @@ function hideLoadingOverlay() {
 
 // ── Main startup ─────────────────────────────────────────────────────────────
 async function startApp() {
-    const hasSavedState = localStorage.getItem('pba_active_battle_state');
-    if (hasSavedState) {
-        console.log('[App] Saved state found, starting immediately without database.');
-        hideLoadingOverlay();
-    } else {
-        try {
-            const { loadGameData } = await import('./engine/services/DataLoader.js');
-            await loadGameData(updateLoadingOverlay);
-        } catch (err) {
-            const msgEl = document.getElementById('loading-message');
-            if (msgEl) msgEl.textContent = `⚠️ Failed to load data: ${err.message}`;
-            console.error('[DataLoader]', err);
-            return; // Don't start the game with missing data
-        }
-        hideLoadingOverlay();
+    try {
+        const { loadGameData } = await import('./engine/services/DataLoader.js');
+        await loadGameData(updateLoadingOverlay);
+    } catch (err) {
+        const msgEl = document.getElementById('loading-message');
+        if (msgEl) msgEl.textContent = `⚠️ Failed to load data: ${err.message}`;
+        console.error('[DataLoader]', err);
+        return; // Don't start the game with missing data
     }
+    hideLoadingOverlay();
 
     const arena = new PokemonBattleArena();
     window.arena = arena; // Expose globally for event handlers & callbacks

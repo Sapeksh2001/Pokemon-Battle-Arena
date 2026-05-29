@@ -51,13 +51,7 @@ export class PokemonBattleArena {
         // Try to load state from localStorage first
         const hasSavedState = this.loadLocalState();
 
-        if (Object.keys(this.db._raw).length === 0 && !hasSavedState) {
-            // No database and no saved state -> Must load database
-            this.ensureDatabaseLoaded().then(() => this._initRemaining());
-            return;
-        }
-
-        this._initRemaining();
+        this.ensureDatabaseLoaded().then(() => this._initRemaining());
     }
 
     async ensureDatabaseLoaded() {

@@ -50,6 +50,7 @@ export class MultiplayerManager {
             navigator.clipboard.writeText(link);
             this.showNotification('Share link copied!', 'success');
         };
+        this.connect();
     }
 
     /**
@@ -149,6 +150,11 @@ export class MultiplayerManager {
 
     async createRoom(trainerName, settings = {}) {
         if (!trainerName) return;
+
+        // Ensure Pokémon database is loaded before entering lobby
+        if (this.arena && typeof this.arena.ensureDatabaseLoaded === 'function') {
+            await this.arena.ensureDatabaseLoaded();
+        }
         
         if (this.arena?.log) {
             this.arena.log.reset();
@@ -426,7 +432,7 @@ export class MultiplayerManager {
                 const state = snapshot.val();
                 if (state._sender === this.playerId) {
                     this.hasLoadedInitialState = true;
-                } else if (!this.hasLoadedInitialState) {
+                } else {
                     this.receiveGameState(state);
                     this.hasLoadedInitialState = true;
                 }
@@ -629,9 +635,14 @@ export class MultiplayerManager {
             return;
         }
 
+        // Ensure database is loaded before accessing pool
+        if (this.arena && typeof this.arena.ensureDatabaseLoaded === 'function') {
+            await this.arena.ensureDatabaseLoaded();
+        }
+
         const fullPool = this._getFlattenedPool();
         if (fullPool.length === 0) {
-            console.log('[Multiplayer] fullPool is empty');
+            console.log('[Multiplayer] fullPool is empty even after ensureDatabaseLoaded');
             this.showNotification('Data loading... Please wait.', 'error');
             return;
         }
@@ -660,12 +671,12 @@ export class MultiplayerManager {
         if (playersSnap.exists()) {
             playersSnap.forEach(snap => {
                 const p = snap.val();
-                if (p.pokemonId) assignedIds.push(p.pokemonId);
+                if (p.assignedPokemonId) assignedIds.push(p.assignedPokemonId);
             });
         }
 
         // Filter out already assigned
-        const availablePool = pool.filter(p => !assignedIds.includes(p.name));
+        const availablePool = pool.filter(p => !assignedIds.includes(p.Name || p.name));
         const selectionSource = availablePool.length > 0 ? availablePool : pool;
         
         const rolled = selectionSource[Math.floor(Math.random() * selectionSource.length)];
@@ -722,6 +733,11 @@ export class MultiplayerManager {
         if (!this.isHost || !this.roomCode) {
             console.log('[Multiplayer] Aborting PICK - Not host or no roomcode');
             return;
+        }
+
+        // Ensure database is loaded before accessing pool
+        if (this.arena && typeof this.arena.ensureDatabaseLoaded === 'function') {
+            await this.arena.ensureDatabaseLoaded();
         }
         
         const titleEl = document.getElementById('selection-modal-title');
@@ -910,14 +926,14 @@ export class MultiplayerManager {
             ${waitingPlayers.map(p => `
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid #1e293b;">
                     <span style="color:#fff;font-size:12px;">${p.name}</span>
-                    <button class="wildcard-rng-btn"
+                    <button onclick="window._mpRng('${p.id}')" class="wildcard-rng-btn"
                         style="background:#1e293b;border:1px solid #5bf083;color:#5bf083;font-size:9px;font-weight:700;letter-spacing:.08em;padding:3px 8px;cursor:pointer;text-transform:uppercase;"
                         onmouseover="this.style.background='#5bf083';this.style.color='#020617';"
                         onmouseout="this.style.background='#1e293b';this.style.color='#5bf083';"
                         data-pid="${p.id}">
                         RNG
                     </button>
-                    <button class="wildcard-pick-btn"
+                    <button onclick="window._mpPick('${p.id}')" class="wildcard-pick-btn"
                         style="background:#1e293b;border:1px solid #5bf083;color:#5bf083;font-size:9px;font-weight:700;letter-spacing:.08em;padding:3px 8px;cursor:pointer;text-transform:uppercase;margin-left:4px;"
                         onmouseover="this.style.background='#5bf083';this.style.color='#020617';"
                         onmouseout="this.style.background='#1e293b';this.style.color='#5bf083';"
@@ -961,8 +977,8 @@ export class MultiplayerManager {
                 </div>
                 ${this.isHost ? `
                 <div class="flex gap-2">
-                    <button class="mp-rng-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}">RNG</button>
-                    <button class="mp-pick-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}">PICK</button>
+                    <button onclick="window._mpRng('${p.id}')" class="mp-rng-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}">RNG</button>
+                    <button onclick="window._mpPick('${p.id}')" class="mp-pick-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}">PICK</button>
                     ${p.isReady ? '<span class="text-[#5bf083] text-[10px] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-1 flex items-center">READY</span>' : ''}
                 </div>
                 ` : `

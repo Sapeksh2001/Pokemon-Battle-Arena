@@ -176,7 +176,8 @@ export class MultiplayerManager {
                 roomName: settings.roomName || 'Epic Battle Room',
                 maxPlayers: settings.maxPlayers || 2,
                 battleType: settings.battleType || 'singles',
-                selectedTiers: settings.selectedTiers || ['Basic', 'Final']
+                selectedTiers: settings.selectedTiers || ['Basic', 'Final'],
+                initialPokemonCount: settings.initialPokemonCount || 6
             }
         });
 
@@ -302,18 +303,55 @@ export class MultiplayerManager {
             return;
         }
 
+        const roomSnap = await get(ref(db, `rooms/${this.roomCode}`));
+        const settings = roomSnap.exists() ? roomSnap.val().settings : null;
+        const initialPokemonCount = settings?.initialPokemonCount || 6;
+        const mode = settings?.teamAssignmentMode || 'random';
+
         // Fetch all players from Lobby and populate gs.players first
         const playersRef = ref(db, `rooms/${this.roomCode}/players`);
         const snapshot = await get(playersRef);
         if (snapshot.exists()) {
             const players = [];
+
+            // Get full pool for rolling
+            const fullPool = this._getFlattenedPool();
+            const selectedTiers = settings?.selectedTiers || ['any'];
+            let pool = fullPool;
+            if (selectedTiers.length > 0 && !selectedTiers.includes('any')) {
+                pool = fullPool.filter(p => selectedTiers.includes(p._computedTier));
+            }
+            if (pool.length === 0) pool = fullPool;
+
             snapshot.forEach(child => {
                 const data = child.val();
-                const p = new Player(child.key, data.name);
-                if (data.assignedPokemonId && window.MergedPokemonData) {
-                    const result = this.arena.db.find(data.assignedPokemonId);
-                    if (result) {
-                        p.team[0] = new Pokemon(result.foundNode, result.baseNode);
+                const p = new Player(child.key, data.name, initialPokemonCount);
+                if (mode === 'random') {
+                    const assignedPokemon = {};
+                    for (let i = 0; i < initialPokemonCount; i++) {
+                        const rolled = pool[Math.floor(Math.random() * pool.length)];
+                        const pokeName = rolled.Name || rolled.name;
+                        assignedPokemon[i] = pokeName;
+                        const result = this.arena.db.find(pokeName);
+                        if (result) {
+                            p.team[i] = new Pokemon(result.foundNode, result.baseNode);
+                        }
+                    }
+                    update(ref(db, `rooms/${this.roomCode}/players/${child.key}`), {
+                        assignedPokemon,
+                        isReady: true
+                    });
+                } else {
+                    if (data.assignedPokemon && window.MergedPokemonData) {
+                        for (let i = 0; i < initialPokemonCount; i++) {
+                            const pokeId = data.assignedPokemon[i];
+                            if (pokeId) {
+                                const result = this.arena.db.find(pokeId);
+                                if (result) {
+                                    p.team[i] = new Pokemon(result.foundNode, result.baseNode);
+                                }
+                            }
+                        }
                     }
                 }
                 players.push(p);
@@ -329,6 +367,15 @@ export class MultiplayerManager {
     }
 
     _listenToLobby() {
+        const settingsRef = ref(db, `rooms/${this.roomCode}/settings`);
+        const unsubSettings = onValue(settingsRef, (snapshot) => {
+            if (snapshot.exists()) {
+                this.roomSettings = snapshot.val();
+                this.initialPokemonCount = this.roomSettings.initialPokemonCount || 6;
+                this.teamAssignmentMode = this.roomSettings.teamAssignmentMode || 'random';
+            }
+        });
+
         const playersRef = ref(db, `rooms/${this.roomCode}/players`);
         const unsubPlayers = onValue(playersRef, (snapshot) => {
             const players = [];
@@ -340,13 +387,18 @@ export class MultiplayerManager {
                 // Detect newly-promoted players (moved from entryQueue → players by assignRandomPokemon)
                 let stateUpdated = false;
                 players.forEach(p => {
-                    if (p.assignedPokemonId) {
+                    if (p.assignedPokemon) {
                         const exists = this.arena.gs.players.find(sp => sp.id === p.id);
                         if (!exists) {
-                            const newPlayer = new Player(p.id, p.name);
-                            const result = this.arena.db.find(p.assignedPokemonId);
-                            if (result) {
-                                newPlayer.team[0] = new Pokemon(result.foundNode, result.baseNode);
+                            const newPlayer = new Player(p.id, p.name, this.initialPokemonCount || 6);
+                            for (let i = 0; i < (this.initialPokemonCount || 6); i++) {
+                                const pokeId = p.assignedPokemon[i];
+                                if (pokeId) {
+                                    const result = this.arena.db.find(pokeId);
+                                    if (result) {
+                                        newPlayer.team[i] = new Pokemon(result.foundNode, result.baseNode);
+                                    }
+                                }
                             }
                             this.arena.gs.players.push(newPlayer);
                             stateUpdated = true;
@@ -375,7 +427,7 @@ export class MultiplayerManager {
             }
         });
 
-        this.unsubscribes.push(unsubPlayers, unsubStatus);
+        this.unsubscribes.push(unsubPlayers, unsubStatus, unsubSettings);
     }
 
     /** Host-only: listens to /entryQueue and renders the wildcard assignment panel. */
@@ -559,8 +611,12 @@ export class MultiplayerManager {
                 if (payload) {
                     const alreadyInGame = this.arena.gs.players.find(sp => sp.id === payload.id);
                     if (!alreadyInGame) {
-                        const newPlayer = new Player(payload.id, payload.name);
-                        if (payload.serializedPokemon) {
+                        const newPlayer = new Player(payload.id, payload.name, payload.serializedTeam ? payload.serializedTeam.length : (payload.serializedPokemon ? 1 : 6));
+                        if (payload.serializedTeam) {
+                            payload.serializedTeam.forEach((t, i) => {
+                                if (t) newPlayer.team[i] = Pokemon.fromJSON(t, this.arena.db);
+                            });
+                        } else if (payload.serializedPokemon) {
                             newPlayer.team[0] = Pokemon.fromJSON(payload.serializedPokemon, this.arena.db);
                         }
                         this.arena.gs.players.push(newPlayer);
@@ -626,6 +682,18 @@ export class MultiplayerManager {
             console.log('[Multiplayer] PICK clicked', pid);
             this.assignSpecificPokemon(pid).catch(err => alert('PICK Error: ' + err.message));
         };
+        window._mpRngSlot = (pid, idx) => {
+            console.log('[Multiplayer] RNG slot clicked', pid, idx);
+            this.assignRandomPokemonSlot(pid, idx).catch(err => alert('RNG Slot Error: ' + err.message));
+        };
+        window._mpPickSlot = (pid, idx) => {
+            console.log('[Multiplayer] PICK slot clicked', pid, idx);
+            this.assignSpecificPokemonSlot(pid, idx).catch(err => alert('PICK Slot Error: ' + err.message));
+        };
+        window._mpClearSlot = (pid, idx) => {
+            console.log('[Multiplayer] CLEAR slot clicked', pid, idx);
+            this.clearPokemonSlot(pid, idx).catch(err => alert('CLEAR Slot Error: ' + err.message));
+        };
     }
 
     async assignRandomPokemon(targetPlayerId) {
@@ -665,13 +733,17 @@ export class MultiplayerManager {
             return;
         }
 
-        // Gather already-assigned IDs across /players (prevent duplicates)
+        // Gather already-assigned IDs across all players
         const playersSnap = await get(ref(db, `rooms/${this.roomCode}/players`));
         const assignedIds = [];
         if (playersSnap.exists()) {
             playersSnap.forEach(snap => {
                 const p = snap.val();
-                if (p.assignedPokemonId) assignedIds.push(p.assignedPokemonId);
+                if (p.assignedPokemon) {
+                    Object.values(p.assignedPokemon).forEach(pokeId => {
+                        if (pokeId) assignedIds.push(pokeId);
+                    });
+                }
             });
         }
 
@@ -679,19 +751,19 @@ export class MultiplayerManager {
         const availablePool = pool.filter(p => !assignedIds.includes(p.Name || p.name));
         const selectionSource = availablePool.length > 0 ? availablePool : pool;
         
-        const rolled = selectionSource[Math.floor(Math.random() * selectionSource.length)];
-        const pokeId = rolled.Name || rolled.name;
-        this.showNotification(`Assigned ${pokeId}!`, 'success');
-
-        // Check if this player is in entryQueue (wildcard mid-game join) or lobby /players
         const queueSnap = await get(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
         if (queueSnap.exists()) {
             // Wildcard mid-game join: promote from entryQueue → players
             const playerData = queueSnap.val();
+            const assignedPokemon = {};
+            for (let i = 0; i < (this.initialPokemonCount || 6); i++) {
+                const rolled = selectionSource[Math.floor(Math.random() * selectionSource.length)];
+                assignedPokemon[i] = rolled.Name || rolled.name;
+            }
+
             await set(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
                 ...playerData,
-                assignedPokemonId: pokeId,
-                assignedPokemonName: rolled.Name || rolled.name,
+                assignedPokemon,
                 isReady: true
             });
             await remove(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
@@ -699,32 +771,24 @@ export class MultiplayerManager {
             // Immediately add to local game state — don't wait for _listenToLobby callback
             const alreadyInGame = this.arena.gs.players.find(sp => sp.id === targetPlayerId);
             if (!alreadyInGame) {
-                const newPlayer = new Player(targetPlayerId, playerData.name);
-                const result = this.arena.db.find(pokeId);
-                if (result) {
-                    newPlayer.team[0] = new Pokemon(result.foundNode, result.baseNode);
-                } else {
-                    console.warn('[Multiplayer] db.find failed for pokeId:', pokeId);
+                const newPlayer = new Player(targetPlayerId, playerData.name, this.initialPokemonCount || 6);
+                for (let i = 0; i < (this.initialPokemonCount || 6); i++) {
+                    const pokeId = assignedPokemon[i];
+                    const result = this.arena.db.find(pokeId);
+                    if (result) {
+                        newPlayer.team[i] = new Pokemon(result.foundNode, result.baseNode);
+                    }
                 }
                 this.arena.gs.players.push(newPlayer);
-                this.arena.log.add(`⚡ ${playerData.name} joined as wildcard with ${rolled.Name || rolled.name}!`, 'system');
+                this.arena.log.add(`⚡ ${playerData.name} joined as wildcard!`, 'system');
                 this.arena.renderer.renderAll();
-                if (newPlayer.team[0]) {
-                    this.sendAction('player_add', {
-                        id: targetPlayerId,
-                        name: playerData.name,
-                        serializedPokemon: newPlayer.team[0].toJSON()
-                    });
-                }
+                this.sendAction('player_add', {
+                    id: targetPlayerId,
+                    name: playerData.name,
+                    serializedTeam: newPlayer.team.map(pt => pt ? pt.toJSON() : null)
+                });
                 this.sendGameState();
             }
-        } else {
-            // Lobby assignment — update the player's record in place and mark ready
-            await update(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
-                assignedPokemonId: pokeId,
-                assignedPokemonName: rolled.Name || rolled.name,
-                isReady: true
-            });
         }
     }
 
@@ -746,7 +810,7 @@ export class MultiplayerManager {
         const grid = document.getElementById('selection-grid');
         if (!grid) return;
 
-        // ── Fetch tier filter from Firebase ──────────────────────────────────
+        // Fetch tier filter from Firebase
         const roomSnap = await get(ref(db, `rooms/${this.roomCode}`));
         const settings = roomSnap.exists() ? roomSnap.val().settings : null;
         const selectedTiers = settings?.selectedTiers || [];
@@ -756,7 +820,7 @@ export class MultiplayerManager {
         const allowedNames = new Set(filteredPool.map(p => (p.Name || p.name)));
         const tierLabel = useTierFilter ? `Tiers: ${selectedTiers.join(', ')}` : 'All Tiers';
 
-        // ── Build UI ─────────────────────────────────────────────────────────
+        // Build UI
         grid.innerHTML = `
             <div class="col-span-4 mb-3">
                 <div style="font-size:9px;color:#facc15;text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;">${tierLabel}</div>
@@ -848,46 +912,284 @@ export class MultiplayerManager {
                 card.onclick = async () => {
                     this.arena.modals.close('selection');
                     const pokeName = name;
-                    const pokeId = pokeName;
                     this.showNotification(`Assigned ${pokeName}!`, 'success');
                     
                     const queueSnap = await get(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
                     if (queueSnap.exists()) {
                         const playerData = queueSnap.val();
+                        const assignedPokemon = { 0: pokeName };
+                        // Roll random for the remaining slots
+                        for (let i = 1; i < (this.initialPokemonCount || 6); i++) {
+                            const rolled = fullPool[Math.floor(Math.random() * fullPool.length)];
+                            assignedPokemon[i] = rolled.Name || rolled.name;
+                        }
+
                         await set(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
                             ...playerData,
-                            assignedPokemonId: pokeId,
-                            assignedPokemonName: pokeName,
+                            assignedPokemon,
                             isReady: true
                         });
                         await remove(ref(db, `rooms/${this.roomCode}/entryQueue/${targetPlayerId}`));
 
                         const alreadyInGame = this.arena.gs.players.find(sp => sp.id === targetPlayerId);
                         if (!alreadyInGame) {
-                            const newPlayer = new Player(targetPlayerId, playerData.name);
-                            const result = this.arena.db.find(pokeId);
-                            if (result) {
-                                newPlayer.team[0] = new Pokemon(result.foundNode, result.baseNode);
-                            } else {
-                                console.warn('[Multiplayer] PICK db.find failed for pokeId:', pokeId);
+                            const newPlayer = new Player(targetPlayerId, playerData.name, this.initialPokemonCount || 6);
+                            for (let i = 0; i < (this.initialPokemonCount || 6); i++) {
+                                const pId = assignedPokemon[i];
+                                const result = this.arena.db.find(pId);
+                                if (result) {
+                                    newPlayer.team[i] = new Pokemon(result.foundNode, result.baseNode);
+                                }
                             }
                             this.arena.gs.players.push(newPlayer);
                             this.arena.log.add(`⚡ ${playerData.name} joined as wildcard with ${pokeName}!`, 'system');
                             this.arena.renderer.renderAll();
-                            if (newPlayer.team[0]) {
-                                this.sendAction('player_add', {
-                                    id: targetPlayerId,
-                                    name: playerData.name,
-                                    serializedPokemon: newPlayer.team[0].toJSON()
-                                });
-                            }
+                            this.sendAction('player_add', {
+                                id: targetPlayerId,
+                                name: playerData.name,
+                                serializedTeam: newPlayer.team.map(pt => pt ? pt.toJSON() : null)
+                            });
                             this.sendGameState();
                         }
-                    } else {
-                        await update(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`), {
-                            assignedPokemonId: pokeId,
-                            assignedPokemonName: pokeName,
-                            isReady: true
+                    }
+                };
+                gridPicker.appendChild(card);
+            });
+        };
+
+        searchInput.addEventListener('input', _refreshGrid);
+        _refreshGrid();
+    }
+
+    async assignRandomPokemonSlot(targetPlayerId, slotIdx) {
+        console.log('[Multiplayer] assignRandomPokemonSlot triggered', targetPlayerId, slotIdx, 'isHost:', this.isHost, 'room:', this.roomCode);
+        if (!this.isHost || !this.roomCode) {
+            console.log('[Multiplayer] Aborting RNG Slot - Not host or no roomcode');
+            return;
+        }
+
+        // Ensure database is loaded before accessing pool
+        if (this.arena && typeof this.arena.ensureDatabaseLoaded === 'function') {
+            await this.arena.ensureDatabaseLoaded();
+        }
+
+        const fullPool = this._getFlattenedPool();
+        if (fullPool.length === 0) {
+            this.showNotification('Data loading... Please wait.', 'error');
+            return;
+        }
+
+        // Read settings from Firebase for multi-tier selection
+        const roomSnap = await get(ref(db, `rooms/${this.roomCode}`));
+        const settings = roomSnap.exists() ? roomSnap.val().settings : null;
+        const selectedTiers = settings?.selectedTiers || ['any'];
+
+        // Build filtered pool
+        let pool = fullPool;
+        if (selectedTiers.length > 0 && !selectedTiers.includes('any')) {
+            pool = fullPool.filter(p => selectedTiers.includes(p._computedTier));
+        }
+
+        if (pool.length === 0) {
+            this.showNotification('No Pokémon found for the selected tiers!', 'error');
+            return;
+        }
+
+        // Gather already-assigned IDs for this specific player to prevent duplicates in their own team
+        const playerSnap = await get(ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`));
+        const assignedIds = [];
+        if (playerSnap.exists()) {
+            const p = playerSnap.val();
+            if (p.assignedPokemon) {
+                Object.entries(p.assignedPokemon).forEach(([idx, pokeId]) => {
+                    if (parseInt(idx) !== slotIdx && pokeId) {
+                        assignedIds.push(pokeId);
+                    }
+                });
+            }
+        }
+
+        // Filter out already assigned
+        const availablePool = pool.filter(p => !assignedIds.includes(p.Name || p.name));
+        const selectionSource = availablePool.length > 0 ? availablePool : pool;
+        
+        const rolled = selectionSource[Math.floor(Math.random() * selectionSource.length)];
+        const pokeId = rolled.Name || rolled.name;
+        this.showNotification(`Slot ${slotIdx + 1}: Assigned ${pokeId}!`, 'success');
+
+        // Update Firebase
+        const playerRef = ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`);
+        const updatedSnap = await get(playerRef);
+        if (updatedSnap.exists()) {
+            const pData = updatedSnap.val();
+            const assigned = pData.assignedPokemon ? { ...pData.assignedPokemon } : {};
+            assigned[slotIdx] = pokeId;
+
+            // Check if all slots are ready
+            let allReady = true;
+            if (this.teamAssignmentMode === 'manual') {
+                allReady = !!assigned[0];
+            } else {
+                for (let i = 0; i < (this.initialPokemonCount || 6); i++) {
+                    if (!assigned[i]) {
+                        allReady = false;
+                        break;
+                    }
+                }
+            }
+
+            await update(playerRef, {
+                [`assignedPokemon/${slotIdx}`]: pokeId,
+                isReady: allReady
+            });
+        }
+    }
+
+    async assignSpecificPokemonSlot(targetPlayerId, slotIdx) {
+        console.log('[Multiplayer] assignSpecificPokemonSlot triggered', targetPlayerId, slotIdx, 'isHost:', this.isHost, 'room:', this.roomCode);
+        if (!this.isHost || !this.roomCode) {
+            console.log('[Multiplayer] Aborting PICK Slot - Not host or no roomcode');
+            return;
+        }
+
+        // Ensure database is loaded before accessing pool
+        if (this.arena && typeof this.arena.ensureDatabaseLoaded === 'function') {
+            await this.arena.ensureDatabaseLoaded();
+        }
+        
+        const titleEl = document.getElementById('selection-modal-title');
+        if (titleEl) titleEl.textContent = `Pick Pokémon for Slot ${slotIdx + 1}`;
+        
+        const grid = document.getElementById('selection-grid');
+        if (!grid) return;
+
+        // Fetch tier filter from Firebase
+        const roomSnap = await get(ref(db, `rooms/${this.roomCode}`));
+        const settings = roomSnap.exists() ? roomSnap.val().settings : null;
+        const selectedTiers = settings?.selectedTiers || [];
+        const useTierFilter = selectedTiers.length > 0 && !selectedTiers.includes('any');
+        const fullPool = this._getFlattenedPool();
+        const filteredPool = useTierFilter ? fullPool.filter(p => selectedTiers.includes(p._computedTier)) : fullPool;
+        const allowedNames = new Set(filteredPool.map(p => (p.Name || p.name)));
+        const tierLabel = useTierFilter ? `Tiers: ${selectedTiers.join(', ')}` : 'All Tiers';
+
+        // Build UI
+        grid.innerHTML = `
+            <div class="col-span-4 mb-3">
+                <div style="font-size:9px;color:#facc15;text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;">${tierLabel}</div>
+                <input type="text" id="pick-search-input"
+                    style="width:100%;background:#0f172a;border:1px solid #334155;color:#fff;padding:8px 10px;font-size:11px;outline:none;letter-spacing:0.05em;box-sizing:border-box;"
+                    placeholder="Search Pokémon...">
+            </div>
+            <div id="pick-grid-picker" class="col-span-4" style="
+                display: none;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+                max-height: 380px;
+                overflow-y: auto;
+                scrollbar-width: thin;
+                scrollbar-color: #facc15 #0a1628;
+                padding-right: 2px;
+            "></div>
+        `;
+        
+        this.arena.modals.open('selection');
+        const searchInput = document.getElementById('pick-search-input');
+        const gridPicker = document.getElementById('pick-grid-picker');
+        
+        setTimeout(() => searchInput.focus(), 100);
+        
+        const _refreshGrid = () => {
+            const q = searchInput.value.trim();
+            gridPicker.innerHTML = '';
+            
+            if (q.length === 0) {
+                const allNamesArr = Array.from(allowedNames);
+                const names = allNamesArr.slice(0, 500);
+                if (names.length === 0) { gridPicker.style.display = 'none'; return; }
+                gridPicker.style.display = 'grid';
+                _renderCards(names);
+                return;
+            }
+
+            if (q.length < 2) { gridPicker.style.display = 'none'; return; }
+            const allMatches = this.arena.db.search(q, 200);
+            const names = useTierFilter
+                ? allMatches.filter(n => allowedNames.has(n)).slice(0, 40)
+                : allMatches.slice(0, 40);
+            if (names.length === 0) { gridPicker.style.display = 'none'; return; }
+            gridPicker.style.display = 'grid';
+            _renderCards(names);
+        };
+
+        const _renderCards = (names) => {
+            names.forEach(name => {
+                const item = this.arena.db.find(name);
+                if (!item) return;
+                const node = item.baseNode;
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.title = name;
+                card.style.cssText = `
+                    background: transparent;
+                    border: 1px solid transparent;
+                    cursor: pointer;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: flex-end;
+                    padding: 6px 4px 7px;
+                    height: 88px;
+                    transition: transform 0.2s, drop-shadow 0.2s;
+                    overflow: visible;
+                    width: 100%;
+                    box-sizing: border-box;
+                `;
+                card.innerHTML = `
+                    <img src="${node.sprite || ''}" alt="${name}"
+                         style="width:52px;height:52px;object-fit:contain;image-rendering:pixelated;
+                                filter:drop-shadow(0 0 3px rgba(250,204,21,0));transition:filter 0.15s;"
+                         loading="lazy">
+                    <span style="font-size:8px;color:#cbd5e1;text-align:center;width:100%;
+                                  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+                                  line-height:1.2;margin-top:4px;font-family:monospace;">${name}</span>
+                `;
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'scale(1.15)';
+                    card.querySelector('img').style.filter = 'drop-shadow(0 0 10px rgba(250,204,21,0.8))';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'scale(1)';
+                    card.querySelector('img').style.filter = 'drop-shadow(0 0 3px rgba(250,204,21,0))';
+                });
+                card.onclick = async () => {
+                    this.arena.modals.close('selection');
+                    const pokeName = name;
+                    this.showNotification(`Slot ${slotIdx + 1}: Assigned ${pokeName}!`, 'success');
+
+                    const playerRef = ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`);
+                    const updatedSnap = await get(playerRef);
+                    if (updatedSnap.exists()) {
+                        const pData = updatedSnap.val();
+                        const assigned = pData.assignedPokemon ? { ...pData.assignedPokemon } : {};
+                        assigned[slotIdx] = pokeName;
+
+                        // Check if all slots are ready
+                        let allReady = true;
+                        if (this.teamAssignmentMode === 'manual') {
+                            allReady = !!assigned[0];
+                        } else {
+                            for (let i = 0; i < (this.initialPokemonCount || 6); i++) {
+                                if (!assigned[i]) {
+                                    allReady = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        await update(playerRef, {
+                            [`assignedPokemon/${slotIdx}`]: pokeName,
+                            isReady: allReady
                         });
                     }
                 };
@@ -897,6 +1199,21 @@ export class MultiplayerManager {
 
         searchInput.addEventListener('input', _refreshGrid);
         _refreshGrid();
+    }
+
+    async clearPokemonSlot(targetPlayerId, slotIdx) {
+        console.log('[Multiplayer] clearPokemonSlot triggered', targetPlayerId, slotIdx, 'isHost:', this.isHost, 'room:', this.roomCode);
+        if (!this.isHost || !this.roomCode) {
+            console.log('[Multiplayer] Aborting CLEAR Slot - Not host or no roomcode');
+            return;
+        }
+
+        const playerRef = ref(db, `rooms/${this.roomCode}/players/${targetPlayerId}`);
+        await update(playerRef, {
+            [`assignedPokemon/${slotIdx}`]: null,
+            isReady: false
+        });
+        this.showNotification(`Slot ${slotIdx + 1} cleared!`, 'info');
     }
 
     /**
@@ -966,50 +1283,81 @@ export class MultiplayerManager {
         const playerList = document.getElementById('room-player-list');
         if (!playerList || !data.players) return;
         
+        const count = this.initialPokemonCount || 6;
+        const isManual = this.teamAssignmentMode === 'manual';
 
+        playerList.innerHTML = data.players.map(p => {
+            let subLabelHtml = '';
+            if (isManual) {
+                const slotPoke = p.assignedPokemon?.[0];
+                let actionButtons = '';
+                if (this.isHost) {
+                    actionButtons = `
+                        <div class="flex gap-1">
+                            <button onclick="window._mpRngSlot('${p.id}', 0)" class="mp-rng-slot-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}" data-idx="0">RNG</button>
+                            <button onclick="window._mpPickSlot('${p.id}', 0)" class="mp-pick-slot-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}" data-idx="0">PICK</button>
+                            ${slotPoke ? `<button onclick="window._mpClearSlot('${p.id}', 0)" class="mp-clear-slot-btn bg-[#b92902] hover:bg-[#ff7351] text-white px-2 py-1 text-[8px] uppercase font-bold border border-[#450900] cursor-pointer" data-pid="${p.id}" data-idx="0">CLEAR</button>` : ''}
+                        </div>
+                    `;
+                }
+                subLabelHtml = `
+                    <div class="flex justify-between items-center mt-1 text-[11px]">
+                        <span class="text-slate-400">Slot 1: <span class="${slotPoke ? 'text-yellow-400 font-bold' : 'text-slate-500 italic'}">${slotPoke || 'Empty'}</span></span>
+                        ${actionButtons}
+                    </div>
+                `;
+            } else {
+                subLabelHtml = `<div class="text-[10px] text-yellow-400/80 mt-1 uppercase tracking-wider font-mono">Auto RNG on Start</div>`;
+            }
 
-        playerList.innerHTML = data.players.map(p => `
-            <div class="flex justify-between items-center bg-surface-container-lowest p-3 border border-outline-variant ${p.isHost ? 'host' : ''}">
-                <div>
-                   <span class="text-white text-sm font-bold">${p.name}</span>
-                   ${p.isHost ? '<span class="text-yellow-400 text-[8px] ml-2 border border-yellow-400 px-1">HOST</span>' : ''}
-                   <div class="text-[10px] text-slate-400 mt-1">${p.assignedPokemonName || 'Unassigned'}</div>
+            return `
+                <div class="bg-surface-container-lowest p-3 border border-outline-variant ${p.isHost ? 'host' : ''} flex flex-col gap-1">
+                    <div class="flex justify-between items-center border-b border-outline-variant pb-1.5">
+                       <div>
+                          <span class="text-white text-sm font-bold">${p.name}</span>
+                          ${p.isHost ? '<span class="text-yellow-400 text-[8px] ml-2 border border-yellow-400 px-1">HOST</span>' : ''}
+                       </div>
+                       ${p.isReady ? '<span class="text-[#5bf083] text-[9px] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-0.5 font-bold">READY</span>' : '<span class="text-red-400 text-[9px] uppercase tracking-wider border border-red-955 bg-red-955/30 px-2 py-0.5 font-bold">NOT READY</span>'}
+                    </div>
+                    ${subLabelHtml}
                 </div>
-                ${this.isHost ? `
-                <div class="flex gap-2">
-                    <button onclick="window._mpRng('${p.id}')" class="mp-rng-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}">RNG</button>
-                    <button onclick="window._mpPick('${p.id}')" class="mp-pick-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}">PICK</button>
-                    ${p.isReady ? '<span class="text-[#5bf083] text-[10px] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-1 flex items-center">READY</span>' : ''}
-                </div>
-                ` : `
-                   ${p.isReady ? '<span class="text-[#5bf083] text-[10px] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-1">READY</span>' : ''}
-                `}
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
         playerList.onclick = (e) => {
-            const rngBtn = e.target.closest('.mp-rng-btn');
-            const pickBtn = e.target.closest('.mp-pick-btn');
+            const rngBtn = e.target.closest('.mp-rng-slot-btn');
+            const pickBtn = e.target.closest('.mp-pick-slot-btn');
+            const clearBtn = e.target.closest('.mp-clear-slot-btn');
             if (rngBtn) {
                 e.preventDefault();
                 e.stopPropagation();
                 const pid = rngBtn.getAttribute('data-pid');
-                this.assignRandomPokemon(pid).catch(err => alert('RNG Error: ' + err.message));
+                const idx = parseInt(rngBtn.getAttribute('data-idx'));
+                this.assignRandomPokemonSlot(pid, idx).catch(err => alert('RNG Error: ' + err.message));
             } else if (pickBtn) {
                 e.preventDefault();
                 e.stopPropagation();
                 const pid = pickBtn.getAttribute('data-pid');
-                this.assignSpecificPokemon(pid).catch(err => alert('PICK Error: ' + err.message));
+                const idx = parseInt(pickBtn.getAttribute('data-idx'));
+                this.assignSpecificPokemonSlot(pid, idx).catch(err => alert('PICK Error: ' + err.message));
+            } else if (clearBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const pid = clearBtn.getAttribute('data-pid');
+                const idx = parseInt(clearBtn.getAttribute('data-idx'));
+                this.clearPokemonSlot(pid, idx).catch(err => alert('CLEAR Error: ' + err.message));
             }
         };
         
         const startBtn = document.getElementById('start-game-btn');
         if (startBtn) {
             startBtn.style.display = this.isHost ? 'block' : 'none';
-            // Start gating: Need >= 2 players, and everyone must have a Pokemon assigned
-            const hasPokemon = data.players.every(p => p.assignedPokemonId);
             const minPlayers = data.players.length >= 2;
-            if (!minPlayers || !hasPokemon) {
+            let hasAllPokemon = true;
+            if (isManual) {
+                hasAllPokemon = data.players.every(p => p.assignedPokemon && p.assignedPokemon[0]);
+            }
+            if (!minPlayers || !hasAllPokemon) {
                 startBtn.classList.add('opacity-50', 'pointer-events-none');
             } else {
                 startBtn.classList.remove('opacity-50', 'pointer-events-none');

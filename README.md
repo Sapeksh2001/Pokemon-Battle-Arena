@@ -146,12 +146,13 @@ pokemon-battle-arena-main/
 │   ├── pokemon_data.js       # ~575KB base stats
 │   ├── moves_data.js         # ~188KB move definitions
 │   └── abilities_map.js      # ~127KB ability map
-├── PRD.md                    # Product requirements
-├── APP_FLOW.md               # Application flow diagrams
-├── TECH_STACK.md             # Full tech stack reference
-├── FRONTEND_GUIDELINES.md    # CSS tokens, components, animations
-├── BACKEND_STRUCTURE.md      # Firebase schema, security rules, logic flow
-└── DEPLOYMENT_GUIDE.md       # Build, deploy, CI/CD
+└── docs/                     # Documentation files
+    ├── PRD.md                # Product requirements
+    ├── APP_FLOW.md           # Application flow diagrams
+    ├── TECH_STACK.md         # Full tech stack reference
+    ├── FRONTEND_GUIDELINES.md# CSS tokens, components, animations
+    ├── BACKEND_STRUCTURE.md  # Firebase schema, security rules, logic flow
+    └── DEPLOYMENT_GUIDE.md   # Build, deploy, CI/CD
 ```
 
 ---
@@ -266,12 +267,12 @@ sequenceDiagram
 
 | File | Contents |
 |------|----------|
-| [PRD.md](PRD.md) | Product goals, user personas, feature list, NFRs |
-| [APP_FLOW.md](APP_FLOW.md) | Auth flow, lobby flows, arena sequence, save/load, navigation map |
-| [TECH_STACK.md](TECH_STACK.md) | All dependencies, Firebase config, module map |
-| [FRONTEND_GUIDELINES.md](FRONTEND_GUIDELINES.md) | Design tokens, component reference, animation system |
-| [BACKEND_STRUCTURE.md](BACKEND_STRUCTURE.md) | RTDB schema, security rules, conflict resolution |
-| [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Dev setup, build, deploy, CI/CD template |
+| [PRD.md](docs/PRD.md) | Product goals, user personas, feature list, NFRs |
+| [APP_FLOW.md](docs/APP_FLOW.md) | Auth flow, lobby flows, arena sequence, save/load, navigation map |
+| [TECH_STACK.md](docs/TECH_STACK.md) | All dependencies, Firebase config, module map |
+| [FRONTEND_GUIDELINES.md](docs/FRONTEND_GUIDELINES.md) | Design tokens, component reference, animation system |
+| [BACKEND_STRUCTURE.md](docs/BACKEND_STRUCTURE.md) | RTDB schema, security rules, conflict resolution |
+| [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) | Dev setup, build, deploy, CI/CD template |
 
 ---
 

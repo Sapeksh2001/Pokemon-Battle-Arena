@@ -13,6 +13,8 @@ export default function Modals() {
   // Room Creation State
   const [roomName, setRoomName] = useState('');
   const [maxPlayers, setMaxPlayers] = useState(2);
+  const [initialPokemonCount, setInitialPokemonCount] = useState(6);
+  const [teamAssignmentMode, setTeamAssignmentMode] = useState('random');
   const [battleType, setBattleType] = useState('singles');
   const [selectedTiers, setSelectedTiers] = useState(['Basic', 'Final']);
 
@@ -96,7 +98,9 @@ export default function Modals() {
             roomName,
             maxPlayers,
             battleType,
-            selectedTiers
+            selectedTiers,
+            initialPokemonCount,
+            teamAssignmentMode
         };
         const code = await window.arena.multiplayer.createRoom(name, settings);
         console.log('Room created:', code);
@@ -257,6 +261,27 @@ export default function Modals() {
               </select>
             </div>
             <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Initial Pokémon Count:</label>
+              <select 
+                id="initial-pokemon-count-select" 
+                value={initialPokemonCount}
+                onChange={(e) => setInitialPokemonCount(parseInt(e.target.value))}
+                className="w-full bg-surface-container-lowest border border-outline-variant p-3 text-sm focus:border-yellow-400 focus:ring-0 text-white">
+                {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} Pokémon</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Team Assignment Mode:</label>
+              <select 
+                id="team-assignment-mode-select" 
+                value={teamAssignmentMode}
+                onChange={(e) => setTeamAssignmentMode(e.target.value)}
+                className="w-full bg-surface-container-lowest border border-outline-variant p-3 text-sm focus:border-yellow-400 focus:ring-0 text-white">
+                <option value="random">RNG Mode (All slots populated at start)</option>
+                <option value="manual">Manual Mode (Slot 1 only, rest picked in-game)</option>
+              </select>
+            </div>
+            <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Allowed Tiers:</label>
               <div className="grid grid-cols-3 gap-2 bg-surface-container-low p-3 border border-outline-variant">
                 {tierOptions.map(tier => (
@@ -291,7 +316,7 @@ export default function Modals() {
             <button 
               id="create-room-confirm-btn"
               onClick={handleCreateRoom}
-              className="w-full bg-tertiary-container hover:bg-[#5bf083] text-[#004a1d] px-6 py-4 border-2 border-white uppercase font-bold tracking-widest step-animation text-[10px] flex justify-center items-center gap-2 mt-4">
+              className="w-full bg-yellow-400 hover:bg-yellow-300 text-black px-6 py-4 border-2 border-white uppercase font-bold tracking-widest step-animation text-[10px] flex justify-center items-center gap-2 mt-4">
               <span className="material-symbols-outlined text-[18px]">check</span> CREATE ROOM
             </button>
           </div>

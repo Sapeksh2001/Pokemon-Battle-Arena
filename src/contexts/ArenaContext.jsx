@@ -1,19 +1,14 @@
 /**
- * ArenaContext.jsx  (React-native event bridge — v2)
+ * ArenaContext.jsx  (React-native event bridge — v3)
  *
  * Architecture:
- *  1. Polls for window.arena as before (100 ms, 30 s timeout).
- *  2. Once found, installs window.__arenaNotify so the engine can ping React
- *     without any DOM coupling. The engine calls this after every renderAll().
+ *  1. Listens for the 'arena:ready' CustomEvent fired by the engine once it
+ *     has fully initialised. ZERO polling — no setInterval wasted ticks.
+ *  2. Once the event fires, installs window.__arenaNotify so the engine can
+ *     ping React without any DOM coupling.
  *  3. On each notify, we shallow-copy arena.gs into React state (gameState).
- *     Components consume gameState directly instead of a blind tick counter.
- *  4. dispatch(action, ...args) is the new React-facing API:
- *       dispatch('handleAttack', 'physical')
- *       dispatch('endRound')
- *       dispatch('timer.start')       ← dot-notation for sub-objects
- *     It resolves the method on the arena/timer/history/multiplayer object,
- *     calls it, then fires __arenaNotify so React state syncs immediately.
- *  5. getArena() still works for raw access (multiplayer, modals, etc.).
+ *  4. dispatch(action, ...args) is the React-facing API (unchanged from v2).
+ *  5. A 30-second safety timeout surfaces an error if arena:ready never fires.
  *
  * UI/UX impact: ZERO — all visual components are unchanged.
  */
@@ -24,8 +19,7 @@ import React, {
 
 const ArenaContext = createContext(null);
 
-const POLL_MS    = 100;
-const TIMEOUT_MS = 30_000;
+const READY_TIMEOUT_MS = 30_000;
 
 // Shallow-clone the relevant slices of gs so React sees a new object reference.
 function snapshotGs(gs) {
@@ -63,72 +57,75 @@ export function ArenaProvider({ children }) {
 
   useEffect(() => {
     let cancelled = false;
-    let elapsed   = 0;
 
-    const interval = setInterval(() => {
-      if (cancelled) return clearInterval(interval);
+    // Safety net: if engine never dispatches arena:ready, show an error after 30 s.
+    const timeoutId = setTimeout(() => {
+      if (!cancelled && !arenaRef.current) {
+        setLoadState({
+          status:   'error',
+          progress: 0,
+          label:    '',
+          error:    'Arena failed to initialise within 30 s. Check the browser console.',
+        });
+      }
+    }, READY_TIMEOUT_MS);
 
-      elapsed += POLL_MS;
-
-      // Mirror DataLoader progress if exposed
-      if (window.__loadProgress !== undefined) {
+    // Listen for data-loader progress events from the engine bootstrap
+    const handleProgress = (e) => {
+      if (cancelled) return;
+      const { loaded, total, label } = e.detail || {};
+      if (typeof loaded === 'number' && typeof total === 'number') {
+        const pct = Math.round((loaded / total) * 90) + 5; // 5←95%
         setLoadState(prev => ({
           ...prev,
-          progress: Math.max(prev.progress, window.__loadProgress),
-          label:    window.__loadLabel || prev.label,
+          progress: Math.max(prev.progress, pct),
+          label:    label || prev.label,
         }));
       }
+    };
+    window.addEventListener('arena:progress', handleProgress);
 
-      if (window.arena) {
-        clearInterval(interval);
-        const arena = window.arena;
-        arenaRef.current = arena;
+    // Primary hook: engine fires this exactly once after full init
+    const handleReady = (e) => {
+      if (cancelled) return;
+      clearTimeout(timeoutId);
 
-        // ── Install notify hook ──────────────────────────────────────────
-        // The engine calls window.__arenaNotify() after renderAll().
-        // This is the only coupling point between engine and React.
-        window.__arenaNotify = () => {
-          if (!cancelled) notify();
+      const arena = e.detail?.arena || window.arena;
+      if (!arena) return;
+      arenaRef.current = arena;
+
+      // Install notify hook — engine calls this after every state mutation
+      window.__arenaNotify = () => {
+        if (!cancelled) notify();
+      };
+
+      // Patch renderer so legacy renderAll() also pings React
+      if (arena.renderer?.renderAll) {
+        const orig = arena.renderer.renderAll.bind(arena.renderer);
+        arena.renderer.renderAll = () => {
+          orig();
+          window.__arenaNotify?.();
         };
-
-        // ── Patch renderer so legacy renderAll() also pings React ────────
-        // This handles any renderAll() calls that happen before a given
-        // component has wired up its own dispatch() call.
-        if (arena.renderer?.renderAll) {
-          const orig = arena.renderer.renderAll.bind(arena.renderer);
-          arena.renderer.renderAll = () => {
-            orig();
-            window.__arenaNotify?.();
-          };
-        }
-
-        // Lucide icons (engine may inject them into dynamic HTML)
-        if (window.lucide) window.lucide.createIcons();
-
-        if (!cancelled) {
-          setGameState(snapshotGs(arena.gs));
-          setLoadState({ status: 'ready', progress: 100, label: '', error: null });
-        }
-        return;
       }
 
-      if (elapsed >= TIMEOUT_MS) {
-        clearInterval(interval);
-        if (!cancelled) {
-          setLoadState({
-            status:   'error',
-            progress: 0,
-            label:    '',
-            error:    'Arena failed to initialise within 30 s. Check the browser console.',
-          });
-        }
-      }
-    }, POLL_MS);
+      if (window.lucide) window.lucide.createIcons();
+
+      setGameState(snapshotGs(arena.gs));
+      setLoadState({ status: 'ready', progress: 100, label: '', error: null });
+    };
+    window.addEventListener('arena:ready', handleReady, { once: true });
+
+    // Fallback: if arena is already on window when this effect runs
+    // (e.g. hot-reload), fire immediately without waiting for the event.
+    if (window.arena && !arenaRef.current) {
+      handleReady({ detail: { arena: window.arena } });
+    }
 
     return () => {
       cancelled = true;
-      clearInterval(interval);
-      // Clean up global hook on unmount
+      clearTimeout(timeoutId);
+      window.removeEventListener('arena:ready', handleReady);
+      window.removeEventListener('arena:progress', handleProgress);
       if (window.__arenaNotify) delete window.__arenaNotify;
     };
   }, [notify]);

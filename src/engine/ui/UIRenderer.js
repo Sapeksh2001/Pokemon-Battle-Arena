@@ -36,17 +36,53 @@ export class UIRenderer {
 
     // ── Player cards ─────────────────────────────────────────────────
 
+    _getCardFingerprint(player) {
+        const pokemon = player.getActivePokemon();
+        const activeState = player.id === this._gs.activeTurnPlayerId;
+        const selectedAttack = player.id === this._gs.selectedAttackTargetId;
+        const selectedStatus = player.id === this._gs.selectedStatusTargetId;
+        const teamStr = player.team.map(p => p ? p.fullName : 'empty').join(',');
+        if (!pokemon) {
+            return `no-pokemon:${player.id}:${activeState}:${selectedAttack}:${selectedStatus}:${teamStr}`;
+        }
+        const typesStr = pokemon.types ? pokemon.types.join(',') : '';
+        const movesStr = pokemon.moves ? pokemon.moves.join(',') : '';
+        const abilityStr = pokemon.ability?.name || '';
+        const statusesStr = Object.keys(pokemon.statuses || {}).join(',');
+        return `${pokemon.fullName}:${pokemon.currentHP}:${pokemon.maxHp}:${statusesStr}:${activeState}:${selectedAttack}:${selectedStatus}:${typesStr}:${movesStr}:${abilityStr}:${teamStr}`;
+    }
+
     _renderPlayerCards() {
         const grid = document.getElementById('player-grid');
         if (!grid) return;
 
-        grid.innerHTML = '';
-        this._gs.players.forEach(p => grid.appendChild(this._createPlayerCard(p)));
-        // Commented out to satisfy dynamic scaling logic (Task 6)
-        // for (let i = this._gs.players.length; i < 6; i++) {
-        //     this._playerGrid.appendChild(this._createEmptyCard());
-        // }
-        lucide.createIcons();
+        const rendered = new Set();
+        this._gs.players.forEach(player => {
+            rendered.add(player.id);
+            const fingerprint = this._getCardFingerprint(player);
+            let card = document.getElementById(`player-card-${player.id}`);
+            if (!card) {
+                card = this._createPlayerCard(player);
+                card.dataset.fingerprint = fingerprint;
+                grid.appendChild(card);
+            } else if (card.dataset.fingerprint !== fingerprint) {
+                const newCard = this._createPlayerCard(player);
+                newCard.dataset.fingerprint = fingerprint;
+                grid.replaceChild(newCard, card);
+            }
+        });
+
+        // Remove cards for removed players
+        const childrenArray = Array.from(grid.children);
+        childrenArray.forEach(child => {
+            if (child.dataset.playerId && !rendered.has(child.dataset.playerId)) {
+                child.remove();
+            }
+        });
+
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
     }
 
     _createEmptyCard() {
@@ -71,15 +107,27 @@ export class UIRenderer {
 
         const pokemon = player.getActivePokemon();
         if (!pokemon) {
-            card.innerHTML = `
-                <div class="flex flex-col items-center justify-center h-full text-center font-body">
-                    <h3 class="font-bold text-2xl text-secondary font-headline">${escapeHTML(player.name)}</h3>
-                    <p class="text-xs uppercase tracking-wider text-on-surface-variant mt-4">No active Pokémon.</p>
-                    <button onclick="window.openTeamManager('${player.id}')"
-                            class="w-full mt-4 bg-secondary-container hover:bg-[#699cff] text-white font-bold py-3 px-4 text-xs uppercase tracking-widest border border-[#003271] step-animation">
-                        Manage Team
-                    </button>
-                </div>`;
+            const inner = document.createElement('div');
+            inner.className = 'flex flex-col items-center justify-center h-full text-center font-body';
+
+            const h3 = document.createElement('h3');
+            h3.className = 'font-bold text-2xl text-secondary font-headline';
+            h3.textContent = player.name;
+            inner.appendChild(h3);
+
+            const p = document.createElement('p');
+            p.className = 'text-xs uppercase tracking-wider text-on-surface-variant mt-4';
+            p.textContent = 'No active Pokémon.';
+            inner.appendChild(p);
+
+            const btn = document.createElement('button');
+            btn.className = 'w-full mt-4 bg-secondary-container hover:bg-[#699cff] text-white font-bold py-3 px-4 text-xs uppercase tracking-widest border border-[#003271] step-animation';
+            btn.textContent = 'Manage Team';
+            // Safe: closed-over variable, never injected into HTML string
+            btn.addEventListener('click', () => window.openTeamManager(player.id));
+            inner.appendChild(btn);
+
+            card.appendChild(inner);
             return card;
         }
 
@@ -112,62 +160,137 @@ export class UIRenderer {
 
         const pct = pokemon.getHPPercent();
 
-        card.innerHTML = `
-            <div class="entry-animation-container"></div>
-            ${player.id === this._gs.activeTurnPlayerId
-                ? '<div class="turn-indicator-arrow"><span class="material-symbols-outlined text-3xl">keyboard_double_arrow_down</span></div>'
-                : ''}
-            <div class="w-full flex-shrink-0">
-                <div class="w-full flex justify-between items-start gap-2 min-w-0">
-                    <h2 class="font-bold card-trainer-name" title="${escapeHTML(player.name)}">${escapeHTML(player.name)}</h2>
-                    <div class="flex gap-2">
-                        <button onclick="window.removePlayer('${player.id}')"
-                                class="text-[#ff7351] hover:text-white transition-colors" title="Remove Player">
-                            <span class="material-symbols-outlined text-[18px]">person_remove</span>
-                        </button>
-                        <button onclick="window.openTeamManager('${player.id}')"
-                                class="text-secondary hover:text-white transition-colors" title="Manage Team">
-                            <span class="material-symbols-outlined text-[20px]">settings</span>
-                        </button>
-                    </div>
-                </div>
-                <h3 class="font-bold card-pokemon-name">${escapeHTML(pokemon.fullName)}</h3>
-                <p class="pokemon-tier">${pokemon.tier || 'Unknown'}</p>
-                <div class="flex justify-center gap-2 mt-1">
-                    ${this._renderTypeBadges(pokemon.types)}
-                </div>
+        // ── Build card body safely using DOM APIs (no innerHTML with onclick) ────
+        const entryAnim = document.createElement('div');
+        entryAnim.className = 'entry-animation-container';
+        card.appendChild(entryAnim);
+
+        if (player.id === this._gs.activeTurnPlayerId) {
+            const arrow = document.createElement('div');
+            arrow.className = 'turn-indicator-arrow';
+            arrow.innerHTML = '<span class="material-symbols-outlined text-3xl">keyboard_double_arrow_down</span>';
+            card.appendChild(arrow);
+        }
+
+        // Header: trainer name + buttons
+        const headerWrap = document.createElement('div');
+        headerWrap.className = 'w-full flex-shrink-0';
+
+        const nameRow = document.createElement('div');
+        nameRow.className = 'w-full flex justify-between items-start gap-2 min-w-0';
+
+        const h2 = document.createElement('h2');
+        h2.className = 'font-bold card-trainer-name';
+        h2.title = player.name;
+        h2.textContent = player.name; // textContent — safe from XSS
+        nameRow.appendChild(h2);
+
+        const btnsDiv = document.createElement('div');
+        btnsDiv.className = 'flex gap-2';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'text-[#ff7351] hover:text-white transition-colors';
+        removeBtn.title = 'Remove Player';
+        removeBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">person_remove</span>';
+        removeBtn.addEventListener('click', () => window.removePlayer(player.id));
+        btnsDiv.appendChild(removeBtn);
+
+        const manageBtn = document.createElement('button');
+        manageBtn.className = 'text-secondary hover:text-white transition-colors';
+        manageBtn.title = 'Manage Team';
+        manageBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">settings</span>';
+        manageBtn.addEventListener('click', () => window.openTeamManager(player.id));
+        btnsDiv.appendChild(manageBtn);
+
+        nameRow.appendChild(btnsDiv);
+        headerWrap.appendChild(nameRow);
+
+        const pokemonNameH3 = document.createElement('h3');
+        pokemonNameH3.className = 'font-bold card-pokemon-name';
+        pokemonNameH3.textContent = pokemon.fullName;
+        headerWrap.appendChild(pokemonNameH3);
+
+        const tierP = document.createElement('p');
+        tierP.className = 'pokemon-tier';
+        tierP.textContent = pokemon.tier || 'Unknown';
+        headerWrap.appendChild(tierP);
+
+        const typesDiv = document.createElement('div');
+        typesDiv.className = 'flex justify-center gap-2 mt-1';
+        typesDiv.innerHTML = this._renderTypeBadges(pokemon.types); // safe — types come from dataset, not user input
+        headerWrap.appendChild(typesDiv);
+
+        card.appendChild(headerWrap);
+
+        // Sprite + HP section
+        const spriteSection = document.createElement('div');
+        spriteSection.className = 'flex flex-col items-center justify-center flex-grow min-h-0 relative';
+
+        const spriteWrap = document.createElement('div');
+        spriteWrap.className = 'relative';
+
+        const img = document.createElement('img');
+        img.src = pokemon.sprite;
+        img.alt = pokemon.fullName;
+        img.className = `pokemon-sprite ${pokemon.isFainted() ? 'grayscale' : ''}`;
+        img.onerror = function() {
+            if (!this.dataset.tried) {
+                this.dataset.tried = '1';
+                this.src = this.src.replace('/ani/', '/gen5/').replace('.gif', '.png');
+            } else if (this.dataset.tried === '1') {
+                this.dataset.tried = '2';
+                this.src = this.src.replace('/gen5/', '/dex/');
+            } else {
+                this.onerror = null;
+                this.src = 'https://placehold.co/96x96/000000/FFFFFF?text=?';
+            }
+        };
+        spriteWrap.appendChild(img);
+
+        if (pokemon.isFainted()) {
+            const faintOverlay = document.createElement('div');
+            faintOverlay.className = 'absolute inset-0 flex items-center justify-center';
+            faintOverlay.innerHTML = '<span class="text-red-500 text-2xl font-bold -rotate-12 bg-black/50 px-2">FAINTED</span>';
+            spriteWrap.appendChild(faintOverlay);
+        }
+        spriteSection.appendChild(spriteWrap);
+
+        // HP bar — click opens HP editor
+        const hpBar = document.createElement('div');
+        hpBar.className = 'hp-bar-container';
+        hpBar.addEventListener('click', () => window.editHP(player.id));
+        hpBar.innerHTML = `
+            <div class="hp-text-row">
+                <span class="hp-values">${pokemon.currentHP}/${pokemon.maxHp}</span>
             </div>
-            <div class="flex flex-col items-center justify-center flex-grow min-h-0 relative">
-                <div class="relative">
-                    <img src="${pokemon.sprite}"
-                         onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src=this.src.replace('/ani/','/gen5/').replace('.gif','.png');}else if(this.dataset.tried=='1'){this.dataset.tried=2;this.src=this.src.replace('/gen5/','/dex/');}else{this.onerror=null;this.src='https://placehold.co/96x96/000000/FFFFFF?text=?';}"
-                         alt="${escapeHTML(pokemon.fullName)}"
-                         class="pokemon-sprite ${pokemon.isFainted() ? 'grayscale' : ''}">
-                    ${pokemon.isFainted()
-                ? '<div class="absolute inset-0 flex items-center justify-center"><span class="text-red-500 text-2xl font-bold -rotate-12 bg-black/50 px-2">FAINTED</span></div>'
-                : ''}
-                </div>
-                <!-- Dynamic Floating Text Container inserted locally in later features -->
-                <div class="hp-bar-container" onclick="window.editHP('${player.id}')">
-                    <div class="hp-text-row">
-                        <span class="hp-values">${pokemon.currentHP}/${pokemon.maxHp}</span>
-                    </div>
-                    <div class="hp-bar-track">
-                        <div class="hp-bar-fill" style="width: ${pct * 100}%; background-color: ${this._getHPColor(pct)};"></div>
-                    </div>
-                </div>
-                <div class="status-alignment-row">
-                    ${this._renderStatusIcons(pokemon)}
-                </div>
-            </div>
-            ${this._renderMovesAndAbilities(pokemon)}
-            <div class="grid grid-cols-5 grid-rows-2 text-center w-full card-stat-grid flex-shrink-0">
-                ${this._renderStatHeaders(pokemon)}
-                ${this._renderStatValues(pokemon)}
-            </div>
-            <div class="flex justify-evenly items-center w-full flex-shrink-0 card-team-row">
-                ${this._renderTeamIcons(player)}
+            <div class="hp-bar-track">
+                <div class="hp-bar-fill" style="width: ${pct * 100}%; background-color: ${this._getHPColor(pct)};"></div>
             </div>`;
+        spriteSection.appendChild(hpBar);
+
+        const statusRow = document.createElement('div');
+        statusRow.className = 'status-alignment-row';
+        statusRow.innerHTML = this._renderStatusIcons(pokemon);
+        spriteSection.appendChild(statusRow);
+
+        card.appendChild(spriteSection);
+
+        // Moves & abilities (data from trusted dataset — innerHTML acceptable here)
+        const movesEl = document.createElement('div');
+        movesEl.innerHTML = this._renderMovesAndAbilities(pokemon);
+        card.appendChild(movesEl.firstElementChild || movesEl);
+
+        // Stat grid
+        const statGrid = document.createElement('div');
+        statGrid.className = 'grid grid-cols-5 grid-rows-2 text-center w-full card-stat-grid flex-shrink-0';
+        statGrid.innerHTML = this._renderStatHeaders(pokemon) + this._renderStatValues(pokemon);
+        card.appendChild(statGrid);
+
+        // Team icons row — built safely
+        const teamRow = document.createElement('div');
+        teamRow.className = 'flex justify-evenly items-center w-full flex-shrink-0 card-team-row';
+        teamRow.appendChild(this._buildTeamIcons(player));
+        card.appendChild(teamRow);
 
         return card;
     }
@@ -302,10 +425,11 @@ export class UIRenderer {
             paralyze: { icon: 'bolt', color: 'text-yellow-400' },
             curse: { icon: 'skull', color: 'text-indigo-400' },
         };
-        return Object.keys(pokemon.statuses)
-            .filter(s => iconMap[s])
-            .map(s => `<span class="material-symbols-outlined text-[20px] ${iconMap[s].color} status-icon-aura" style="font-variation-settings: 'FILL' 1;">${iconMap[s].icon}</span>`)
-            .join('');
+        const active = Object.keys(pokemon.statuses).filter(s => iconMap[s]);
+        if (active.length === 0) {
+            return `<div class="w-full h-full"></div>`;
+        }
+        return active.map(s => `<span class="material-symbols-outlined text-[20px] ${iconMap[s].color} status-icon-aura" style="font-variation-settings: 'FILL' 1;">${iconMap[s].icon}</span>`).join('');
     }
 
     /** Stat header row icons (Attack, Defense, SpA, SpD, Speed). */
@@ -336,21 +460,37 @@ export class UIRenderer {
             }).join('');
     }
 
-    /** Team icon row — Pokéballs clickable to switch active Pokémon. */
+    /** Team icon row — Pokéballs clickable to switch active Pokémon (safe DOM version). */
     _renderTeamIcons(player) {
-        return player.team.map((p, i) => {
-            const isActive = i === player.activePokemonIndex;
-            const isFainted = p && p.isFainted();
-            const src = p ? p.sprite
-                : (isFainted
-                    ? 'https://img.pokemondb.net/sprites/items/luxury-ball.png'
-                    : 'https://img.pokemondb.net/sprites/items/poke-ball.png');
-            const border = isActive ? 'border-2 border-transparent' : 'border-2 border-transparent';
-            return `<img src="${src}" title="${p ? escapeHTML(p.fullName) : 'Empty'}"
-                         class="w-16 h-16 team-pokeball bg-transparent p-1 ${border} ${isFainted ? 'grayscale' : ''}"
-                         onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src=this.src.replace('/ani/','/gen5/').replace('.gif','.png');}else if(this.dataset.tried=='1'){this.dataset.tried=2;this.src=this.src.replace('/gen5/','/dex/');}"
-                         onclick="window.handleTeamIconClick('${player.id}', ${i})">`;
-        }).join('');
+        // Kept for legacy callers. New code uses _buildTeamIcons.
+        return this._buildTeamIcons(player).innerHTML;
+    }
+
+    _buildTeamIcons(player) {
+        const frag = document.createDocumentFragment();
+        player.team.forEach((p, i) => {
+            if (!p) return;
+            const isFainted = p.isFainted();
+            const img = document.createElement('img');
+            img.src = p.sprite;
+            img.title = p.fullName;
+            img.className = `w-16 h-16 team-pokeball bg-transparent p-1 border-2 border-transparent ${isFainted ? 'grayscale' : ''}`;
+            img.onerror = function() {
+                if (!this.dataset.tried) {
+                    this.dataset.tried = '1';
+                    this.src = this.src.replace('/ani/', '/gen5/').replace('.gif', '.png');
+                } else if (this.dataset.tried === '1') {
+                    this.dataset.tried = '2';
+                    this.src = this.src.replace('/gen5/', '/dex/');
+                }
+            };
+            img.addEventListener('click', () => window.handleTeamIconClick(player.id, i));
+            frag.appendChild(img);
+        });
+        const wrapper = document.createElement('div');
+        wrapper.className = 'contents';
+        wrapper.appendChild(frag);
+        return wrapper;
     }
 
     // ── Control panel ──────────────────────────────────────────────────

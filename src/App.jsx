@@ -36,7 +36,7 @@ function GameRoot() {
                       e.target.tagName === 'INPUT' || 
                       e.target.tagName === 'TEXTAREA';
       
-      if (e.key.toLowerCase() === 'f' && !isInput) {
+      if (e.key.toLowerCase() === 'f' && !e.shiftKey && !isInput) {
         console.info('Pokemon Arena: Immersive Fullscreen triggered.');
         e.preventDefault();
         

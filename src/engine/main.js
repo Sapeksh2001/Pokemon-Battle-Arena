@@ -123,7 +123,12 @@ export class PokemonBattleArena {
             const [pid] = val.split('|');
             this.openTeamManager(pid);
         };
+
+        // Signal to React (ArenaContext v3) that the engine is fully ready.
+        // This replaces the 100ms polling loop in ArenaContext with a single event.
+        window.dispatchEvent(new CustomEvent('arena:ready', { detail: { arena: this } }));
     }
+
 
     saveLocalState() {
         try {
@@ -162,24 +167,53 @@ export class PokemonBattleArena {
     }
 
     _setupMultiplayerUI() {
-        // Expose methods to global scope for HTML buttons in index.html
-        window.createMultiplayerRoom = () => {
-            const name = prompt('Enter your trainer name (Host):');
-            if (name) {
-                this.multiplayer.connect();
-                setTimeout(() => this.multiplayer.createRoom(name), 500);
+        /**
+         * window.createMultiplayerRoom(name)
+         *
+         * Called by the React "Create Room" modal's submit handler.
+         * 'name' is provided as a parameter — no prompt() needed.
+         */
+        window.createMultiplayerRoom = (name, settings = {}) => {
+            // Fallback: read from the auth display name if no name was passed
+            const trainerName = name
+                || document.getElementById('mp-host-name-input')?.value?.trim()
+                || this.multiplayer?.playerName
+                || 'Trainer';
+
+            if (!trainerName) {
+                this._announce('Enter a trainer name to create a room.', true);
+                return;
             }
+
+            this.multiplayer.connect();
+            // Use setTimeout to allow Firebase connection to stabilise
+            setTimeout(() => this.multiplayer.createRoom(trainerName, settings), 500);
         };
 
-        window.joinMultiplayerRoom = () => {
-            const code = prompt('Enter the 6-digit room code:');
-            const name = prompt('Enter your trainer name:');
-            if (code && name) {
-                this.multiplayer.connect();
-                setTimeout(() => this.multiplayer.joinRoom(code.toUpperCase(), name), 500);
+        /**
+         * window.joinMultiplayerRoom(code, name)
+         *
+         * Called by the React "Join Room" modal's submit handler.
+         * Parameters are provided directly — no prompt() needed.
+         */
+        window.joinMultiplayerRoom = (code, name) => {
+            const roomCode = code
+                || document.getElementById('mp-join-code-input')?.value?.trim();
+            const trainerName = name
+                || document.getElementById('mp-join-name-input')?.value?.trim()
+                || this.multiplayer?.playerName
+                || 'Trainer';
+
+            if (!roomCode) {
+                this._announce('Enter a room code to join.', true);
+                return;
             }
+
+            this.multiplayer.connect();
+            setTimeout(() => this.multiplayer.joinRoom(roomCode.toUpperCase(), trainerName), 500);
         };
     }
+
 
     _registerModals() {
         [
@@ -577,7 +611,7 @@ export class PokemonBattleArena {
         if (!container) return;
         container.innerHTML = '';
 
-        for (let i = 0; i < player.team.length; i++) {
+        for (let i = 0; i < Math.max(6, player.team.length); i++) {
             const pokemon = player.team[i];
             const slot = document.createElement('div');
             slot.className = 'bg-transparent p-2 text-center cursor-pointer transition-all hover:scale-110 relative overflow-visible h-full flex flex-col items-center justify-between min-h-[120px] border border-transparent hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]';
@@ -898,6 +932,7 @@ export class PokemonBattleArena {
         player.setSlot(slotId, pokemon);
         if (player.team.filter(p => p).length === 1) player.activePokemonIndex = slotId;
         this._renderTeamEditorGrid();
+        this.renderer.renderAll();
         document.getElementById('pokemon-editor-form')?.classList.add('hidden');
 
         // Autosave Local State
@@ -1456,10 +1491,10 @@ export class PokemonBattleArena {
 
     // ── Prepopulate ───────────────────────────────────────────────────────
 
-    _prepopulate(tiers = null) {
+    _prepopulate(tiers = null, playerCount = 6, pokemonCount = 6) {
         this.gs.players = []; // Clear current players to avoid duplicates
         this._toggleLoading(true, 'Loading Pokémon teams...');
-        const names = ['Ash', 'Misty', 'Brock', 'Gary', 'Jessie', 'James'];
+        const names = ['Ash', 'Misty', 'Brock', 'Gary', 'Jessie', 'James'].slice(0, playerCount);
         let filteredPool = tiers ? this.db._buildFiltered(tiers) : this.db.filteredNames;
         if (!filteredPool || filteredPool.length === 0) {
             console.warn('[DATABASE] Filtered pool empty, falling back to all names.');
@@ -1468,16 +1503,16 @@ export class PokemonBattleArena {
         const pool = [...filteredPool].sort(() => 0.5 - Math.random());
 
         names.forEach((name, i) => {
-            const teamNames = pool.splice(0, 6);
-            if (pool.length < 6) pool.push(...filteredPool);
+            const teamNames = pool.splice(0, pokemonCount);
+            if (pool.length < pokemonCount) pool.push(...filteredPool);
 
             const team = teamNames.map(n => {
                 const r = this.db.find(n);
                 return r ? new Pokemon(r.foundNode, r.baseNode) : null;
             }).filter(Boolean);
-            while (team.length < 6) team.push(null);
+            while (team.length < pokemonCount) team.push(null);
 
-            const player = new Player(String(Date.now() + i), name);
+            const player = new Player(String(Date.now() + i), name, pokemonCount);
             team.forEach((pk, idx) => player.setSlot(idx, pk));
             this.gs.players.push(player);
         });
@@ -1834,11 +1869,15 @@ export class PokemonBattleArena {
                 's': 'special-attack-btn',
                 'e': 'evolve-btn',
                 'd': 'devolve-btn',
-                'f': 'change-form-btn',
                 'r': 'generate-number-btn',
             };
             const key = e.key?.toLowerCase();
-            if (shortcuts[key]) {
+            if (key === 'f' && e.shiftKey) {
+                e.preventDefault();
+                document.getElementById('change-form-btn')?.click();
+                return;
+            }
+            if (shortcuts[key] && !e.shiftKey) {
                 e.preventDefault();
                 document.getElementById(shortcuts[key])?.click();
                 return;

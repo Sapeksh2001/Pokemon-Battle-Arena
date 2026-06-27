@@ -1,9 +1,34 @@
 import { Player } from '../models/Player.js';
 import { Pokemon } from '../models/Pokemon.js';
 import { 
-    ref, set, get, onValue, off, push, update, remove, 
+    ref as dbRef, set, get, onValue, off, push, update, remove, 
     serverTimestamp, onDisconnect, query, limitToLast, onChildAdded, orderByChild
 } from "firebase/database";
+
+let activeRoomCode = null;
+let activeRoomId = null;
+
+export function setActiveRoom(code, id) {
+    activeRoomCode = code;
+    activeRoomId = id;
+}
+
+function ref(db, path) {
+    if (!path) return dbRef(db, path);
+    let cleanPath = path.trim();
+    if (cleanPath.startsWith('/')) {
+        cleanPath = cleanPath.substring(1);
+    }
+    let resolvedPath = cleanPath;
+    if (activeRoomCode && activeRoomId) {
+        const codeStr = String(activeRoomCode);
+        const idStr = String(activeRoomId);
+        if (cleanPath.startsWith(`rooms/${codeStr}`)) {
+            resolvedPath = cleanPath.replace(`rooms/${codeStr}`, `rooms/${idStr}`);
+        }
+    }
+    return dbRef(db, resolvedPath);
+}
 import { db } from '../../firebase.js';
 import { authManager } from './authManager.js';
 import { normalizeTier } from '../utils/helpers.js';
@@ -27,16 +52,60 @@ function generatePlayerId() {
     }
 }
 
+function getObjectDiff(oldObj, newObj, prefix = '') {
+    const diff = {};
+    
+    function compare(oldVal, newVal, path) {
+        if (oldVal === newVal) return;
+        
+        // If either is not an object or is null, it's a replacement
+        if (oldVal === null || newVal === null || typeof oldVal !== 'object' || typeof newVal !== 'object') {
+            diff[path] = newVal;
+            return;
+        }
+        
+        // Array comparison: if lengths differ or they are arrays of primitives, just replace.
+        if (Array.isArray(oldVal) || Array.isArray(newVal)) {
+            if (!Array.isArray(oldVal) || !Array.isArray(newVal) || oldVal.length !== newVal.length) {
+                diff[path] = newVal;
+            } else {
+                for (let i = 0; i < newVal.length; i++) {
+                    compare(oldVal[i], newVal[i], `${path}/${i}`);
+                }
+            }
+            return;
+        }
+        
+        // Object comparison
+        const oldKeys = Object.keys(oldVal);
+        const newKeys = Object.keys(newVal);
+        
+        for (const key of newKeys) {
+            compare(oldVal[key], newVal[key], path ? `${path}/${key}` : key);
+        }
+        for (const key of oldKeys) {
+            if (!(key in newVal)) {
+                diff[path ? `${path}/${key}` : key] = null; // deleted
+            }
+        }
+    }
+    
+    compare(oldObj, newObj, prefix);
+    return diff;
+}
+
 export class MultiplayerManager {
     constructor(arena) {
         this.arena = arena;
         this.roomCode = null;
+        this.roomId = null;
         this.playerId = generatePlayerId();
         this.playerName = '';
         this.isHost = false;
         this.isConnected = true; 
         this.mode = 'offline'; 
         this.unsubscribes = [];
+        this.lastSentState = null;
 
         // UI Helpers called via global scope from React components
         window.copyRoomCode = () => {
@@ -53,6 +122,11 @@ export class MultiplayerManager {
         this.connect();
     }
 
+    getRoomRef(subPath = '') {
+        const id = this.roomId || this.roomCode;
+        return ref(db, subPath ? `rooms/${id}/${subPath}` : `rooms/${id}`);
+    }
+
     /**
      * Instantly starts a local battle with 6 prepopulated teams (Ash, Misty, etc.)
      * This bypasses the multiplayer room creation for testing and quick play.
@@ -65,14 +139,22 @@ export class MultiplayerManager {
             this.arena.log.reset();
         }
 
+        const headerEl = document.getElementById('battle-log-header');
+        if (headerEl) {
+            headerEl.textContent = 'Battle Log (Offline)';
+        }
+
         // Ensure database is fully loaded before trying to prepopulate teams
         if (this.arena && typeof this.arena.ensureDatabaseLoaded === 'function') {
             await this.arena.ensureDatabaseLoaded();
         }
 
+        const playerCount = settings.playerCount || 6;
+        const pokemonCount = settings.pokemonCount || 6;
+
         // 1. Prepopulate the arena with dummy data
         if (typeof this.arena._prepopulate === 'function') {
-            this.arena._prepopulate(settings.selectedTiers);
+            this.arena._prepopulate(settings.selectedTiers, playerCount, pokemonCount);
         } else {
             console.error('[MULTIPLAYER] Error: _prepopulate not found on arena instance.');
             return;
@@ -161,23 +243,34 @@ export class MultiplayerManager {
         }
 
         const roomCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const roomId = roomCode;
+
         this.roomCode = roomCode;
+        this.roomId = roomId;
         this.isHost = true;
         this.trainerName = trainerName;
+        this.lastPlayers = [];
+        setActiveRoom(roomCode, roomId);
 
-        const roomRef = ref(db, `rooms/${roomCode}`);
-        const playerRef = ref(db, `rooms/${roomCode}/players/${this.playerId}`);
-        
+        const roomRef = ref(db, `rooms/${roomId}`);
+        const playerRef = ref(db, `rooms/${roomId}/players/${this.playerId}`);
+        const aliasRef = ref(db, `roomAliases/${roomCode}`);
+
+        await set(aliasRef, roomId);
+
         await set(roomRef, {
             createdAt: Date.now(),
             hostId: this.playerId,
+            hostUid: authManager.currentUser?.uid || null,
             status: 'lobby',
+            aliasCode: roomCode,
             settings: {
                 roomName: settings.roomName || 'Epic Battle Room',
                 maxPlayers: settings.maxPlayers || 2,
                 battleType: settings.battleType || 'singles',
                 selectedTiers: settings.selectedTiers || ['Basic', 'Final'],
-                initialPokemonCount: settings.initialPokemonCount || 6
+                initialPokemonCount: settings.initialPokemonCount || 6,
+                teamAssignmentMode: settings.teamAssignmentMode || 'manual'
             }
         });
 
@@ -188,10 +281,12 @@ export class MultiplayerManager {
         });
 
         onDisconnect(playerRef).remove();
+        onDisconnect(aliasRef).remove();
         onDisconnect(roomRef).update({ hostDisconnected: true });
 
         this.showNotification(`Room created: ${roomCode}`, 'success');
         this.saveRecentRoom(roomCode, 'host');
+        this._recordJoinedGame();
         this.isHost = true;
         this.mode = 'lobby';
         this.showRoomLobby();
@@ -201,10 +296,22 @@ export class MultiplayerManager {
 
     async joinRoom(roomCode, playerName, role = 'player') {
         this.playerName = playerName;
+        this.lastPlayers = [];
         if (this.arena?.log) {
             this.arena.log.reset();
         }
-        const roomRef = ref(db, `rooms/${roomCode}`);
+
+        let roomId = roomCode;
+        const aliasSnap = await get(ref(db, `roomAliases/${roomCode}`));
+        if (aliasSnap.exists()) {
+            roomId = aliasSnap.val();
+        }
+
+        this.roomId = roomId;
+        this.roomCode = roomCode;
+        setActiveRoom(roomCode, roomId);
+
+        const roomRef = ref(db, `rooms/${roomId}`);
         const snapshot = await get(roomRef);
 
         if (!snapshot.exists()) {
@@ -220,7 +327,6 @@ export class MultiplayerManager {
             this.showNotification('Joining ongoing game...', 'info');
         }
 
-        this.roomCode = roomCode;
         if (roomData.hostId === this.playerId) {
             this.isHost = true;
             this.showNotification('Rejoined as Host', 'success');
@@ -243,7 +349,7 @@ export class MultiplayerManager {
         }
 
         this._entryPath = path; // remember for leaveRoom cleanup
-        const playerRef = ref(db, `rooms/${roomCode}/${path}/${this.playerId}`);
+        const playerRef = ref(db, `rooms/${roomId}/${path}/${this.playerId}`);
         await set(playerRef, {
             name: playerName,
             isHost: this.isHost,
@@ -255,6 +361,7 @@ export class MultiplayerManager {
 
         this.showNotification(`Joined room securely as ${selectedRole}`, 'success');
         this.saveRecentRoom(roomCode, selectedRole);
+        this._recordJoinedGame();
 
         if (roomData.status === 'playing') {
              this._listenToLobby();
@@ -266,24 +373,36 @@ export class MultiplayerManager {
     }
 
     leaveRoom() {
-        if (this.roomCode) {
+        const targetId = this.roomId || this.roomCode;
+        if (targetId) {
             // Clean up from whichever path we joined under
             const path = this._entryPath || (this.isSpectator ? 'spectators' : 'players');
-            const playerRef = ref(db, `rooms/${this.roomCode}/${path}/${this.playerId}`);
+            const playerRef = ref(db, `rooms/${targetId}/${path}/${this.playerId}`);
             remove(playerRef);
 
             this.unsubscribes.forEach(unsub => unsub());
             this.unsubscribes = [];
         }
         this.roomCode = null;
+        this.roomId = null;
         this.isHost = false;
         this.mode = 'offline';
         this.isSpectator = false;
         this._entryPath = null;
+        setActiveRoom(null, null);
         // Dismiss lingering wildcard queue overlay if present
         const queueEl = document.getElementById('wildcard-queue');
         if (queueEl) queueEl.remove();
         this.arena.modals.close('multiplayerLobby');
+        const event = new CustomEvent('arena:lobby', {
+            detail: {
+                open: false,
+                players: [],
+                roomCode: null,
+                isHost: false
+            }
+        });
+        window.dispatchEvent(event);
     }
 
     toggleReady() {
@@ -373,6 +492,9 @@ export class MultiplayerManager {
                 this.roomSettings = snapshot.val();
                 this.initialPokemonCount = this.roomSettings.initialPokemonCount || 6;
                 this.teamAssignmentMode = this.roomSettings.teamAssignmentMode || 'random';
+                if (this.mode !== 'playing') {
+                    this.updateRoomUI({ players: this.lastPlayers || [] });
+                }
             }
         });
 
@@ -451,6 +573,16 @@ export class MultiplayerManager {
         document.getElementById('room-modal')?.classList.remove('visible');
         document.getElementById('join-modal')?.classList.remove('visible');
 
+        const event = new CustomEvent('arena:lobby', {
+            detail: {
+                open: false,
+                players: [],
+                roomCode: null,
+                isHost: false
+            }
+        });
+        window.dispatchEvent(event);
+
         const lobbyView = document.getElementById('lobby-view');
         const arenaView = document.getElementById('arena-view');
         const loadingScreen = document.getElementById('loading-screen');
@@ -461,6 +593,11 @@ export class MultiplayerManager {
             if (lobbyView) lobbyView.classList.add('hidden');
             if (arenaView) arenaView.classList.remove('hidden');
             if (loadingScreen) loadingScreen.classList.add('hidden');
+
+            const headerEl = document.getElementById('battle-log-header');
+            if (headerEl && this.roomCode) {
+                headerEl.textContent = `Battle Log (${this.roomCode})`;
+            }
 
             this.arena.log.add('🎮 Multiplayer game started! All players connected.', 'system');
             this.arena.renderer.renderAll();
@@ -504,12 +641,23 @@ export class MultiplayerManager {
     }
 
     sendGameState() {
-        if (!this.roomCode || this.mode !== 'playing') return;
+        const targetId = this.roomId || this.roomCode;
+        if (!targetId || this.mode !== 'playing') return;
         try {
             const state = this.serializeGameState();
             state._sender = this.playerId; 
-            const stateRef = ref(db, `rooms/${this.roomCode}/state`);
-            set(stateRef, state);
+            const stateRef = ref(db, `rooms/${targetId}/state`);
+            
+            if (this.lastSentState) {
+                const diff = getObjectDiff(this.lastSentState, state);
+                if (Object.keys(diff).length > 0) {
+                    diff["_sender"] = this.playerId;
+                    update(stateRef, diff);
+                }
+            } else {
+                set(stateRef, state);
+            }
+            this.lastSentState = state;
         } catch (err) {
             console.error('[MULTIPLAYER] Error serializing game state:', err);
         }
@@ -518,6 +666,7 @@ export class MultiplayerManager {
     receiveGameState(state) {
         try {
             this.deserializeGameState(state);
+            this.lastSentState = state;
             this.arena.renderer.renderAll();
         } catch (err) {
             console.error('[MULTIPLAYER] Error deserializing game state:', err);
@@ -539,8 +688,12 @@ export class MultiplayerManager {
         switch (action) {
             case 'log_add':
                 if (payload) {
-                    this.arena.log._buffer.push(payload);
-                    this.arena.log._render();
+                    const recentEntries = this.arena.log._buffer.toArray().slice(-5);
+                    const alreadyExists = recentEntries.some(e => e.message === payload.message);
+                    if (!alreadyExists) {
+                        this.arena.log._buffer.push(payload);
+                        this.arena.log._render();
+                    }
                 }
                 break;
             case 'attack':
@@ -673,6 +826,18 @@ export class MultiplayerManager {
         const codeDisplay = document.getElementById('room-code-display');
         if (codeDisplay) codeDisplay.textContent = this.roomCode;
 
+        const event = new CustomEvent('arena:lobby', {
+            detail: {
+                open: true,
+                players: this.lastPlayers || [],
+                roomCode: this.roomCode,
+                isHost: this.isHost,
+                initialPokemonCount: this.initialPokemonCount || 6,
+                teamAssignmentMode: this.teamAssignmentMode || 'random'
+            }
+        });
+        window.dispatchEvent(event);
+
         // Expose assignment methods globally so inline onclick survives React re-renders
         window._mpRng = (pid) => {
             console.log('[Multiplayer] RNG clicked', pid);
@@ -694,6 +859,18 @@ export class MultiplayerManager {
             console.log('[Multiplayer] CLEAR slot clicked', pid, idx);
             this.clearPokemonSlot(pid, idx).catch(err => alert('CLEAR Slot Error: ' + err.message));
         };
+        window._mpSetAssignmentMode = (mode) => {
+            console.log('[Multiplayer] Set assignment mode clicked', mode);
+            this.setTeamAssignmentMode(mode).catch(err => alert('Set Mode Error: ' + err.message));
+        };
+    }
+
+    async setTeamAssignmentMode(mode) {
+        if (!this.isHost || !this.roomCode) return;
+        this.teamAssignmentMode = mode;
+        const settingsRef = ref(db, `rooms/${this.roomCode}/settings`);
+        await update(settingsRef, { teamAssignmentMode: mode });
+        this.updateRoomUI({ players: this.lastPlayers || [] });
     }
 
     async assignRandomPokemon(targetPlayerId) {
@@ -1274,80 +1451,26 @@ export class MultiplayerManager {
                 e.preventDefault();
                 e.stopPropagation();
                 const pid = pickBtn.getAttribute('data-pid');
-                this.assignSpecificPokemon(pid).catch(err => alert('PICK Error: ' + err.message));
+                    this.assignSpecificPokemon(pid).catch(err => alert('PICK Error: ' + err.message));
             }
         };
     }
 
     updateRoomUI(data) {
-        const playerList = document.getElementById('room-player-list');
-        if (!playerList || !data.players) return;
-        
-        const count = this.initialPokemonCount || 6;
+        this.lastPlayers = data.players || [];
+        const event = new CustomEvent('arena:lobby', {
+            detail: {
+                open: true,
+                players: this.lastPlayers,
+                roomCode: this.roomCode,
+                isHost: this.isHost,
+                initialPokemonCount: this.initialPokemonCount || 6,
+                teamAssignmentMode: this.teamAssignmentMode || 'random'
+            }
+        });
+        window.dispatchEvent(event);
+
         const isManual = this.teamAssignmentMode === 'manual';
-
-        playerList.innerHTML = data.players.map(p => {
-            let subLabelHtml = '';
-            if (isManual) {
-                const slotPoke = p.assignedPokemon?.[0];
-                let actionButtons = '';
-                if (this.isHost) {
-                    actionButtons = `
-                        <div class="flex gap-1">
-                            <button onclick="window._mpRngSlot('${p.id}', 0)" class="mp-rng-slot-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}" data-idx="0">RNG</button>
-                            <button onclick="window._mpPickSlot('${p.id}', 0)" class="mp-pick-slot-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer" data-pid="${p.id}" data-idx="0">PICK</button>
-                            ${slotPoke ? `<button onclick="window._mpClearSlot('${p.id}', 0)" class="mp-clear-slot-btn bg-[#b92902] hover:bg-[#ff7351] text-white px-2 py-1 text-[8px] uppercase font-bold border border-[#450900] cursor-pointer" data-pid="${p.id}" data-idx="0">CLEAR</button>` : ''}
-                        </div>
-                    `;
-                }
-                subLabelHtml = `
-                    <div class="flex justify-between items-center mt-1 text-[11px]">
-                        <span class="text-slate-400">Slot 1: <span class="${slotPoke ? 'text-yellow-400 font-bold' : 'text-slate-500 italic'}">${slotPoke || 'Empty'}</span></span>
-                        ${actionButtons}
-                    </div>
-                `;
-            } else {
-                subLabelHtml = `<div class="text-[10px] text-yellow-400/80 mt-1 uppercase tracking-wider font-mono">Auto RNG on Start</div>`;
-            }
-
-            return `
-                <div class="bg-surface-container-lowest p-3 border border-outline-variant ${p.isHost ? 'host' : ''} flex flex-col gap-1">
-                    <div class="flex justify-between items-center border-b border-outline-variant pb-1.5">
-                       <div>
-                          <span class="text-white text-sm font-bold">${p.name}</span>
-                          ${p.isHost ? '<span class="text-yellow-400 text-[8px] ml-2 border border-yellow-400 px-1">HOST</span>' : ''}
-                       </div>
-                       ${p.isReady ? '<span class="text-[#5bf083] text-[9px] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-0.5 font-bold">READY</span>' : '<span class="text-red-400 text-[9px] uppercase tracking-wider border border-red-955 bg-red-955/30 px-2 py-0.5 font-bold">NOT READY</span>'}
-                    </div>
-                    ${subLabelHtml}
-                </div>
-            `;
-        }).join('');
-
-        playerList.onclick = (e) => {
-            const rngBtn = e.target.closest('.mp-rng-slot-btn');
-            const pickBtn = e.target.closest('.mp-pick-slot-btn');
-            const clearBtn = e.target.closest('.mp-clear-slot-btn');
-            if (rngBtn) {
-                e.preventDefault();
-                e.stopPropagation();
-                const pid = rngBtn.getAttribute('data-pid');
-                const idx = parseInt(rngBtn.getAttribute('data-idx'));
-                this.assignRandomPokemonSlot(pid, idx).catch(err => alert('RNG Error: ' + err.message));
-            } else if (pickBtn) {
-                e.preventDefault();
-                e.stopPropagation();
-                const pid = pickBtn.getAttribute('data-pid');
-                const idx = parseInt(pickBtn.getAttribute('data-idx'));
-                this.assignSpecificPokemonSlot(pid, idx).catch(err => alert('PICK Error: ' + err.message));
-            } else if (clearBtn) {
-                e.preventDefault();
-                e.stopPropagation();
-                const pid = clearBtn.getAttribute('data-pid');
-                const idx = parseInt(clearBtn.getAttribute('data-idx'));
-                this.clearPokemonSlot(pid, idx).catch(err => alert('CLEAR Error: ' + err.message));
-            }
-        };
         
         const startBtn = document.getElementById('start-game-btn');
         if (startBtn) {
@@ -1455,7 +1578,7 @@ export class MultiplayerManager {
                 const active = p.team?.[activeIndex] || p.team?.[0];
                 return active?.name || active?.species || null;
             }).filter(Boolean);
-            await set(ref(db, `users/${user.uid}/saved_games/${this.roomCode}`), {
+            await set(ref(db, `users/${user.uid}/saved_games/${this.roomId || this.roomCode}`), {
                 snapshot: state,
                 savedAt: Date.now(),
                 roomCode: this.roomCode,
@@ -1473,10 +1596,54 @@ export class MultiplayerManager {
         }
     }
 
+    async _recordJoinedGame() {
+        const user = authManager.currentUser;
+        if (!user || !this.roomId) return;
+        try {
+            const saveRef = ref(db, `users/${user.uid}/saved_games/${this.roomId}`);
+            const snap = await get(saveRef);
+            const existing = snap.exists() ? snap.val() : {};
+            await update(saveRef, {
+                roomCode: this.roomCode || this.roomId,
+                savedAt: Date.now(),
+                isStarted: existing.isStarted || false,
+                playerNames: existing.playerNames || [this.trainerName || this.playerName || user.displayName || 'Trainer']
+            });
+        } catch (e) {
+            console.error('[MULTIPLAYER] Error recording joined game:', e);
+        }
+    }
+
+    async toggleGameStarted(roomId, currentVal) {
+        const user = authManager.currentUser;
+        if (!user) return;
+        try {
+            if (!currentVal) {
+                const savedSnap = await get(ref(db, `users/${user.uid}/saved_games`));
+                if (savedSnap.exists()) {
+                    let startedCount = 0;
+                    savedSnap.forEach(child => {
+                        if (child.val().isStarted) startedCount++;
+                    });
+                    if (startedCount >= 5) {
+                        this.showNotification('You can only mark up to 5 rooms as started. Unmark one first.', 'error');
+                        return;
+                    }
+                }
+            }
+            await update(ref(db, `users/${user.uid}/saved_games/${roomId}`), {
+                isStarted: !currentVal
+            });
+            this.showNotification(!currentVal ? 'Room marked as started!' : 'Room unmarked.', 'success');
+        } catch (e) {
+            console.error('[MULTIPLAYER] Error toggling game started:', e);
+        }
+    }
+
     loadSavedGames() {
         const user = authManager.currentUser;
         if (!user) return;
-        const savedQuery = query(ref(db, `users/${user.uid}/saved_games`), orderByChild('savedAt'), limitToLast(20));
+        const savedQuery = query(ref(db, `users/${user.uid}/saved_games`), orderByChild('savedAt'));
         onValue(savedQuery, (snapshot) => {
             const list = document.getElementById('load-game-list');
             if (!list) return;
@@ -1487,26 +1654,57 @@ export class MultiplayerManager {
             const saves = [];
             snapshot.forEach(child => saves.push({ key: child.key, ...child.val() }));
             saves.sort((a, b) => b.savedAt - a.savedAt);
-            list.innerHTML = saves.map(s => {
-                const date = new Date(s.savedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                const pokemon = (s.pokemonNames || []).slice(0, 4).join(', ') || 'Unknown team';
-                const players = (s.playerNames || []).join(' vs ') || 'Unknown players';
-                return `
-                    <button onclick="window.arena?.multiplayer?.loadAndResume('${s.roomCode}')"
-                        class="load-save-card w-full text-left bg-surface-container-low hover:bg-surface-variant border border-outline-variant p-4 step-animation transition-colors group">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="font-headline text-[#5bf083] text-xl tracking-widest">${s.roomCode}</div>
+            
+            const startedGames = saves.filter(s => s.isStarted).slice(0, 5);
+            const recentGames = saves.filter(s => !s.isStarted).slice(0, 20);
+
+            let html = '';
+            if (startedGames.length > 0) {
+                html += `<div class="col-span-1 sm:col-span-2 mb-2">
+                    <h3 class="text-xs font-bold text-[#5bf083] uppercase tracking-widest border-b border-outline-variant pb-1">Rooms Marked as Started (${startedGames.length}/5)</h3>
+                </div>`;
+                html += startedGames.map(s => this._renderSaveCard(s)).join('');
+            }
+
+            html += `<div class="col-span-1 sm:col-span-2 mt-4 mb-2">
+                <h3 class="text-xs font-bold text-yellow-400 uppercase tracking-widest border-b border-outline-variant pb-1">Last 20 Multiplayer Games Joined</h3>
+            </div>`;
+            if (recentGames.length === 0) {
+                html += '<div class="text-center text-[10px] text-slate-400 py-8 col-span-2">No recent games found</div>';
+            } else {
+                html += recentGames.map(s => this._renderSaveCard(s)).join('');
+            }
+
+            list.innerHTML = html;
+        });
+    }
+
+    _renderSaveCard(s) {
+        const date = new Date(s.savedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const pokemon = (s.pokemonNames || []).slice(0, 4).join(', ') || 'Team pending...';
+        const players = (s.playerNames || []).join(' vs ') || 'Trainer';
+        return `
+            <div class="load-save-card w-full text-left bg-surface-container-low hover:bg-surface-variant border border-outline-variant p-4 step-animation transition-colors flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="font-headline text-[#5bf083] text-xl tracking-widest">${s.roomCode || s.key}</div>
+                        <div class="flex gap-1">
+                            <button onclick="window.arena?.multiplayer?.toggleGameStarted('${s.key}', ${!!s.isStarted})" class="text-[9px] font-bold ${s.isStarted ? 'bg-yellow-400 text-black border-white' : 'bg-surface-container text-slate-400 border-outline-variant hover:text-white'} border px-2 py-1 uppercase tracking-wider transition-all">
+                                ${s.isStarted ? '★ STARTED' : 'MARK AS STARTED'}
+                            </button>
                             <div class="text-[9px] text-slate-500 uppercase tracking-wider border border-outline-variant px-2 py-1">Round ${s.round || 1}</div>
                         </div>
-                        <div class="text-[11px] font-bold text-white mb-1">${players}</div>
-                        <div class="text-[10px] text-slate-400 mb-2">${pokemon}</div>
-                        <div class="flex justify-between items-center">
-                            <div class="text-[9px] text-slate-500 uppercase tracking-wider">${date}</div>
-                            <div class="text-[9px] text-[#5bf083] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">RESUME →</div>
-                        </div>
-                    </button>`;
-            }).join('');
-        });
+                    </div>
+                    <div class="text-[11px] font-bold text-white mb-1">${players}</div>
+                    <div class="text-[10px] text-slate-400 mb-2">${pokemon}</div>
+                </div>
+                <div class="flex justify-between items-center mt-2 pt-2 border-t border-outline-variant/50">
+                    <div class="text-[9px] text-slate-500 uppercase tracking-wider">${date}</div>
+                    <button onclick="window.arena?.multiplayer?.loadAndResume('${s.roomCode || s.key}')" class="text-[9px] font-bold text-[#5bf083] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 hover:bg-[#5bf083] hover:text-black px-3 py-1 transition-all">
+                        RESUME →
+                    </button>
+                </div>
+            </div>`;
     }
 
     async loadAndResume(roomCode) {
@@ -1517,26 +1715,41 @@ export class MultiplayerManager {
         if (!user) { this.showNotification('You must be logged in to load', 'error'); return; }
         const name = this.playerName || user.displayName || user.email || 'Trainer';
         try {
-            const saveSnap = await get(ref(db, `users/${user.uid}/saved_games/${roomCode}`));
+            let roomId = roomCode;
+            const aliasSnap = await get(dbRef(db, `roomAliases/${roomCode}`));
+            if (aliasSnap.exists()) {
+                roomId = aliasSnap.val();
+            }
+
+            const saveSnap = await get(dbRef(db, `users/${user.uid}/saved_games/${roomId}`));
             if (!saveSnap.exists()) { this.showNotification('Save data not found', 'error'); return; }
-            const snapshot = saveSnap.val().snapshot;
-            const roomSnap = await get(ref(db, `rooms/${roomCode}`));
-            if (roomSnap.exists() && roomSnap.val().status === 'playing') {
+            const saveVal = saveSnap.val();
+            const snapshot = saveVal.snapshot || {};
+            const roomSnap = await get(dbRef(db, `rooms/${roomId}`));
+            if (roomSnap.exists() && (roomSnap.val().status === 'playing' || roomSnap.val().status === 'lobby' || roomSnap.val().status === 'waiting')) {
                 this.showNotification('Reconnecting to live room...', 'info');
                 await this.joinRoom(roomCode, name);
-                setTimeout(async () => {
-                    try {
-                        this.deserializeGameState(snapshot);
-                        await set(ref(db, `rooms/${roomCode}/state`), { ...snapshot, _sender: this.playerId });
-                        this.arena.renderer.renderAll();
-                        this.showNotification('Save loaded — continued from Round ' + (snapshot.round || 1), 'success');
-                        this.arena.log.add(`💾 Resumed from save (Round ${snapshot.round || 1}).`, 'system');
-                    } catch (e) { console.error('[MULTIPLAYER] Error pushing saved state:', e); }
-                }, 2000);
+                const headerEl = document.getElementById('battle-log-header');
+                if (headerEl) {
+                    headerEl.textContent = `Battle Log (${roomCode})`;
+                }
+                if (roomSnap.val().status === 'playing' && Object.keys(snapshot).length > 0) {
+                    setTimeout(async () => {
+                        try {
+                            this.deserializeGameState(snapshot);
+                            await set(dbRef(db, `rooms/${roomId}/state`), { ...snapshot, _sender: this.playerId });
+                            this.arena.renderer.renderAll();
+                            this.showNotification('Save loaded — continued from Round ' + (snapshot.round || 1), 'success');
+                            this.arena.log.add(`💾 Resumed from save (Round ${snapshot.round || 1}).`, 'system');
+                        } catch (e) { console.error('[MULTIPLAYER] Error pushing saved state:', e); }
+                    }, 2000);
+                }
             } else {
                 this.showNotification('Room offline. Restoring last save locally...', 'info');
                 this.mode = 'playing';
+                this.roomId = roomId;
                 this.roomCode = roomCode;
+                setActiveRoom(roomCode, roomId);
                 const lobbyView = document.getElementById('lobby-view');
                 const arenaView = document.getElementById('arena-view');
                 const loadingScreen = document.getElementById('loading-screen');
@@ -1545,9 +1758,15 @@ export class MultiplayerManager {
                     if (lobbyView) lobbyView.classList.add('hidden');
                     if (arenaView) arenaView.classList.remove('hidden');
                     if (loadingScreen) loadingScreen.classList.add('hidden');
-                    this.deserializeGameState(snapshot);
-                    this.arena.renderer.renderAll();
-                    this.arena.log.add(`💾 Loaded offline save from room ${roomCode} (Round ${snapshot.round || 1}).`, 'system');
+                    const headerEl = document.getElementById('battle-log-header');
+                    if (headerEl) {
+                        headerEl.textContent = `Battle Log (${roomCode})`;
+                    }
+                    if (Object.keys(snapshot).length > 0) {
+                        this.deserializeGameState(snapshot);
+                        this.arena.renderer.renderAll();
+                        this.arena.log.add(`💾 Loaded offline save from room ${roomCode} (Round ${snapshot.round || 1}).`, 'system');
+                    }
                     this.showNotification('Save loaded (offline mode)!', 'success');
                 }, 1500);
             }

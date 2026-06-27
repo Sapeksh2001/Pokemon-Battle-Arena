@@ -1,84 +1,79 @@
 // ==========================================
-// DATA LOADER — Async dynamic script injection
+// DATA LOADER — Async JSON fetch loading
 // ==========================================
-// Each data file sets a global variable when it runs.
-// We inject <script> tags on demand and wait for onload,
-// then verify the global exists before resolving.
+// Each data file is a JSON file served from public/data/.
+// We fetch them in parallel and assign them to window.* globals.
 
-import pokemonDataUrl from '../../data/Pokemon_NewDataset.js?url';
-import abilityDataUrl from '../../data/ability.js?url';
-import abilitiesMapUrl from '../../data/abilities_map.js?url';
-import movesDataUrl from '../../data/moves_data.js?url';
-import movesetsDataUrl from '../../data/movesets.js?url';
+const BASE_URL = import.meta.env.BASE_URL || '/';
+const cleanBaseUrl = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
 
 const DATA_FILES = [
-    { src: pokemonDataUrl,   global: 'MergedPokemonData',    label: 'Pokémon data'   },
-    { src: abilityDataUrl,   global: 'AbilitiesData',         label: 'Abilities'      },
-    { src: abilitiesMapUrl,  global: 'PokemonAbilitiesMap',   label: 'Abilities map'  },
-    { src: movesDataUrl,    global: 'MovesData',             label: 'Move data'      },
-    { src: movesetsDataUrl,  global: 'MovesetsData',          label: 'Move sets'      },
+    { src: `${cleanBaseUrl}data/pokemon.json`,       global: 'MergedPokemonData',    label: 'Pokémon data'   },
+    { src: `${cleanBaseUrl}data/abilities.json`,     global: 'AbilitiesData',         label: 'Abilities'      },
+    { src: `${cleanBaseUrl}data/abilities_map.json`, global: 'PokemonAbilitiesMap',   label: 'Abilities map'  },
+    { src: `${cleanBaseUrl}data/moves.json`,         global: 'MovesData',             label: 'Move data'      },
+    { src: `${cleanBaseUrl}data/movesets.json`,      global: 'MovesetsData',          label: 'Move sets'      },
 ];
 
 /**
- * Dynamically inject a classic (non-module) script tag and wait for it to load.
- * @param {string} src  - URL/path relative to the document
+ * Fetch a JSON file and store it on the global window object.
+ * @param {string} src  - URL of the JSON file
+ * @param {string} globalName - Name of window global to set
  * @returns {Promise<void>}
  */
-function loadScript(src) {
-    return new Promise((resolve, reject) => {
-        console.log(`[DataLoader] Creating <script> for ${src}`);
-        const el = document.createElement('script');
-        el.src = src;
-        el.onload = () => {
-            console.log(`[DataLoader] Script loaded event fired for ${src}`);
-            resolve();
-        };
-        el.onerror = () => {
-            console.error(`[DataLoader] Error event fired for ${src}`);
-            reject(new Error(`Failed to load: ${src}`));
-        };
-        document.head.appendChild(el);
-    });
+async function loadJson(src, globalName) {
+    console.log(`[DataLoader] Fetching ${src}`);
+    const res = await fetch(src);
+    if (!res.ok) {
+        throw new Error(`Failed to load ${src}: ${res.status}`);
+    }
+    const data = await res.json();
+    window[globalName] = data;
+    console.log(`[DataLoader] Loaded global window.${globalName}`);
 }
 
 /**
- * Load all game data files sequentially, calling onProgress after each one.
+ * Emit a structured progress event that ArenaContext v3 listens for.
+ */
+function emitProgress(loaded, total, label) {
+    window.dispatchEvent(new CustomEvent('arena:progress', {
+        detail: { loaded, total, label }
+    }));
+}
+
+/**
+ * Load all game data files in parallel, emitting progress events after each one.
  *
- * @param {function(loaded: number, total: number, label: string): void} onProgress
- *   Called after each file finishes. `loaded` is the count done so far.
+ * @param {function(loaded: number, total: number, label: string): void} [onProgress]
+ *   Optional legacy callback.
  * @returns {Promise<void>} Resolves when every global is available.
  */
 export async function loadGameData(onProgress) {
     const total = DATA_FILES.length;
     let loadedCount = 0;
 
-    console.log('[DataLoader] Starting to load game data files in parallel...', total, 'files');
+    console.log('[DataLoader] Starting to fetch game data files in parallel...', total, 'files');
 
     const loadTasks = DATA_FILES.map(async ({ src, global: globalName, label }) => {
         // Skip if already present (e.g. hot-reload scenarios)
         if (window[globalName]) {
-            console.log(`[DataLoader] ${globalName} already exists on window. Skipping ${src}.`);
+            console.log(`[DataLoader] ${globalName} already exists on window. Skipping.`);
         } else {
-            console.log(`[DataLoader] Awaiting loadScript for ${src}...`);
             try {
-                await loadScript(src);
+                await loadJson(src, globalName);
             } catch (err) {
                 console.error(`[DataLoader] Caught error loading ${src}:`, err);
                 throw err;
             }
-
-            // Sanity check — the script should have set the global
-            if (!window[globalName]) {
-                console.error(`[DataLoader] Sanity check failed! window.${globalName} is undefined after loading ${src}.`);
-                throw new Error(`Script loaded but global "window.${globalName}" is still undefined. Check ${src}.`);
-            }
-            console.log(`[DataLoader] Successfully verified global "window.${globalName}".`);
         }
 
         loadedCount++;
-        onProgress?.(loadedCount, total, label);
+        emitProgress(loadedCount, total, label);   // CustomEvent
+        onProgress?.(loadedCount, total, label);   // Legacy callback
     });
 
     await Promise.all(loadTasks);
     console.log('[DataLoader] All game data files loaded successfully.');
 }
+
+

@@ -52,37 +52,57 @@ export class BattleController {
 
     // ── Attack ────────────────────────────────────────────────────────────
 
+    /**
+     * Read and validate attack form inputs from the DOM.
+     *
+     * Isolated here so that handleAttack() stays pure logic. Also makes
+     * it possible to stub this method in tests without needing a real DOM.
+     *
+     * @returns {{ attackerId, targetId, moveType, movePower } | null}
+     *   Returns the parsed input object, or null if validation fails
+     *   (error already announced inside this method).
+     */
+    readAttackInputs() {
+        const attackerSel = document.getElementById('attacker-select');
+        const targetSel   = document.getElementById('attack-target-select');
+        const typeSel     = document.getElementById('move-type-select');
+        const powerInput  = document.getElementById('move-power-input');
+
+        const attackerId = attackerSel?.dataset?.value || attackerSel?.value;
+        const targetId   = targetSel?.dataset?.value   || targetSel?.value;
+        const moveType   = typeSel?.value;
+        let   movePower  = parseInt(powerInput?.value, 10);
+
+        // Clamp power to valid range
+        if (movePower > 1000) { movePower = 1000; if (powerInput) powerInput.value = 1000; }
+        if (movePower < 1)    { movePower = 0; }
+
+        if (!attackerId || !targetId || !moveType || isNaN(movePower)) {
+            this.arena._announce('Attacker, Target, Move Type, and Power are required!', true);
+            this.arena.audio.play('error');
+            return null;
+        }
+
+        return { attackerId, targetId, moveType, movePower };
+    }
+
     handleAttack(attackType, remoteData = null) {
         this.arena.audio.play('attack');
 
         let attackerId, targetId, moveType, movePower, damage, effectiveness;
 
         if (remoteData) {
-            attackerId = remoteData.attackerId;
-            targetId = remoteData.targetId;
-            moveType = remoteData.moveType;
-            movePower = remoteData.movePower;
-            damage = remoteData.damage;
+            attackerId   = remoteData.attackerId;
+            targetId     = remoteData.targetId;
+            moveType     = remoteData.moveType;
+            movePower    = remoteData.movePower;
+            damage       = remoteData.damage;
             effectiveness = remoteData.effectiveness;
         } else {
-            const attackerSel = document.getElementById('attacker-select');
-            const targetSel = document.getElementById('attack-target-select');
-            const typeSel = document.getElementById('move-type-select');
-            const powerInput = document.getElementById('move-power-input');
-
-            attackerId = attackerSel?.dataset?.value || attackerSel?.value;
-            targetId = targetSel?.dataset?.value || targetSel?.value;
-            moveType = typeSel?.value;
-            movePower = parseInt(powerInput?.value);
-
-            if (movePower > 1000) { movePower = 1000; if (powerInput) powerInput.value = 1000; }
-            if (movePower < 1) { movePower = 0; }
-
-            if (!attackerId || !targetId || !moveType || isNaN(movePower)) {
-                this.arena._announce('Attacker, Target, Move Type, and Power are required!', true);
-                this.arena.audio.play('error');
-                return;
-            }
+            // Read and validate form inputs via dedicated helper — no inline DOM access.
+            const inputs = this.readAttackInputs();
+            if (!inputs) return;  // helper already announced the error
+            ({ attackerId, targetId, moveType, movePower } = inputs);
         }
 
         const attackerPlayer = this.arena.gs.players.find(p => p.id === attackerId);

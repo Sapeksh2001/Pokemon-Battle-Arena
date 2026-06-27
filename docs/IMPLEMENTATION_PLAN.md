@@ -66,3 +66,21 @@ Summary of changes:
 3. Click "Save Game". Verify the downloaded JSON accurately reflects the 50 HP.
 4. Exit to the Lobby. Click "Load Game". Verify the 20 recent games populate.
 5. Click the room just played. Verify you are thrown straight back into the match with HP still at 50.
+
+---
+
+## Phase 4: Quick Play, Lobby UX, and Card Renderer Enhancements
+
+### 1. Quick Play Dynamic Match Configurations
+- Allowed dynamic player counts (2 to 6) and Pokémon counts per player (1 to 6) directly in Quick Play Modal.
+- Shared the yellow Allowed Tiers styling between Multiplayer and Quick Play Modals.
+
+### 2. Team Editor Card Integration
+- Renders only actual active team members on player cards in the battle arena (no empty placeholders).
+- Clicking the "Manage Team" gear button opens the full-grid editor, supporting adding new Pokémon to the player's team (up to 6) in-game.
+- Added card diffing fingerprint tracking for team lists to instantly display newly added Pokémon.
+
+### 3. Multiplayer Battle Log Improvements
+- Implemented battle log duplication filters when synchronizing `log_add` events between clients.
+- Room code appended to the Battle Log panel header for quick access.
+

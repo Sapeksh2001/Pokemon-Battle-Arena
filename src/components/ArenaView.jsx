@@ -316,7 +316,7 @@ export default function ArenaView() {
                 <div className="bg-surface-container-high px-3 py-2 border-b-2 border-outline-variant flex justify-between items-center flex-shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-yellow-400 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>history_edu</span>
-                    <span className="font-label text-sm text-yellow-400 uppercase tracking-widest text-glow">Battle Log</span>
+                    <span id="battle-log-header" className="font-label text-sm text-yellow-400 uppercase tracking-widest text-glow">Battle Log</span>
                   </div>
                   <div className="flex gap-1">
                     <button id="save-game-btn" onClick={() => window.arena?.multiplayer?.saveGameToFirebase()}

@@ -4,14 +4,14 @@ import { getDatabase } from "firebase/database";
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBJAsIW9w1Sa7NKO8tzODPOPFWKNPtr-yM",
-  authDomain: "pokemon-1248.firebaseapp.com",
-  databaseURL: "https://pokemon-1248-default-rtdb.firebaseio.com",
-  projectId: "pokemon-1248",
-  storageBucket: "pokemon-1248.firebasestorage.app",
-  messagingSenderId: "185001376620",
-  appId: "1:185001376620:web:4358f1204a5fe1a7615149",
-  measurementId: "G-G07TP1ENV6"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase

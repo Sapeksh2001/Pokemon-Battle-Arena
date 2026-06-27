@@ -41,7 +41,19 @@ export default function Modals() {
 
   // Quick Play State
   const [quickPlayTiers, setQuickPlayTiers] = useState(['Final', 'Legendary', 'Ultra Beast', 'Mythical']);
+  const [quickPlayPlayerCount, setQuickPlayPlayerCount] = useState(6);
+  const [quickPlayPokemonCount, setQuickPlayPokemonCount] = useState(6);
   const [tradeSelectedTiers, setTradeSelectedTiers] = useState(['Final']);
+
+  // Multiplayer Lobby State
+  const [lobbyData, setLobbyData] = useState({
+    open: false,
+    players: [],
+    roomCode: '',
+    isHost: false,
+    initialPokemonCount: 6,
+    teamAssignmentMode: 'random'
+  });
 
   const toggleQuickPlayTier = (tierId) => {
     setQuickPlayTiers(prev => 
@@ -64,7 +76,11 @@ export default function Modals() {
         alert('Multiplayer engine not initialized');
         return;
     }
-    window.arena.multiplayer.quickBattle({ selectedTiers: quickPlayTiers });
+    window.arena.multiplayer.quickBattle({ 
+        selectedTiers: quickPlayTiers,
+        playerCount: quickPlayPlayerCount,
+        pokemonCount: quickPlayPokemonCount
+    });
     closeModal('quick-play-modal');
   };
 
@@ -77,6 +93,17 @@ export default function Modals() {
   useEffect(() => {
     const unsub = authManager.subscribe(setUser);
     return unsub;
+  }, []);
+
+  useEffect(() => {
+    const handleLobby = (e) => {
+      setLobbyData(prev => ({
+        ...prev,
+        ...e.detail
+      }));
+    };
+    window.addEventListener('arena:lobby', handleLobby);
+    return () => window.removeEventListener('arena:lobby', handleLobby);
   }, []);
 
   const closeModal = (id) => {
@@ -326,14 +353,34 @@ export default function Modals() {
       {/* Quick Play Modal */}
       <div id="quick-play-modal" className="modal-overlay">
         <div className="modal-content max-w-md relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#5bf083]/50 to-transparent" />
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent" />
           <div className="flex justify-between items-center mb-4 border-b-2 border-outline-variant pb-2">
-            <h2 className="text-xl font-bold text-[#5bf083] font-headline uppercase tracking-tighter text-glow">Quick Battle Settings</h2>
+            <h2 className="text-xl font-bold text-yellow-400 font-headline uppercase tracking-tighter text-glow">Quick Battle Settings</h2>
             <button onClick={() => closeModal('quick-play-modal')} className="text-secondary hover:text-white transition-colors">
               <span className="material-symbols-outlined text-[24px]">close</span>
             </button>
           </div>
           <div className="space-y-4 font-body">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Number of Players:</label>
+                <select 
+                  value={quickPlayPlayerCount}
+                  onChange={(e) => setQuickPlayPlayerCount(parseInt(e.target.value))}
+                  className="w-full bg-surface-container-lowest border border-outline-variant p-3 text-sm focus:border-yellow-400 focus:ring-0 text-white">
+                  {[2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} Players</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Pokémon per Player:</label>
+                <select 
+                  value={quickPlayPokemonCount}
+                  onChange={(e) => setQuickPlayPokemonCount(parseInt(e.target.value))}
+                  className="w-full bg-surface-container-lowest border border-outline-variant p-3 text-sm focus:border-yellow-400 focus:ring-0 text-white">
+                  {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} Pokémon</option>)}
+                </select>
+              </div>
+            </div>
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Allowed Tiers:</label>
               <div className="grid grid-cols-3 gap-2 bg-surface-container-low p-3 border border-outline-variant">
@@ -343,8 +390,8 @@ export default function Modals() {
                     onClick={() => toggleQuickPlayTier(tier.id)}
                     className={`text-[9px] font-bold uppercase tracking-widest p-2 border transition-all ${
                       quickPlayTiers.includes(tier.id)
-                        ? 'bg-[#5bf083] text-black border-[#5bf083] shadow-[0_0_10px_rgba(91,240,131,0.5)]'
-                        : 'bg-surface-container-lowest text-slate-400 border-outline-variant hover:border-[#5bf083]/50'
+                        ? 'bg-yellow-400 text-black border-white shadow-[0_0_10px_rgba(250,204,21,0.5)]'
+                        : 'bg-surface-container-lowest text-slate-400 border-outline-variant hover:border-yellow-400/50'
                     }`}
                   >
                     {tier.label}
@@ -354,7 +401,7 @@ export default function Modals() {
               <div className="flex gap-2 mt-2">
                 <button 
                   onClick={() => setQuickPlayTiers(tierOptions.map(t => t.id))}
-                  className="text-[8px] text-[#5bf083]/70 hover:text-[#5bf083] uppercase tracking-tighter"
+                  className="text-[8px] text-yellow-400/70 hover:text-yellow-400 uppercase tracking-tighter"
                 >
                   Select All
                 </button>
@@ -368,7 +415,7 @@ export default function Modals() {
             </div>
             <button 
               onClick={handleStartQuickPlay}
-              className="w-full bg-tertiary-container hover:bg-[#5bf083] text-[#004a1d] px-6 py-4 border-2 border-white uppercase font-bold tracking-widest step-animation text-[10px] flex justify-center items-center gap-2 mt-4">
+              className="w-full bg-yellow-400 hover:bg-yellow-300 text-black px-6 py-4 border-2 border-white uppercase font-bold tracking-widest step-animation text-[10px] flex justify-center items-center gap-2 mt-4 shadow-[0_0_15px_rgba(250,204,21,0.3)]">
               <span className="material-symbols-outlined text-[18px]">bolt</span> START QUICK BATTLE
             </button>
           </div>
@@ -477,9 +524,8 @@ export default function Modals() {
           </div>
         </div>
       </div>
-
       {/* Multiplayer Lobby Modal */}
-      <div id="multiplayer-lobby-modal" className="modal-overlay">
+      <div id="multiplayer-lobby-modal" className={`modal-overlay ${lobbyData.open ? 'active' : ''}`}>
         <div className="modal-content max-w-2xl relative overflow-hidden group">
           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#699cff]/50 to-transparent" />
           <div className="flex justify-between items-center mb-6 border-b-2 border-outline-variant pb-3">
@@ -496,7 +542,7 @@ export default function Modals() {
             <div className="flex-1 space-y-6">
               <div className="room-code-section bg-surface-container-low border-2 border-outline-variant p-5 text-center">
                 <h3 className="text-[10px] text-on-surface-variant uppercase tracking-widest mb-3">Room Code</h3>
-                <div id="room-code-display" className="room-code text-5xl font-headline text-yellow-400 tracking-[0.2em] text-glow mb-4 bg-surface-container-lowest py-4 border border-outline-variant inline-block w-full">ABC123</div>
+                <div id="room-code-display" className="room-code text-5xl font-headline text-yellow-400 tracking-[0.2em] text-glow mb-4 bg-surface-container-lowest py-4 border border-outline-variant inline-block w-full">{lobbyData.roomCode || 'ABC123'}</div>
                 <p className="text-[8px] text-on-surface-variant uppercase tracking-wider mb-4">Share this code with friends to join</p>
                 <div className="flex gap-3 justify-center">
                   <button id="copy-code-btn" onClick={() => window.copyRoomCode?.()}
@@ -522,13 +568,42 @@ export default function Modals() {
               <div className="players-section bg-surface-container border-2 border-outline-variant flex-1 flex flex-col">
                 <div className="bg-surface-container-high px-4 py-2 border-b-2 border-outline-variant flex justify-between items-center">
                   <h3 className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Players in Room</h3>
-
                 </div>
                 <div id="room-player-list" className="p-3 space-y-2 overflow-y-auto flex-1 max-h-[250px] font-body">
-                  <div className="flex justify-between items-center bg-surface-container-lowest p-3 border border-outline-variant">
-                    <span className="text-white text-sm font-bold">Player 1 (Host)</span>
-                    <span className="text-[#5bf083] text-[10px] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-1">Ready</span>
-                  </div>
+                  {lobbyData.players.length === 0 ? (
+                    <div className="flex justify-between items-center bg-surface-container-lowest p-3 border border-outline-variant">
+                      <span className="text-slate-500 italic text-[10px] uppercase">Waiting for players to join…</span>
+                    </div>
+                  ) : (
+                    lobbyData.players.map(p => {
+                      const slotPoke = p.assignedPokemon?.[0];
+                      return (
+                        <div key={p.id} className={`bg-surface-container-lowest p-3 border border-outline-variant ${p.isHost ? 'host' : ''} flex flex-col gap-1`}>
+                          <div className="flex justify-between items-center border-b border-outline-variant pb-1.5">
+                            <div>
+                              <span className="text-white text-sm font-bold">{p.name}</span>
+                              {p.isHost && <span className="text-yellow-400 text-[8px] ml-2 border border-yellow-400 px-1">HOST</span>}
+                            </div>
+                            {p.isReady ? (
+                              <span className="text-[#5bf083] text-[9px] uppercase tracking-wider border border-[#004a1d] bg-[#004a1d]/30 px-2 py-0.5 font-bold">READY</span>
+                            ) : (
+                              <span className="text-red-400 text-[9px] uppercase tracking-wider border border-red-955 bg-red-955/30 px-2 py-0.5 font-bold">NOT READY</span>
+                            )}
+                          </div>
+                          <div className="flex justify-between items-center mt-1 text-[11px]">
+                            <span className="text-slate-400">Slot 1: <span className={slotPoke ? 'text-yellow-400 font-bold' : 'text-slate-500 italic'}>{slotPoke || 'Empty'}</span></span>
+                            {lobbyData.isHost && (
+                              <div className="flex gap-1">
+                                <button onClick={() => window._mpRngSlot?.(p.id, 0)} className="mp-rng-slot-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer">RNG</button>
+                                <button onClick={() => window._mpPickSlot?.(p.id, 0)} className="mp-pick-slot-btn bg-surface-variant hover:bg-surface-bright text-white px-2 py-1 text-[8px] uppercase font-bold border border-secondary cursor-pointer">PICK</button>
+                                {slotPoke && <button onClick={() => window._mpClearSlot?.(p.id, 0)} className="mp-clear-slot-btn bg-[#b92902] hover:bg-[#ff7351] text-white px-2 py-1 text-[8px] uppercase font-bold border border-[#450900] cursor-pointer">CLEAR</button>}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
               <div className="controls mt-4 flex gap-3">

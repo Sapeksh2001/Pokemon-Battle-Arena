@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authManager } from '../engine/api/authManager.js';
+import { CreateRoomModal, JoinRoomModal } from './MultiplayerModals.jsx';
 
 /**
  * LobbyView
@@ -10,6 +11,8 @@ export default function LobbyView() {
   const [user, setUser] = useState(authManager.currentUser);
   const [newName, setNewName] = useState(user?.displayName || '');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showCreateRoom, setShowCreateRoom] = useState(false);
+  const [showJoinRoom, setShowJoinRoom] = useState(false);
 
   useEffect(() => {
     const unsub = authManager.subscribe((curr) => {
@@ -104,10 +107,7 @@ export default function LobbyView() {
 
               {/* Create Room */}
               <button id="create-room-btn"
-                onClick={() => {
-                  const modal = document.getElementById('room-modal');
-                  if (modal) modal.classList.add('visible');
-                }}
+                onClick={() => setShowCreateRoom(true)}
                 className="w-full bg-secondary-container text-on-secondary-container p-4 border-2 border-white flex items-center gap-4 step-animation hover:bg-[#699cff] transition-all hard-shadow-secondary group">
                 <span className="material-symbols-outlined text-2xl">add_box</span>
                 <div className="text-left">
@@ -119,10 +119,7 @@ export default function LobbyView() {
 
               {/* Join Room */}
               <button id="join-room-btn"
-                onClick={() => {
-                  const modal = document.getElementById('join-modal');
-                  if (modal) modal.classList.add('visible');
-                }}
+                onClick={() => setShowJoinRoom(true)}
                 className="w-full bg-surface-container text-[#699cff] p-4 border-2 border-[#699cff] flex items-center gap-4 step-animation hover:bg-surface-high transition-all group">
                 <span className="material-symbols-outlined text-2xl">groups</span>
                 <div className="text-left">
@@ -210,6 +207,21 @@ export default function LobbyView() {
           </div>
         </nav>
       </div>
+
+      {/* Multiplayer Modals — rendered via React portals, no prompt() */}
+      {showCreateRoom && (
+        <CreateRoomModal
+          defaultName={user?.displayName || ''}
+          onClose={() => setShowCreateRoom(false)}
+        />
+      )}
+      {showJoinRoom && (
+        <JoinRoomModal
+          defaultName={user?.displayName || ''}
+          onClose={() => setShowJoinRoom(false)}
+        />
+      )}
     </div>
+
   );
 }

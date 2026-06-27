@@ -1,11 +1,58 @@
 {
   "rules": {
-    ".read": "auth != null",
-    ".write": "auth != null",
     "rooms": {
       "$room_id": {
-        ".read": true,
-        ".write": true
+        ".read": "auth != null",
+        ".write": "auth != null && (!data.exists() || data.child('hostUid').val() === auth.uid)",
+
+        "players": {
+          "$player_id": {
+            ".write": "auth != null"
+          }
+        },
+        "actions": {
+          "$action_id": {
+            ".write": "auth != null && !data.exists()"
+          }
+        },
+        "entryQueue": {
+          "$player_id": {
+            ".write": "auth != null"
+          }
+        },
+        "state": {
+          ".write": "auth != null"
+        },
+        "settings": {
+          ".write": "auth != null"
+        }
+      }
+    },
+    "roomAliases": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$room_code": {
+        ".validate": "newData.isString() && newData.val().length > 0"
+      }
+    },
+    "errors": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "recent_rooms": {
+          "$room_code": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        },
+        "saved_games": {
+          "$game_id": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        }
       }
     }
   }

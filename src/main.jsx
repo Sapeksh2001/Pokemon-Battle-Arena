@@ -8,6 +8,11 @@ import { initErrorTracker } from './engine/services/errorTracker.js';
 
 initErrorTracker();
 
+// Reticle dev SDK — stripped from production builds
+if (import.meta.env.DEV) {
+  import('./reticle-dev.js');
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <App />
 );

@@ -841,27 +841,27 @@ export class MultiplayerManager {
         // Expose assignment methods globally so inline onclick survives React re-renders
         window._mpRng = (pid) => {
             console.log('[Multiplayer] RNG clicked', pid);
-            this.assignRandomPokemon(pid).catch(err => alert('RNG Error: ' + err.message));
+            this.assignRandomPokemon(pid).catch(err => this.showNotification('RNG Error: ' + err.message, 'error'));
         };
         window._mpPick = (pid) => {
             console.log('[Multiplayer] PICK clicked', pid);
-            this.assignSpecificPokemon(pid).catch(err => alert('PICK Error: ' + err.message));
+            this.assignSpecificPokemon(pid).catch(err => this.showNotification('PICK Error: ' + err.message, 'error'));
         };
         window._mpRngSlot = (pid, idx) => {
             console.log('[Multiplayer] RNG slot clicked', pid, idx);
-            this.assignRandomPokemonSlot(pid, idx).catch(err => alert('RNG Slot Error: ' + err.message));
+            this.assignRandomPokemonSlot(pid, idx).catch(err => this.showNotification('RNG Slot Error: ' + err.message, 'error'));
         };
         window._mpPickSlot = (pid, idx) => {
             console.log('[Multiplayer] PICK slot clicked', pid, idx);
-            this.assignSpecificPokemonSlot(pid, idx).catch(err => alert('PICK Slot Error: ' + err.message));
+            this.assignSpecificPokemonSlot(pid, idx).catch(err => this.showNotification('PICK Slot Error: ' + err.message, 'error'));
         };
         window._mpClearSlot = (pid, idx) => {
             console.log('[Multiplayer] CLEAR slot clicked', pid, idx);
-            this.clearPokemonSlot(pid, idx).catch(err => alert('CLEAR Slot Error: ' + err.message));
+            this.clearPokemonSlot(pid, idx).catch(err => this.showNotification('CLEAR Slot Error: ' + err.message, 'error'));
         };
         window._mpSetAssignmentMode = (mode) => {
             console.log('[Multiplayer] Set assignment mode clicked', mode);
-            this.setTeamAssignmentMode(mode).catch(err => alert('Set Mode Error: ' + err.message));
+            this.setTeamAssignmentMode(mode).catch(err => this.showNotification('Set Mode Error: ' + err.message, 'error'));
         };
     }
 
@@ -1446,12 +1446,12 @@ export class MultiplayerManager {
                 e.preventDefault();
                 e.stopPropagation();
                 const pid = rngBtn.getAttribute('data-pid');
-                this.assignRandomPokemon(pid).catch(err => alert('RNG Error: ' + err.message));
+                this.assignRandomPokemon(pid).catch(err => this.showNotification('RNG Error: ' + err.message, 'error'));
             } else if (pickBtn) {
                 e.preventDefault();
                 e.stopPropagation();
                 const pid = pickBtn.getAttribute('data-pid');
-                    this.assignSpecificPokemon(pid).catch(err => alert('PICK Error: ' + err.message));
+                    this.assignSpecificPokemon(pid).catch(err => this.showNotification('PICK Error: ' + err.message, 'error'));
             }
         };
     }

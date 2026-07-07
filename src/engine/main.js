@@ -1394,14 +1394,6 @@ export class PokemonBattleArena {
         }
     }
 
-    _applyStatusDamage() {
-        this.battleController._applyStatusDamage();
-    }
-
-    _applyWeatherDamage() {
-        this.battleController._applyWeatherDamage();
-    }
-
     // ── Arena background ──────────────────────────────────────────────────
 
     _setArena(type) {

@@ -28,7 +28,7 @@ export default function LobbyView() {
     const result = await authManager.updateTrainerName(newName.trim());
     setIsUpdating(false);
     if (result.error) {
-      alert(result.error);
+      window.arena?._announce(result.error, true);
     }
   };
 

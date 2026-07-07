@@ -73,7 +73,7 @@ export default function Modals() {
 
   const handleStartQuickPlay = () => {
     if (!window.arena?.multiplayer) {
-        alert('Multiplayer engine not initialized');
+        window.arena?._announce('Multiplayer engine not initialized', true);
         return;
     }
     window.arena.multiplayer.quickBattle({ 
@@ -116,7 +116,7 @@ export default function Modals() {
 
   const handleCreateRoom = async () => {
     if (!window.arena?.multiplayer) {
-        alert('Multiplayer engine not initialized');
+        window.arena?._announce('Multiplayer engine not initialized', true);
         return;
     }
     try {
@@ -134,14 +134,14 @@ export default function Modals() {
         closeModal('room-modal');
     } catch (err) {
         console.error('Create room failed:', err);
-        alert('Failed to create room: ' + err.message);
+        window.arena?._announce('Failed to create room: ' + err.message, true);
     }
   };
 
   const handleJoinRoom = async () => {
     const codeToJoin = document.getElementById('room-code-input')?.value || roomCode;
     if (!window.arena?.multiplayer || !codeToJoin) {
-        alert('Please enter a room code');
+        window.arena?._announce('Please enter a room code', true);
         return;
     }
     const name = user?.displayName || 'Anonymous';

@@ -142,6 +142,22 @@ flowchart LR
 - Dynamic soundscape transitions between Lobby Chill and Arena Tension modes
 - Web Audio API; no blocking on load
 
+#### 6.8 Advanced Battle & Ability Engines
+- **Ability Engine**: Resolves 97+ unique abilities spanning on-switch-in, on-attack, on-defense, on-hit, and end-of-round triggers.
+- **Manual Ability Activation**: Clickable ability items on active Pokémon cards triggering effects manually.
+- **Ability Limits**:
+  - Basic/Mid/Final tiers: max 2 regular activations per battle, max 1 hidden ability activation.
+  - Ultra/Legendary/Mythical tiers: max 1 activation of regular/hidden abilities per round.
+- **Partner Fusion Validation**: Fusion commands (Calyrex/Necrozma/Kyurem) check if the partner Glastrier/Spectrier, Solgaleo/Lunala, or Reshiram/Zekrom is active in battle; transforms on success or triggers a warning alert. Zygarde transforms into Complete form only if HP is below 50%; Greninja Battle Bond warns if no fainted Pokémon are present before forcing transformation.
+- **9-Weather System**:
+  - Normal weathers: Sandstorm, Hail, Rain, Harsh Sunlight.
+  - Superior weathers (cannot be overridden by normal weather, selectable via dropdown): Heavy Rain, Extremely Harsh Sunlight, Snow Storm, Dune Storm, Delta Stream (immutable).
+  - Triggers power buffs/nerfs (e.g. fire/water modifiers, non-flying moves halved), type overrides, accuracy adjustments, and status immunities.
+- **Status Category Moves**: Auto self-targeting if no target is specified, applying status conditions or stat boosts directly without triggering damage calculations.
+- **Type Immunities**: Strict type nullification blocks secondary effects, ailments, and stat boosts completely (e.g. no poisoning steel types).
+- **Delayed Attacks**: Future Sight and Doom Desire trigger damage exactly 2 rounds after execution.
+- **Visual Feedback**: Buffed/nerfed move powers display green/red text and direction indicators (e.g. `120 ↑`, `45 ↓`, `0 🚫`) in the moves table based on weather and terrain.
+
 ### P1 — Should Have
 
 #### 6.8 Dynamic Terrain Engine

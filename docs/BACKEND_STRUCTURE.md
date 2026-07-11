@@ -69,6 +69,8 @@ erDiagram
         array actions
         number round
         string weather
+        string terrain
+        array delayedEffects
     }
     SAVED_GAME {
         timestamp savedAt

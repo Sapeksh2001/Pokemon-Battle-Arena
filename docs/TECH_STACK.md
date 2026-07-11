@@ -150,9 +150,9 @@ src/engine/
 ├── api/
 │   ├── authManager.js   # Firebase Auth wrapper with subscribe pattern
 │   └── socketClient.js  # RTDB multiplayer: room create/join/sync, save/load
-├── data/                # Data loaders / lookups
+├── data/                # Data loaders / lookups (including weather.js configurations)
 ├── models/              # Domain models (Player, Pokemon, Move, etc.)
-├── services/            # Battle engine services (damage calc, terrain, history)
+├── services/            # Battle engine services (AbilityEngine, BattleEngine, terrain, history)
 ├── ui/                  # DOM renderers (player card, HP gauge, log)
 └── utils/               # Helpers (type chart, math, formatters)
 ```

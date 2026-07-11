@@ -57,6 +57,14 @@ flowchart TD
 | Damage number popups | ✅ |
 | Tone.js battle music | ✅ |
 | Responsive 1–6 column layout | ✅ |
+| Weather engine (9 normal + superior weather types) | ✅ |
+| Ability engine (97+ passive abilities resolved) | ✅ |
+| Manual Ability/Hidden Ability triggers with tier limits | ✅ |
+| Partner Fusion validation (Calyrex, Necrozma, Kyurem) | ✅ |
+| Status category move processing & auto self-targeting | ✅ |
+| Delayed moves (Future Sight, Doom Desire) | ✅ |
+| Dynamic weather power adjustments visual styling | ✅ |
+| Strict type immunity secondary effect prevention | ✅ |
 
 ---
 
@@ -136,7 +144,11 @@ pokemon-battle-arena-main/
 │   │   ├── api/
 │   │   │   ├── authManager.js    # Firebase Auth wrapper
 │   │   │   └── socketClient.js   # RTDB multiplayer: rooms, save/load
-│   │   ├── services/         # Damage calc, terrain, undo/redo history
+│   │   ├── data/
+│   │   │   └── weather.js        # Weather types configuration (9 types)
+│   │   ├── services/         # Damage calc, AbilityEngine, terrain, history
+│   │   │   ├── AbilityEngine.js  # 97-ability rules engine
+│   │   │   └── BattleEngine.js   # Core damage math (weather + ability aware)
 │   │   ├── models/           # Domain models (Player, Pokemon, Move)
 │   │   ├── ui/               # DOM renderers (card, HP gauge, log)
 │   │   └── utils/            # Type chart, math helpers

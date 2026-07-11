@@ -161,9 +161,10 @@ export default function ArenaView() {
                       className="w-full text-center text-[11px] font-bold tracking-wider bg-surface-container-lowest p-1.5 border border-outline-variant text-[#a9c4ff]">
                       --
                     </div>
-                    <div className="grid grid-cols-2 gap-2 mt-1">
-                      <button id="physical-attack-btn" onClick={act('handleAttack', 'physical')} className="w-full text-[11px] font-bold bg-[#b92902] text-white hover:bg-[#d53d18] border border-[#450900] py-1.5 step-animation transition-colors">PHYSICAL</button>
-                      <button id="special-attack-btn" onClick={act('handleAttack', 'special')} className="w-full text-[11px] font-bold bg-secondary-container text-white hover:bg-[#699cff] border border-[#003271] py-1.5 step-animation transition-colors">SPECIAL</button>
+                    <div className="grid grid-cols-3 gap-1 mt-1">
+                      <button id="physical-attack-btn" onClick={act('handleAttack', 'physical')} className="w-full text-[10px] font-bold bg-[#b92902] text-white hover:bg-[#d53d18] border border-[#450900] py-1.5 step-animation transition-colors">PHYSICAL</button>
+                      <button id="special-attack-btn" onClick={act('handleAttack', 'special')} className="w-full text-[10px] font-bold bg-secondary-container text-white hover:bg-[#699cff] border border-[#003271] py-1.5 step-animation transition-colors">SPECIAL</button>
+                      <button id="status-attack-btn" onClick={act('handleAttack', 'status')} className="w-full text-[10px] font-bold bg-purple-700 text-white hover:bg-purple-600 border border-purple-900 py-1.5 step-animation transition-colors">STATUS</button>
                     </div>
                   </div>
                 </div>
@@ -177,7 +178,18 @@ export default function ArenaView() {
                       <button id="curse-btn" data-status="curse" className="status-btn step-animation flex items-center justify-center gap-0.5 text-[10px]"><span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>skull</span>CRS</button>
                       <button id="poison-btn" data-status="poison" className="status-btn step-animation flex items-center justify-center gap-0.5 text-[10px]"><span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>science</span>PSN</button>
                       <button id="paralyze-btn" data-status="paralyze" className="status-btn step-animation flex items-center justify-center gap-0.5 text-[10px]"><span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>PAR</button>
-                      <button id="weather-btn" className="step-animation text-center text-[10px]">WTH</button>
+                      <select id="weather-select" className="bg-[#1e293b] border border-outline-variant text-[10px] text-white focus:border-yellow-400 focus:ring-0 p-1 col-span-2">
+                        <option value="none">☀ None</option>
+                        <option value="sandstorm">🌪 Sand</option>
+                        <option value="hail">🧊 Hail</option>
+                        <option value="rain">🌧 Rain</option>
+                        <option value="harsh-sunlight">☀️ Sun</option>
+                        <option value="heavy-rain">⛈ H.Rain (Sup)</option>
+                        <option value="extreme-sunlight">🔥 E.Sun (Sup)</option>
+                        <option value="snow-storm">❄ Snow (Sup)</option>
+                        <option value="dune-storm">🏜 Dune (Sup)</option>
+                        <option value="delta-stream">💨 Delta (Sup)</option>
+                      </select>
                       <button id="burn-btn" data-status="burn" className="status-btn step-animation flex items-center justify-center gap-0.5 text-[10px]"><span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>BRN</button>
                       <button id="toxic-btn" data-status="bad_poison" className="status-btn step-animation flex items-center justify-center gap-0.5 text-[10px]"><span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>coronavirus</span>TOX</button>
                     </div>

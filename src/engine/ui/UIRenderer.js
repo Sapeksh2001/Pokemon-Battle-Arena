@@ -390,7 +390,7 @@ export class UIRenderer {
                     </tbody>
                 </table>
                 <div class="flex border-t-2 border-[#1e293b] bg-gray-300 p-0.5 gap-0.5 rounded-b-[10px]">
-                    <div class="w-1/2 bg-white rounded-bl-lg rounded-tl-sm rounded-r-sm border-2 border-[#1e293b] p-1 text-center flex flex-col justify-center items-center ${pokemon.ability ? 'mc-tooltip' : ''}">
+                    <div class="w-1/2 bg-white rounded-bl-lg rounded-tl-sm rounded-r-sm border-2 border-[#1e293b] p-1 text-center flex flex-col justify-center items-center cursor-pointer hover:bg-slate-100 transition-colors ${pokemon.ability ? 'mc-tooltip' : ''}" onclick="window.triggerAbilityManual('${player.id}', '${escapeHTML(pokemon.ability || '')}', false)">
                         <div class="uppercase text-[8px] mb-0.5 text-[#334155] tracking-widest leading-none">Ability</div>
                         ${pokemon.ability ? `
                             <div class="text-[10px] sm:text-xs tracking-wide text-[#0f172a] leading-none font-bold">${escapeHTML(pokemon.ability)}</div>
@@ -400,7 +400,7 @@ export class UIRenderer {
                             </div>
                         ` : `<div class="text-gray-400 italic text-[9px] mt-0.5">None</div>`}
                     </div>
-                    <div class="w-1/2 bg-white rounded-br-lg rounded-tr-sm rounded-l-sm border-2 border-[#1e293b] p-1 text-center flex flex-col justify-center items-center ${pokemon.hiddenAbility ? 'mc-tooltip' : ''}">
+                    <div class="w-1/2 bg-white rounded-br-lg rounded-tr-sm rounded-l-sm border-2 border-[#1e293b] p-1 text-center flex flex-col justify-center items-center cursor-pointer hover:bg-slate-100 transition-colors ${pokemon.hiddenAbility ? 'mc-tooltip' : ''}" onclick="window.triggerAbilityManual('${player.id}', '${escapeHTML(pokemon.hiddenAbility || '')}', true)">
                         <div class="uppercase text-[8px] mb-0.5 text-[#334155] tracking-widest leading-none">Hidden Ability</div>
                         ${pokemon.hiddenAbility ? `
                             <div class="text-[10px] sm:text-xs tracking-wide text-[#0f172a] leading-none font-bold">${escapeHTML(pokemon.hiddenAbility)}</div>
@@ -584,39 +584,9 @@ export class UIRenderer {
             document.getElementById(id)?.classList.toggle('hidden', w !== key);
         });
 
-        const btn = document.getElementById('weather-btn');
-        if (btn) {
-            const shortNames = {
-                none:             '☀ None',
-                sandstorm:        '🌪 Sand',
-                hail:             '🧊 Hail',
-                rain:             '🌧 Rain',
-                'harsh-sunlight': '☀️ Sun',
-                'heavy-rain':     '⛈ H.Rain',
-                'extreme-sunlight':'🔥 E.Sun',
-                'snow-storm':     '❄ Snow',
-                'dune-storm':     '🏜 Dune',
-                'delta-stream':   '💨 Delta',
-            };
-            btn.textContent = shortNames[w] || 'Wth';
-
-            const cssMap = {
-                none:             'weather-none',
-                sandstorm:        'weather-sandstorm',
-                hail:             'weather-hail',
-                rain:             'weather-rain',
-                'harsh-sunlight': 'weather-sun',
-                'heavy-rain':     'weather-heavy-rain',
-                'extreme-sunlight':'weather-extreme-sun',
-                'snow-storm':     'weather-snow',
-                'dune-storm':     'weather-dune',
-                'delta-stream':   'weather-delta',
-            };
-            btn.className = 'step-animation ' + (cssMap[w] || 'weather-none');
-
-            // Show superior badge
-            const isSuperior = ['heavy-rain', 'extreme-sunlight', 'snow-storm', 'dune-storm', 'delta-stream'].includes(w);
-            btn.title = isSuperior ? `${shortNames[w]} (Superior Weather — cannot be overridden by normal weather)` : (shortNames[w] || w);
+        const sel = document.getElementById('weather-select');
+        if (sel) {
+            sel.value = w;
         }
     }
 

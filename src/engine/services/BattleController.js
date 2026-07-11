@@ -72,15 +72,30 @@ export class BattleController {
         const targetSel   = document.getElementById('attack-target-select');
         const typeSel     = document.getElementById('move-type-select');
         const powerInput  = document.getElementById('move-power-input');
+        const moveNameSel = document.getElementById('move-name-select');
 
         const attackerId = attackerSel?.dataset?.value || attackerSel?.value;
-        const targetId   = targetSel?.dataset?.value   || targetSel?.value;
+        let   targetId   = targetSel?.dataset?.value   || targetSel?.value;
         const moveType   = typeSel?.value;
         let   movePower  = parseInt(powerInput?.value, 10);
+        const moveName   = moveNameSel?.value || '';
 
         // Clamp power to valid range
         if (movePower > 1000) { movePower = 1000; if (powerInput) powerInput.value = 1000; }
         if (movePower < 1)    { movePower = 0; }
+
+        // Find actual move category from MovesData if possible
+        const moveData = window.MovesData && moveName ? window.MovesData[moveName] : null;
+        const isStatusMove = moveData?.category === 'Status' || moveData?.category === 'status';
+
+        // Auto self-target if it is a self status move and no target is selected
+        if (isStatusMove && !targetId && attackerId) {
+            targetId = attackerId;
+            if (targetSel) {
+                if (targetSel.dataset) targetSel.dataset.value = attackerId;
+                targetSel.value = attackerId;
+            }
+        }
 
         if (!attackerId || !targetId || !moveType || isNaN(movePower)) {
             this.arena._announce('Attacker, Target, Move Type, and Power are required!', true);
@@ -88,26 +103,27 @@ export class BattleController {
             return null;
         }
 
-        return { attackerId, targetId, moveType, movePower };
+        return { attackerId, targetId, moveType, movePower, moveName };
     }
 
     handleAttack(attackType, remoteData = null) {
         this.arena.audio.play('attack');
 
-        let attackerId, targetId, moveType, movePower, damage, effectiveness;
+        let attackerId, targetId, moveType, movePower, moveName, damage, effectiveness;
 
         if (remoteData) {
             attackerId   = remoteData.attackerId;
             targetId     = remoteData.targetId;
             moveType     = remoteData.moveType;
             movePower    = remoteData.movePower;
+            moveName     = remoteData.moveName || '';
             damage       = remoteData.damage;
             effectiveness = remoteData.effectiveness;
         } else {
             // Read and validate form inputs via dedicated helper — no inline DOM access.
             const inputs = this.readAttackInputs();
             if (!inputs) return;  // helper already announced the error
-            ({ attackerId, targetId, moveType, movePower } = inputs);
+            ({ attackerId, targetId, moveType, movePower, moveName } = inputs);
         }
 
         const attackerPlayer = this.arena.gs.players.find(p => p.id === attackerId);
@@ -184,52 +200,90 @@ export class BattleController {
                 : onDone();
         } else {
             // ── Get enriched move object (from window.MovesData) ─────────
-            const moveObj = window.MovesData
-                ? Object.values(window.MovesData).find(m => m.type === moveType)
+            const moveObj = window.MovesData && moveName
+                ? window.MovesData[moveName]
                 : null;
             const move = moveObj
-                ? { ...moveObj, type: moveType, category: attackType === 'physical' ? 'Physical' : 'Special', flags: moveObj.flags || {} }
+                ? { ...moveObj, type: moveType, category: moveObj.category || (attackType === 'physical' ? 'Physical' : 'Special'), flags: moveObj.flags || {} }
                 : { type: moveType, category: attackType === 'physical' ? 'Physical' : 'Special', flags: {} };
 
-            // ── Weather burn/freeze immunity checks ───────────────────────
-            if (this.wCfg?.statusImmune?.includes('burn') && effectiveness > 0) {
-                // Can't apply burn in rain
-            }
+            const isStatusMove = move.category === 'Status' || move.category === 'status' || attackType === 'status';
 
-            // ── Ability block check (before damage) ───────────────────────
-            if (this.abilityEngine && this.abilityEngine.isBlockedByAbility(attacker, target, move)) {
-                this.abilityEngine.getDefenseMultiplier(attacker, target, move);
+            let msg = '';
+            if (isStatusMove) {
                 damage = 0;
-                effectiveness = 0;
+                effectiveness = 1;
+                msg = `${attacker.fullName} used status move ${moveName || 'Status Attack'} on ${target.fullName}!`;
             } else {
-                // Calculate damage locally
-                const calc = this.arena.engine.calculateDamage(
-                    attacker, target, movePower, moveType, attackType,
-                    this.weather, move, this.abilityEngine
-                );
-                damage = calc.damage;
-                effectiveness = calc.effectiveness;
-            }
+                // ── Weather burn/freeze immunity checks ───────────────────────
+                if (this.wCfg?.statusImmune?.includes('burn') && effectiveness > 0) {
+                    // Can't apply burn in rain
+                }
 
-            let msg;
-            if (effectiveness === 0) {
-                msg = target.ability && this.abilityEngine?.isBlockedByAbility(attacker, target, move)
-                    ? `${target.fullName}'s ${target.ability} made it immune!`
-                    : `${target.fullName} is immune!`;
-            } else {
-                msg = `${attacker.fullName} used a ${attackType} ${moveType} attack on ${target.fullName} for ${damage} damage!`;
-                if (effectiveness > 1) msg += " It's super effective!";
-                if (effectiveness < 1 && effectiveness > 0) msg += " It's not very effective...";
+                // ── Ability block check (before damage) ───────────────────────
+                if (this.abilityEngine && this.abilityEngine.isBlockedByAbility(attacker, target, move)) {
+                    this.abilityEngine.getDefenseMultiplier(attacker, target, move);
+                    damage = 0;
+                    effectiveness = 0;
+                } else {
+                    // Calculate damage locally
+                    const calc = this.arena.engine.calculateDamage(
+                        attacker, target, movePower, moveType, attackType,
+                        this.weather, move, this.abilityEngine
+                    );
+                    damage = calc.damage;
+                    effectiveness = calc.effectiveness;
+                }
+
+                if (effectiveness === 0) {
+                    msg = target.ability && this.abilityEngine?.isBlockedByAbility(attacker, target, move)
+                        ? `${target.fullName}'s ${target.ability} made it immune!`
+                        : `${target.fullName} is immune!`;
+                } else {
+                    msg = `${attacker.fullName} used a ${attackType} ${moveType} attack on ${target.fullName} for ${damage} damage!`;
+                    if (effectiveness > 1) msg += " It's super effective!";
+                    if (effectiveness < 1 && effectiveness > 0) msg += " It's not very effective...";
+                }
             }
 
             this.arena.log.add(msg, effectiveness === 0 ? 'action' : 'damage');
             this.arena._announce(msg);
 
-            if (damage > 0) {
-                this.arena._showDamageNumber(targetId, damage, effectiveness >= 2 ? 'critical' : 'damage');
+            const isDelayedMove = moveName === 'Future Sight' || moveName === 'Doom Desire';
+
+            if (isDelayedMove) {
+                if (!this.arena.gs.delayedEffects) this.arena.gs.delayedEffects = [];
+                this.arena.gs.delayedEffects.push({
+                    name: moveName,
+                    targetId: targetId,
+                    damage: Math.max(20, Math.floor(attacker.getEffectiveStat('specialAttack') * 1.25)),
+                    roundsLeft: 2
+                });
+                msg = `${attacker.fullName} foresaw a future attack on ${target.fullName}!`;
+                this.arena.log.add(msg, 'action');
+                this.arena._announce(msg);
+                this.arena.renderer.renderAll();
+
+                // Broadcast
+                if (this.arena.multiplayer && this.arena.multiplayer.mode === 'playing') {
+                    this.arena.multiplayer.sendAction('attack', {
+                        attackerId,
+                        targetId,
+                        moveType,
+                        movePower,
+                        attackType,
+                        damage: 0,
+                        effectiveness: 1,
+                        isDelayed: true
+                    });
+                }
+                return;
             }
 
-            target.currentHP = Math.max(0, target.currentHP - damage);
+            if (damage > 0) {
+                this.arena._showDamageNumber(targetId, damage, effectiveness >= 2 ? 'critical' : 'damage');
+                target.currentHP = Math.max(0, target.currentHP - damage);
+            }
             this.arena.renderer.renderAll();
 
             // ── Post-attack ability effects ───────────────────────────────
@@ -238,9 +292,33 @@ export class BattleController {
                 this.abilityEngine.onHitDefender(attacker, target, move, damage);
             }
 
-            // ── Secondary effects from move ───────────────────────────────
-            if (damage > 0 && move.secondary) {
+            // ── Secondary effects from move (always trigger on status moves) ─
+            if (move.secondary) {
                 this._applySecondaryEffect(attacker, target, move.secondary);
+            }
+
+            // If move data itself has custom status effect
+            if (isStatusMove && move.status) {
+                const sName = move.status === 'brn' ? 'burn' :
+                              move.status === 'par' ? 'paralysis' :
+                              move.status === 'psn' ? 'poison' :
+                              move.status === 'frz' ? 'freeze' :
+                              move.status === 'slp' ? 'sleep' : move.status;
+                if (target.applyStatus(sName)) {
+                    this.arena.log.add(`${target.fullName} got ${sName}!`, 'status');
+                }
+            }
+
+            // If move data itself has custom boosts
+            if (isStatusMove && move.boosts) {
+                Object.entries(move.boosts).forEach(([stat, stages]) => {
+                    const statMap = { atk: 'attack', def: 'defence', spa: 'specialAttack', spd: 'specialDefence', spe: 'speed' };
+                    const statName = statMap[stat] || stat;
+                    const pct = stages * 0.10;
+                    const mod = Math.floor(target.stats[statName] * Math.abs(pct));
+                    target.statModifiers[statName] = (target.statModifiers[statName] || 0) + (stages < 0 ? -mod : mod);
+                    this.arena.log.add(`${target.fullName}'s ${statName} ${stages < 0 ? 'fell' : 'rose'}!`, 'action');
+                });
             }
 
             // ── Extremely Harsh Sunlight: fire moves apply severe burn 100% ─
@@ -296,6 +374,7 @@ export class BattleController {
         this.arena.gs.round++;
         this._applyWeatherDamage();
         this._applyStatusDamage();
+        this._applyDelayedEffects();
         this._applyEndRoundAbilities();
         this.arena.renderer.renderAll();
         this.arena._notify(`========== ROUND ${this.arena.gs.round} BEGINS ==========`, 'round');
@@ -307,6 +386,26 @@ export class BattleController {
 
         // Autosave Local State
         this.arena.saveLocalState();
+    }
+
+    _applyDelayedEffects() {
+        if (!this.arena.gs.delayedEffects) this.arena.gs.delayedEffects = [];
+        const remaining = [];
+        this.arena.gs.delayedEffects.forEach(effect => {
+            effect.roundsLeft--;
+            if (effect.roundsLeft <= 0) {
+                const targetPlayer = this.arena.gs.players.find(p => p.id === effect.targetId || p.id === parseInt(effect.targetId));
+                const target = targetPlayer?.getActivePokemon();
+                if (target && !target.isFainted()) {
+                    target.takeDamage(effect.damage);
+                    this._applyHPChange(target, targetPlayer.id, target.currentHP, effect.name);
+                    this.arena.log.add(`[EFFECT] ${effect.name} struck ${target.fullName} for ${effect.damage} damage!`, 'damage');
+                }
+            } else {
+                remaining.push(effect);
+            }
+        });
+        this.arena.gs.delayedEffects = remaining;
     }
 
     _applyStatusDamage() {
@@ -419,7 +518,9 @@ export class BattleController {
                 return;
             }
             if (target.applyStatus(statusName)) {
-                this._notify(`${target.fullName} was ${statusName}ed by the move!`, 'action');
+                const msgText = `${target.fullName} was ${statusName}ed by the move!`;
+                this._notify(msgText, 'action');
+                this.arena.log.add(`[EFFECT] ${msgText}`, 'status');
             }
         }
 
@@ -430,13 +531,17 @@ export class BattleController {
                 const pct = stages * 0.10;
                 const mod = Math.floor(target.stats[statName] * Math.abs(pct));
                 target.statModifiers[statName] = (target.statModifiers[statName] || 0) + (stages < 0 ? -mod : mod);
-                this._notify(`${target.fullName}'s ${statName} ${stages < 0 ? 'fell' : 'rose'}!`, 'action');
+                const msgText = `${target.fullName}'s ${statName} ${stages < 0 ? 'fell' : 'rose'}!`;
+                this._notify(msgText, 'action');
+                this.arena.log.add(`[BOOST] ${msgText}`, 'action');
             });
         }
 
         if (volatileStatus === 'confusion') {
             target.applyStatus('confusion');
-            this._notify(`${target.fullName} became confused!`, 'action');
+            const msgText = `${target.fullName} became confused!`;
+            this._notify(msgText, 'action');
+            this.arena.log.add(`[EFFECT] ${msgText}`, 'status');
         }
     }
 

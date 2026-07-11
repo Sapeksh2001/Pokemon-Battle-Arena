@@ -29,12 +29,12 @@ export class PokemonBattleArena {
         this.multiplayer = new MultiplayerManager(this);
         this.abilityEngine = new AbilityEngine(this);
 
-        // Game state — plain object so it remains JSON-serialisable by HistoryManager.
         this.gs = {
             players: [],
             round: 1,
             weather: 'none',
             terrain: null,  // grassy, electric, psychic — set by ability
+            delayedEffects: [], // { name, targetId, damage, roundsLeft }
             activeTurnPlayerId: null,
             selectedAttackTargetId: null,
             selectedStatusTargetId: null,
@@ -1398,37 +1398,32 @@ export class PokemonBattleArena {
 
     // ── Weather ───────────────────────────────────────────────────────────
 
-    cycleWeather(remote = false) {
+    setWeatherDirect(newWeather, remote = false) {
         this.history.snapshot(this.gs);
-        const allWeathers = Object.keys(WEATHER_CONFIG);
         const current = this.gs.weather;
         const currentCfg = WEATHER_CONFIG[current] || {};
+        const newCfg = WEATHER_CONFIG[newWeather] || {};
 
-        // Delta Stream: untouchable by anything — only cycle if not set or user has permission
-        if (currentCfg.untouchable) {
+        // Delta Stream: untouchable by anything
+        if (currentCfg.untouchable && newWeather !== current) {
             this._notify('Delta Stream cannot be overridden!', 'action');
+            // Revert select dropdown value visually
+            const sel = document.getElementById('weather-select');
+            if (sel) sel.value = current;
             return;
         }
 
-        // Build the cycle: normal weathers for normal cycling,
-        // superior weathers accessible via cycling forward
-        const normalWeathers = ['none', 'sandstorm', 'hail', 'rain', 'harsh-sunlight'];
-        const superiorWeathers = ['heavy-rain', 'extreme-sunlight', 'snow-storm', 'dune-storm', 'delta-stream'];
-        const cycle = [...normalWeathers, ...superiorWeathers];
-
-        const idx = cycle.indexOf(current);
-        const next = cycle[(idx + 1) % cycle.length];
-        const nextCfg = WEATHER_CONFIG[next] || {};
-
         // Superior weather blocks normal weather if already superior
-        if (currentCfg.superior && !nextCfg.superior && next !== 'none') {
-            this._notify(`Superior weather ${currentCfg.label} is in effect — cannot set ${nextCfg.label || next}!`, 'action');
+        if (currentCfg.superior && !newCfg.superior && newWeather !== 'none' && newWeather !== current) {
+            this._notify(`Superior weather ${currentCfg.label} is in effect — cannot set ${newCfg.label || newWeather}!`, 'action');
+            const sel = document.getElementById('weather-select');
+            if (sel) sel.value = current;
             return;
         }
 
         const old = this.gs.weather;
-        this.gs.weather = next;
-        const label = nextCfg.label || next;
+        this.gs.weather = newWeather;
+        const label = newCfg.label || newWeather;
         this._notify(`Weather changed from ${WEATHER_CONFIG[old]?.label || old} to ${label}.`, 'action');
         this.renderer.renderAll();
         this.audio.play('click');
@@ -1438,7 +1433,7 @@ export class PokemonBattleArena {
 
         // Sync action in multiplayer
         if (!remote && this.multiplayer && this.multiplayer.mode === 'playing') {
-            this.multiplayer.sendAction('cycle_weather', { weather: next, old });
+            this.multiplayer.sendAction('set_weather', { weather: newWeather, old });
         }
     }
 
@@ -1774,9 +1769,12 @@ export class PokemonBattleArena {
 
         // Status buttons
         document.querySelectorAll('.status-btn').forEach(btn => {
-            if (btn.id !== 'weather-btn') btn.addEventListener('click', e => this.toggleStatus(e));
+            btn.addEventListener('click', e => this.toggleStatus(e));
         });
-        document.getElementById('weather-btn')?.addEventListener('click', () => this.cycleWeather());
+        document.getElementById('weather-select')?.addEventListener('change', e => {
+            const newWeather = e.target.value;
+            this.setWeatherDirect(newWeather);
+        });
 
         // Attack buttons
         // Stat update
@@ -1847,6 +1845,26 @@ export class PokemonBattleArena {
             window.switchActivePokemonForMgmt?.();
         });
 
+        // Manual Ability Activator
+        window.triggerAbilityManual = (playerId, abilityName, isHidden) => {
+            if (!abilityName) return;
+            const player = this.gs.players.find(p => p.id === playerId || p.id === parseInt(playerId));
+            const pokemon = player?.getActivePokemon();
+            if (!pokemon) return;
+
+            this.audio.play('status');
+            this.log.add(`[ABILITY] ${pokemon.fullName} manually activated its ability: ${abilityName}${isHidden ? ' (Hidden)' : ''}!`, 'action');
+            
+            // Re-trigger switch-in effect as the standard activation sequence
+            if (this.abilityEngine) {
+                // Temporarily override active ability if they clicked the alternate option
+                const oldAbility = pokemon.ability;
+                pokemon.ability = abilityName;
+                this.abilityEngine.onSwitchIn(pokemon);
+                pokemon.ability = oldAbility; // restore original structural ability state
+            }
+            this.renderer.renderAll();
+        };
     }
 
     _setupKeyboardShortcuts() {

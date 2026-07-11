@@ -566,20 +566,57 @@ export class UIRenderer {
 
     _updateWeatherView() {
         const w = this._gs.weather;
-        document.getElementById('sandstorm-overlay')?.classList.toggle('hidden', w !== 'sandstorm');
-        document.getElementById('hail-overlay')?.classList.toggle('hidden', w !== 'hail');
+
+        // Toggle all weather overlays
+        const overlays = {
+            sandstorm: 'sandstorm-overlay',
+            hail: 'hail-overlay',
+            rain: 'rain-overlay',
+            'harsh-sunlight': 'sun-overlay',
+            'heavy-rain': 'heavy-rain-overlay',
+            'extreme-sunlight': 'extreme-sun-overlay',
+            'snow-storm': 'snow-storm-overlay',
+            'dune-storm': 'dune-storm-overlay',
+            'delta-stream': 'delta-stream-overlay',
+        };
+
+        Object.entries(overlays).forEach(([key, id]) => {
+            document.getElementById(id)?.classList.toggle('hidden', w !== key);
+        });
 
         const btn = document.getElementById('weather-btn');
         if (btn) {
-            const shortNames = { none: 'Wth: None', sun: 'Wth: Sun', rain: 'Wth: Rain', sandstorm: 'Wth: Sand', hail: 'Wth: Hail' };
+            const shortNames = {
+                none:             '☀ None',
+                sandstorm:        '🌪 Sand',
+                hail:             '🧊 Hail',
+                rain:             '🌧 Rain',
+                'harsh-sunlight': '☀️ Sun',
+                'heavy-rain':     '⛈ H.Rain',
+                'extreme-sunlight':'🔥 E.Sun',
+                'snow-storm':     '❄ Snow',
+                'dune-storm':     '🏜 Dune',
+                'delta-stream':   '💨 Delta',
+            };
             btn.textContent = shortNames[w] || 'Wth';
 
-            btn.className = 'step-animation ' +
-                (w === 'none' ? 'weather-none' :
-                    w === 'sun' ? 'weather-sun' :
-                        w === 'rain' ? 'weather-rain' :
-                            w === 'sandstorm' ? 'weather-sandstorm' :
-                                'weather-hail');
+            const cssMap = {
+                none:             'weather-none',
+                sandstorm:        'weather-sandstorm',
+                hail:             'weather-hail',
+                rain:             'weather-rain',
+                'harsh-sunlight': 'weather-sun',
+                'heavy-rain':     'weather-heavy-rain',
+                'extreme-sunlight':'weather-extreme-sun',
+                'snow-storm':     'weather-snow',
+                'dune-storm':     'weather-dune',
+                'delta-stream':   'weather-delta',
+            };
+            btn.className = 'step-animation ' + (cssMap[w] || 'weather-none');
+
+            // Show superior badge
+            const isSuperior = ['heavy-rain', 'extreme-sunlight', 'snow-storm', 'dune-storm', 'delta-stream'].includes(w);
+            btn.title = isSuperior ? `${shortNames[w]} (Superior Weather — cannot be overridden by normal weather)` : (shortNames[w] || w);
         }
     }
 

@@ -12,6 +12,8 @@ import { Timer } from './ui/Timer.js';
 import { UIRenderer } from './ui/UIRenderer.js';
 import { MultiplayerManager } from './api/socketClient.js';
 import { BattleController } from './services/BattleController.js';
+import { AbilityEngine } from './services/AbilityEngine.js';
+import { WEATHER_CONFIG, SUPERIOR_WEATHERS, UNTOUCHABLE_WEATHERS } from './data/weather.js';
 
 export class PokemonBattleArena {
     constructor() {
@@ -25,12 +27,14 @@ export class PokemonBattleArena {
         this.modals = new ModalManager();
         this.timer = new Timer(120);
         this.multiplayer = new MultiplayerManager(this);
+        this.abilityEngine = new AbilityEngine(this);
 
         // Game state — plain object so it remains JSON-serialisable by HistoryManager.
         this.gs = {
             players: [],
             round: 1,
             weather: 'none',
+            terrain: null,  // grassy, electric, psychic — set by ability
             activeTurnPlayerId: null,
             selectedAttackTargetId: null,
             selectedStatusTargetId: null,
@@ -1396,11 +1400,36 @@ export class PokemonBattleArena {
 
     cycleWeather(remote = false) {
         this.history.snapshot(this.gs);
-        const cycle = ['none', 'sandstorm', 'hail'];
-        const next = cycle[(cycle.indexOf(this.gs.weather) + 1) % cycle.length];
+        const allWeathers = Object.keys(WEATHER_CONFIG);
+        const current = this.gs.weather;
+        const currentCfg = WEATHER_CONFIG[current] || {};
+
+        // Delta Stream: untouchable by anything — only cycle if not set or user has permission
+        if (currentCfg.untouchable) {
+            this._notify('Delta Stream cannot be overridden!', 'action');
+            return;
+        }
+
+        // Build the cycle: normal weathers for normal cycling,
+        // superior weathers accessible via cycling forward
+        const normalWeathers = ['none', 'sandstorm', 'hail', 'rain', 'harsh-sunlight'];
+        const superiorWeathers = ['heavy-rain', 'extreme-sunlight', 'snow-storm', 'dune-storm', 'delta-stream'];
+        const cycle = [...normalWeathers, ...superiorWeathers];
+
+        const idx = cycle.indexOf(current);
+        const next = cycle[(idx + 1) % cycle.length];
+        const nextCfg = WEATHER_CONFIG[next] || {};
+
+        // Superior weather blocks normal weather if already superior
+        if (currentCfg.superior && !nextCfg.superior && next !== 'none') {
+            this._notify(`Superior weather ${currentCfg.label} is in effect — cannot set ${nextCfg.label || next}!`, 'action');
+            return;
+        }
+
         const old = this.gs.weather;
         this.gs.weather = next;
-        this._notify(`Weather changed from ${old} to ${next}.`, 'action');
+        const label = nextCfg.label || next;
+        this._notify(`Weather changed from ${WEATHER_CONFIG[old]?.label || old} to ${label}.`, 'action');
         this.renderer.renderAll();
         this.audio.play('click');
 

@@ -1933,6 +1933,49 @@ export class PokemonBattleArena {
                     this.audio.play('error');
                     return;
                 }
+            } else if (pokeName.toLowerCase().startsWith('kyurem')) {
+                const activeArenaPokemons = this.gs.players.map(p => p.getActivePokemon()).filter(Boolean);
+                const hasReshiram = activeArenaPokemons.some(p => (p.baseSpecies || p.fullName).toLowerCase().includes('reshiram'));
+                const hasZekrom = activeArenaPokemons.some(p => (p.baseSpecies || p.fullName).toLowerCase().includes('zekrom'));
+
+                if (hasReshiram) {
+                    if (pokemon.changeForm('Kyurem-White', this.db)) {
+                        this.log.add(`[FUSION] Kyurem fused with Reshiram to become Kyurem-White!`, 'action');
+                        fusionPerformed = true;
+                    }
+                } else if (hasZekrom) {
+                    if (pokemon.changeForm('Kyurem-Black', this.db)) {
+                        this.log.add(`[FUSION] Kyurem fused with Zekrom to become Kyurem-Black!`, 'action');
+                        fusionPerformed = true;
+                    }
+                } else {
+                    this._announce('Partner Reshiram or Zekrom must be active in battle to fuse Kyurem!', true);
+                    this.audio.play('error');
+                    return;
+                }
+            } else if (abilityName.toLowerCase().replace(/[\s\-]/g, '') === 'powerconstruct') {
+                // Zygarde Power Construct: requires HP < 50%
+                if (pokemon.currentHP > pokemon.maxHp * 0.5) {
+                    this._announce('Zygarde HP must be below 50% to trigger Power-Construct!', true);
+                    this.audio.play('error');
+                    return;
+                }
+                if (pokemon.changeForm('Zygarde-Complete', this.db)) {
+                    this.log.add(`[FORM CHANGE] Zygarde transformed into Zygarde-Complete!`, 'action');
+                    fusionPerformed = true;
+                }
+            } else if (abilityName.toLowerCase().replace(/[\s\-]/g, '') === 'battlebond') {
+                // Greninja Battle Bond: Warn if no fainted Pokémon are present yet, but allow custom override confirmation
+                const anyFainted = this.gs.players.some(p => p.team.some(pk => pk && pk.isFainted()));
+                if (!anyFainted) {
+                    if (!confirm('Battle Bond usually requires a fainted Pokémon. Force transform Greninja to Ash-Greninja anyway?')) {
+                        return;
+                    }
+                }
+                if (pokemon.changeForm('Greninja-Ash', this.db) || pokemon.changeForm('Ash-Greninja', this.db)) {
+                    this.log.add(`[FORM CHANGE] Greninja transformed into Ash-Greninja via Battle Bond!`, 'action');
+                    fusionPerformed = true;
+                }
             }
 
             // Consume a use slot

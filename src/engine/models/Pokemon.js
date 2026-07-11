@@ -49,20 +49,18 @@ export class Pokemon {
             const normBase = normalize(this.baseName);
             let abilities = window.PokemonAbilitiesMap[normFull] || window.PokemonAbilitiesMap[this.fullName] || window.PokemonAbilitiesMap[normBase] || window.PokemonAbilitiesMap[this.baseName] || [];
             if (abilities.length > 0) {
-                let regularAbilities = abilities.filter(a => !a.hidden);
-                let hiddenAbilities = abilities.filter(a => a.hidden);
-                
-                if (regularAbilities.length > 0) {
-                    let randomRegular = regularAbilities[Math.floor(Math.random() * regularAbilities.length)];
-                    this.ability = randomRegular.name;
-                } else if (abilities.length > 0) {
-                    // Fallback to any if no non-hidden abilities exist
-                    this.ability = abilities[0].name;
-                }
-                
+                let hiddenAbilities = abilities.filter(a => typeof a === 'object' && a.hidden);
                 if (hiddenAbilities.length > 0) {
+                    this.ability = hiddenAbilities[0].name;
                     this.hiddenAbility = hiddenAbilities[0].name;
+                } else {
+                    let regularAbilities = abilities.map(a => typeof a === 'string' ? a : a.name);
+                    this.ability = regularAbilities[Math.floor(Math.random() * regularAbilities.length)];
+                    this.hiddenAbility = null;
                 }
+            } else {
+                this.ability = null;
+                this.hiddenAbility = null;
             }
         }
     }

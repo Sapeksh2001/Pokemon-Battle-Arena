@@ -687,40 +687,40 @@ export class PokemonBattleArena {
         const form = document.getElementById('pokemon-editor-form');
         if (!form) return;
 
-        // Build ability selector HTML for the current pokemon
-        const abilityOptionsHTML = this._buildAbilityOptionsHTML(pokemon?.fullName);
-
         form.innerHTML = `
             <h4 class="text-lg text-yellow-300 mb-3">${pokemon ? 'Edit' : 'Add'} Pokémon (Slot ${slotId + 1})</h4>
-            <div class="mb-2">
-                <label for="pokedex-search" class="text-xs text-slate-300 uppercase tracking-wider block mb-1">Search Pokémon</label>
-                <input type="text" id="pokedex-search"
-                       class="w-full bg-slate-900 border border-slate-600 p-2 mt-1 text-xs focus:border-yellow-400 outline-none text-white placeholder:text-slate-500"
-                       onclick="this.select()"
-                       placeholder="Search Pokémon..."
-                       value="${pokemon ? escapeHTML(pokemon.fullName) : ''}">
-                <div id="pokedex-search-results" style="display:none;"></div>
-                <div id="pokedex-grid-picker" class="mt-2 hidden" style="
-                    display: none;
-                    grid-template-columns: repeat(4, 1fr);
-                    gap: 6px;
-                    max-height: 380px;
-                    overflow-y: auto;
-                    background: transparent;
-                    border: 1px solid transparent;
-                    padding: 8px;
-                    scrollbar-width: thin;
-                    scrollbar-color: #facc15 transparent;
-                "></div>
+            <div class="grid grid-cols-2 gap-4 mb-3">
+                <div>
+                    <label for="pokedex-search" class="text-xs text-slate-300 uppercase tracking-wider block mb-1">Search Pokémon</label>
+                    <input type="text" id="pokedex-search"
+                           class="w-full bg-slate-900 border border-slate-600 p-2 mt-1 text-xs focus:border-yellow-400 outline-none text-white placeholder:text-slate-500"
+                           onclick="this.select()"
+                           placeholder="Search Pokémon..."
+                           value="${pokemon ? escapeHTML(pokemon.fullName) : ''}">
+                </div>
+                <div>
+                    <span class="text-xs text-slate-300 uppercase tracking-wider block mb-1">RNG Assign</span>
+                    <div class="flex gap-2 mt-1">
+                        <button type="button" id="rng-roll-btn" class="bg-blue-600 hover:bg-blue-700 text-white border border-blue-400 px-3 py-2 text-xs font-bold uppercase tracking-wider">Roll</button>
+                        <div id="rng-rolled-name" class="flex-1 bg-slate-900 border border-slate-600 p-2 text-xs text-yellow-400 font-bold flex align-middle items-center">
+                            ${pokemon ? escapeHTML(pokemon.fullName) : 'None'}
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="mb-2">
-                <label for="ability-select" class="text-xs text-slate-300 uppercase tracking-wider block mb-1">Ability</label>
-                <select id="ability-select" class="w-full bg-slate-900 border border-slate-600 p-2 mt-1 text-xs text-white focus:border-yellow-400 outline-none">
-                    <option value="">-- Select Ability --</option>
-                    ${abilityOptionsHTML}
-                </select>
-                <div id="ability-description" class="text-xs text-slate-400 mt-1 italic"></div>
-            </div>
+            <div id="pokedex-search-results" style="display:none;"></div>
+            <div id="pokedex-grid-picker" class="mt-2 hidden" style="
+                display: none;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+                max-height: 380px;
+                overflow-y: auto;
+                background: transparent;
+                border: 1px solid transparent;
+                padding: 8px;
+                scrollbar-width: thin;
+                scrollbar-color: #facc15 transparent;
+            "></div>
             <div class="flex gap-2 mt-4">
                 <button id="confirm-pokemon-edit" class="bg-green-600 hover:bg-green-700 p-2 text-xs w-full font-bold uppercase tracking-wider border border-green-400">Confirm</button>
                 ${pokemon ? `<button id="reshuffle-pokemon-edit" class="bg-blue-600 hover:bg-blue-700 p-2 text-xs w-full font-bold uppercase tracking-wider border border-blue-400">Reshuffle</button>` : ''}
@@ -729,14 +729,21 @@ export class PokemonBattleArena {
         form.classList.remove('hidden');
 
         const searchInput = document.getElementById('pokedex-search');
-        const searchResults = document.getElementById('pokedex-search-results');
         const gridPicker = document.getElementById('pokedex-grid-picker');
-        const abilitySelect = document.getElementById('ability-select');
-        const abilityDesc = document.getElementById('ability-description');
+        const rollBtn = document.getElementById('rng-roll-btn');
+        const rolledNameDiv = document.getElementById('rng-rolled-name');
 
         const _hideGrid = () => {
             gridPicker.style.display = 'none';
             gridPicker.innerHTML = '';
+        };
+
+        const _updateRolledName = () => {
+            const name = searchInput.value.trim();
+            const result = this.db.find(name);
+            if (rolledNameDiv) {
+                rolledNameDiv.textContent = result ? (result.foundNode.Name || result.foundNode.name) : 'None';
+            }
         };
 
         const _showGrid = (names) => {
@@ -767,10 +774,10 @@ export class PokemonBattleArena {
                 `;
                 card.innerHTML = `
                     <img src="${node.sprite || ''}" alt="${name}"
-                         onerror="const name='${name.toLowerCase().replace(/[^a-z0-9]/g, '')}'; if(!this.dataset.tried){this.dataset.tried=1; if(this.src.includes('.gif')){this.src=this.src.replace('/ani/','/gen5/').replace('.gif','.png');}else{this.dataset.tried=2;this.src='https://play.pokemonshowdown.com/sprites/dex/'+name+'.png';}}else if(this.dataset.tried=='1'){this.dataset.tried=2;this.src='https://play.pokemonshowdown.com/sprites/dex/'+name+'.png';}"
-                         style="width:46px;height:46px;object-fit:contain;image-rendering:pixelated;
-                                filter:drop-shadow(0 0 3px rgba(250,204,21,0));transition:filter 0.15s;"
-                         loading="lazy">
+                          onerror="const name='${name.toLowerCase().replace(/[^a-z0-9]/g, '')}'; if(!this.dataset.tried){this.dataset.tried=1; if(this.src.includes('.gif')){this.src=this.src.replace('/ani/','/gen5/').replace('.gif','.png');}else{this.dataset.tried=2;this.src='https://play.pokemonshowdown.com/sprites/dex/'+name+'.png';}}else if(this.dataset.tried=='1'){this.dataset.tried=2;this.src='https://play.pokemonshowdown.com/sprites/dex/'+name+'.png';}"
+                          style="width:46px;height:46px;object-fit:contain;image-rendering:pixelated;
+                                 filter:drop-shadow(0 0 3px rgba(250,204,21,0));transition:filter 0.15s;"
+                          loading="lazy">
                     <span style="font-size:8px;color:#cbd5e1;text-align:center;width:100%;
                                   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
                                   line-height:1.1;margin-top:3px;font-family:monospace;">${name}</span>
@@ -786,12 +793,7 @@ export class PokemonBattleArena {
                 card.onclick = () => {
                     searchInput.value = name;
                     _hideGrid();
-                    if (abilitySelect) {
-                        abilitySelect.innerHTML =
-                            '<option value="">-- Select Ability --</option>' +
-                            this._buildAbilityOptionsHTML(name);
-                    }
-                    if (abilityDesc) abilityDesc.textContent = '';
+                    _updateRolledName();
                 };
                 fragment.appendChild(card);
             });
@@ -810,31 +812,35 @@ export class PokemonBattleArena {
             _showGrid(names);
         };
 
-        searchInput.addEventListener('input', _refreshGrid);
-        searchInput.addEventListener('focus', _refreshGrid);
-        _refreshGrid(); // Show initial grid
+        searchInput.addEventListener('input', () => {
+            _refreshGrid();
+            _updateRolledName();
+        });
+        searchInput.addEventListener('focus', () => {
+            _refreshGrid();
+            _updateRolledName();
+        });
+        _refreshGrid();
+        _updateRolledName();
 
         // Hide grid when clicking outside
         document.addEventListener('click', function _outsideClick(e) {
-            if (!gridPicker.contains(e.target) && e.target !== searchInput) {
+            if (!gridPicker.contains(e.target) && e.target !== searchInput && e.target !== rollBtn) {
                 _hideGrid();
                 document.removeEventListener('click', _outsideClick);
             }
         });
 
-        // Ability select — show description
-        if (abilitySelect) {
-            abilitySelect.addEventListener('change', () => {
-                const chosen = abilitySelect.value;
-                if (!chosen || typeof AbilitiesData === 'undefined') {
-                    if (abilityDesc) abilityDesc.textContent = '';
-                    return;
-                }
-                const info = AbilitiesData[chosen];
-                if (abilityDesc) {
-                    abilityDesc.textContent = info
-                        ? `${info.description} (Gen ${info.generation})`
-                        : '';
+        // Roll random pokemon
+        if (rollBtn) {
+            rollBtn.addEventListener('click', () => {
+                let pool = this.db.filteredNames;
+                if (!pool || pool.length === 0) pool = this.db.allNames || [];
+                if (pool.length > 0) {
+                    const randomName = pool[Math.floor(Math.random() * pool.length)];
+                    searchInput.value = randomName;
+                    _updateRolledName();
+                    _hideGrid();
                 }
             });
         }
@@ -850,12 +856,6 @@ export class PokemonBattleArena {
                 if (pokemon) {
                     pokemon.shuffleMoves();
                     pokemon.shuffleAbility();
-                    // Update form values
-                    const abilitySelect = document.getElementById('ability-select');
-                    if (abilitySelect) {
-                        abilitySelect.value = pokemon.ability || '';
-                        abilitySelect.dispatchEvent(new Event('change'));
-                    }
                     this._notify(`Shuffled ${pokemon.fullName}'s moves and ability.`, 'status');
                 }
             });
@@ -923,12 +923,6 @@ export class PokemonBattleArena {
         } else {
             pokemon = new Pokemon(result.foundNode, result.baseNode);
         }
-
-        const abilitySelect = document.getElementById('ability-select');
-        if (abilitySelect && abilitySelect.value) {
-            pokemon.ability = abilitySelect.value;
-        }
-
         player.setSlot(slotId, pokemon);
         if (player.team.filter(p => p).length === 1) player.activePokemonIndex = slotId;
         this._renderTeamEditorGrid();

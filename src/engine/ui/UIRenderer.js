@@ -1,4 +1,5 @@
 import { escapeHTML } from '../utils/helpers.js';
+import { WEATHER_CONFIG } from '../data/weather.js';
 
 // ==========================================
 // UI RENDERER (DOM Construction)
@@ -337,6 +338,32 @@ export class UIRenderer {
                 catIcon = `<svg width="20" height="14" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg" class="inline-block"><path d="M12 1 L15 5 L21 3 L17 8 L22 13 L15 12 L13 17 L10 12 L3 13 L8 8 L2 3 L9 5 Z" fill="#fff" stroke="#ea580c" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
             }
 
+            let powerColor = 'text-[#0f172a]';
+            let powerLabel = String(power);
+            const w = this._gs.weather || 'none';
+            const wCfg = WEATHER_CONFIG[w] || {};
+
+            if (power > 0) {
+                if (wCfg.moveModifiers && wCfg.moveModifiers[type] !== undefined) {
+                    const mult = wCfg.moveModifiers[type];
+                    if (mult > 1) {
+                        powerColor = 'text-green-600 font-bold';
+                        powerLabel = `${Math.floor(power * mult)} ↑`;
+                    } else if (mult < 1) {
+                        powerColor = 'text-red-500 font-bold';
+                        powerLabel = `${Math.floor(power * mult)} ↓`;
+                    }
+                }
+                if (wCfg.nullified && wCfg.nullified.includes(type)) {
+                    powerColor = 'text-red-700 line-through font-bold';
+                    powerLabel = '0 🚫';
+                }
+                if (wCfg.nonFlyingHalved && type !== 'Flying') {
+                    powerColor = 'text-red-500 font-bold';
+                    powerLabel = `${Math.floor(power * 0.5)} ↓`;
+                }
+            }
+
             const moveDesc = moveData.effect ? `<span class="mc-tooltip-desc">${escapeHTML(moveData.effect)}</span>` : '';
 
             return `
@@ -353,11 +380,11 @@ export class UIRenderer {
                     </td>
                     <td class="p-0.5 text-center align-middle">
                         <span class="type-badge" style="background-color:var(--type-${type.toLowerCase()}); font-size: 10px; font-weight: 800; font-family: sans-serif; padding: 3px 8px; border-radius: 4px !important; border: 1.5px solid white; box-shadow: 0 0 0 1px black; display: inline-block; vertical-align: middle; line-height: 1; text-shadow: 1px 1px 0 rgba(0,0,0,0.5); letter-spacing: 0.5px;">
-                            ${escapeHTML(type.toUpperCase())}
+                             ${escapeHTML(type.toUpperCase())}
                         </span>
                     </td>
                     <td class="p-0.5 text-center align-middle">${catIcon}</td>
-                    <td class="p-0.5 text-center text-[9px] sm:text-[10px] align-middle">${escapeHTML(String(power))}</td>
+                    <td class="p-0.5 text-center text-[9px] sm:text-[10px] align-middle ${powerColor}">${escapeHTML(powerLabel)}</td>
                     <td class="p-0.5 text-center pr-1 text-[9px] sm:text-[10px] align-middle">${escapeHTML(displayAcc)}</td>
                 </tr>
             `;

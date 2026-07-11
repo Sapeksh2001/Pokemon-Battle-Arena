@@ -210,6 +210,22 @@ export class BattleController {
             const isStatusMove = move.category === 'Status' || move.category === 'status' || attackType === 'status';
 
             let msg = '';
+            
+            // ── Move Condition Warnings ──────────────────────────────────
+            if (!remoteData && moveName) {
+                const nameLower = moveName.toLowerCase();
+                if (nameLower === 'dream eater' && !target.hasStatus('sleep')) {
+                    if (!confirm(`${moveName} requires the target to be asleep. Attack anyway?`)) return;
+                }
+                if ((nameLower === 'snore' || nameLower === 'sleep talk') && !attacker.hasStatus('sleep')) {
+                    if (!confirm(`${moveName} requires the attacker to be asleep. Attack anyway?`)) return;
+                }
+                if ((nameLower === 'solar beam' || nameLower === 'solar blade') && 
+                    !['harsh-sunlight', 'extreme-sunlight'].includes(this.weather)) {
+                    if (!confirm(`${moveName} takes 2 rounds to charge without sunlight. Attack anyway?`)) return;
+                }
+            }
+
             if (isStatusMove) {
                 damage = 0;
                 effectiveness = 1;
@@ -292,13 +308,13 @@ export class BattleController {
                 this.abilityEngine.onHitDefender(attacker, target, move, damage);
             }
 
-            // ── Secondary effects from move (always trigger on status moves) ─
-            if (move.secondary) {
+            // ── Secondary effects from move (always trigger on status moves unless immune) ─
+            if (move.secondary && effectiveness > 0) {
                 this._applySecondaryEffect(attacker, target, move.secondary);
             }
 
             // If move data itself has custom status effect
-            if (isStatusMove && move.status) {
+            if (isStatusMove && move.status && effectiveness > 0) {
                 const sName = move.status === 'brn' ? 'burn' :
                               move.status === 'par' ? 'paralysis' :
                               move.status === 'psn' ? 'poison' :
@@ -310,7 +326,7 @@ export class BattleController {
             }
 
             // If move data itself has custom boosts
-            if (isStatusMove && move.boosts) {
+            if (isStatusMove && move.boosts && effectiveness > 0) {
                 Object.entries(move.boosts).forEach(([stat, stages]) => {
                     const statMap = { atk: 'attack', def: 'defence', spa: 'specialAttack', spd: 'specialDefence', spe: 'speed' };
                     const statName = statMap[stat] || stat;

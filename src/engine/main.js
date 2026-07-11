@@ -803,13 +803,23 @@ export class PokemonBattleArena {
         // Trie-powered O(k) live search.
         const _refreshGrid = () => {
             const q = searchInput.value.trim();
+            let names = [];
             if (q.length === 0) {
-                _showGrid(this.db.allNames);
+                names = this.db.allNames;
+            } else if (q.length < 2) {
+                _hideGrid();
                 return;
+            } else {
+                names = this.db.search(q, 100);
             }
-            if (q.length < 2) { _hideGrid(); return; }
-            const names = this.db.search(q, 40);
-            _showGrid(names);
+
+            if (this.activeTiers && this.activeTiers.length > 0 && !this.activeTiers.includes('any')) {
+                names = names.filter(name => {
+                    const item = this.db.find(name);
+                    return item && this.activeTiers.includes(item.foundNode.tier);
+                });
+            }
+            _showGrid(names.slice(0, 40));
         };
 
         searchInput.addEventListener('input', () => {
@@ -834,8 +844,15 @@ export class PokemonBattleArena {
         // Roll random pokemon
         if (rollBtn) {
             rollBtn.addEventListener('click', () => {
-                let pool = this.db.filteredNames;
-                if (!pool || pool.length === 0) pool = this.db.allNames || [];
+                let pool = this.db.allNames || [];
+                if (this.activeTiers && this.activeTiers.length > 0 && !this.activeTiers.includes('any')) {
+                    pool = pool.filter(name => {
+                        const item = this.db.find(name);
+                        return item && this.activeTiers.includes(item.foundNode.tier);
+                    });
+                } else {
+                    pool = this.db.filteredNames || pool;
+                }
                 if (pool.length > 0) {
                     const randomName = pool[Math.floor(Math.random() * pool.length)];
                     searchInput.value = randomName;
@@ -914,6 +931,14 @@ export class PokemonBattleArena {
             this._announce(`Invalid Pokémon: "${escapeHTML(name)}"`, true);
             this.audio.play('error');
             return;
+        }
+
+        if (this.activeTiers && this.activeTiers.length > 0 && !this.activeTiers.includes('any')) {
+            if (!this.activeTiers.includes(result.foundNode.tier)) {
+                this._announce(`Pokémon "${escapeHTML(name)}" is not in the selected tiers!`, true);
+                this.audio.play('error');
+                return;
+            }
         }
 
         const existing = player.team[slotId];
@@ -1478,6 +1503,7 @@ export class PokemonBattleArena {
     // ── Prepopulate ───────────────────────────────────────────────────────
 
     _prepopulate(tiers = null, playerCount = 6, pokemonCount = 6) {
+        this.activeTiers = tiers;
         this.gs.players = []; // Clear current players to avoid duplicates
         this._toggleLoading(true, 'Loading Pokémon teams...');
         const names = ['Ash', 'Misty', 'Brock', 'Gary', 'Jessie', 'James'].slice(0, playerCount);

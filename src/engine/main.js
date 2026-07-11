@@ -1852,11 +1852,103 @@ export class PokemonBattleArena {
             const pokemon = player?.getActivePokemon();
             if (!pokemon) return;
 
+            // ── Usage Limit Checks ──────────────────────────────────────────
+            const tierLower = (pokemon.tier || '').toLowerCase();
+            const isLegendary = ['ultra', 'legendary', 'mythical'].includes(tierLower);
+
+            if (isLegendary) {
+                // Ultra, Legendary, Mythical: once in every round
+                if (isHidden) {
+                    if (pokemon.hiddenAbilityUsesThisRound >= 1) {
+                        this._announce('Hidden ability limit reached for this round!', true);
+                        this.audio.play('error');
+                        return;
+                    }
+                } else {
+                    if (pokemon.abilityUsesThisRound >= 1) {
+                        this._announce('Ability limit reached for this round!', true);
+                        this.audio.play('error');
+                        return;
+                    }
+                }
+            } else {
+                // Basic, Mid, Final: regular 2 uses total, hidden 1 use total
+                if (isHidden) {
+                    if (pokemon.hiddenAbilityUses >= 1) {
+                        this._announce('Hidden ability limit reached (max 1 per battle)!', true);
+                        this.audio.play('error');
+                        return;
+                    }
+                } else {
+                    if (pokemon.abilityUses >= 2) {
+                        this._announce('Ability limit reached (max 2 per battle)!', true);
+                        this.audio.play('error');
+                        return;
+                    }
+                }
+            }
+
+            // ── Partner Fusion/Form Change Check ─────────────────────────────
+            const pokeName = pokemon.baseSpecies || pokemon.fullName;
+            let fusionPerformed = false;
+
+            if (pokeName.toLowerCase().startsWith('calyrex')) {
+                // Find Glastrier or Spectrier on active battle arena
+                const activeArenaPokemons = this.gs.players.map(p => p.getActivePokemon()).filter(Boolean);
+                const hasGlastrier = activeArenaPokemons.some(p => (p.baseSpecies || p.fullName).toLowerCase().includes('glastrier'));
+                const hasSpectrier = activeArenaPokemons.some(p => (p.baseSpecies || p.fullName).toLowerCase().includes('spectrier'));
+
+                if (hasGlastrier) {
+                    if (pokemon.changeForm('Calyrex-Ice', this.db)) {
+                        this.log.add(`[FUSION] Calyrex fused with Glastrier to become Calyrex-Ice!`, 'action');
+                        fusionPerformed = true;
+                    }
+                } else if (hasSpectrier) {
+                    if (pokemon.changeForm('Calyrex-Shadow', this.db)) {
+                        this.log.add(`[FUSION] Calyrex fused with Spectrier to become Calyrex-Shadow!`, 'action');
+                        fusionPerformed = true;
+                    }
+                } else {
+                    this._announce('Partner Glastrier or Spectrier must be active in battle to fuse Calyrex!', true);
+                    this.audio.play('error');
+                    return;
+                }
+            } else if (pokeName.toLowerCase().startsWith('necrozma')) {
+                const activeArenaPokemons = this.gs.players.map(p => p.getActivePokemon()).filter(Boolean);
+                const hasSolgaleo = activeArenaPokemons.some(p => (p.baseSpecies || p.fullName).toLowerCase().includes('solgaleo'));
+                const hasLunala = activeArenaPokemons.some(p => (p.baseSpecies || p.fullName).toLowerCase().includes('lunala'));
+
+                if (hasSolgaleo) {
+                    if (pokemon.changeForm('Necrozma-Dusk Mane', this.db) || pokemon.changeForm('Necrozma-Dusk-Mane', this.db)) {
+                        this.log.add(`[FUSION] Necrozma fused with Solgaleo to become Necrozma Dusk Mane!`, 'action');
+                        fusionPerformed = true;
+                    }
+                } else if (hasLunala) {
+                    if (pokemon.changeForm('Necrozma-Dawn Wings', this.db) || pokemon.changeForm('Necrozma-Dawn-Wings', this.db)) {
+                        this.log.add(`[FUSION] Necrozma fused with Lunala to become Necrozma Dawn Wings!`, 'action');
+                        fusionPerformed = true;
+                    }
+                } else {
+                    this._announce('Partner Solgaleo or Lunala must be active in battle to fuse Necrozma!', true);
+                    this.audio.play('error');
+                    return;
+                }
+            }
+
+            // Consume a use slot
+            if (isHidden) {
+                pokemon.hiddenAbilityUses++;
+                pokemon.hiddenAbilityUsesThisRound++;
+            } else {
+                pokemon.abilityUses++;
+                pokemon.abilityUsesThisRound++;
+            }
+
             this.audio.play('status');
             this.log.add(`[ABILITY] ${pokemon.fullName} manually activated its ability: ${abilityName}${isHidden ? ' (Hidden)' : ''}!`, 'action');
             
             // Re-trigger switch-in effect as the standard activation sequence
-            if (this.abilityEngine) {
+            if (this.abilityEngine && !fusionPerformed) {
                 // Temporarily override active ability if they clicked the alternate option
                 const oldAbility = pokemon.ability;
                 pokemon.ability = abilityName;

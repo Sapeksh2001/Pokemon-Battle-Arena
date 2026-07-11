@@ -28,6 +28,12 @@ export class Pokemon {
         this.ability = null;
         this.hiddenAbility = null;
         
+        // Ability usage limits tracking
+        this.abilityUses = 0;
+        this.hiddenAbilityUses = 0;
+        this.abilityUsesThisRound = 0;
+        this.hiddenAbilityUsesThisRound = 0;
+        
         this.shuffleMoves();
         this.shuffleAbility();
     }

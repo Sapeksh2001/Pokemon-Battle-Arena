@@ -372,6 +372,17 @@ export class BattleController {
         this.arena.audio.play('confirm');
         this.arena.history.snapshot(this.arena.gs);
         this.arena.gs.round++;
+
+        // Reset round ability use trackers for all players' pokemon
+        this.arena.gs.players.forEach(p => {
+            p.team.forEach(poke => {
+                if (poke) {
+                    poke.abilityUsesThisRound = 0;
+                    poke.hiddenAbilityUsesThisRound = 0;
+                }
+            });
+        });
+
         this._applyWeatherDamage();
         this._applyStatusDamage();
         this._applyDelayedEffects();

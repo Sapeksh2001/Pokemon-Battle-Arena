@@ -932,8 +932,37 @@ export class MultiplayerManager {
         if (queueSnap.exists()) {
             // Wildcard mid-game join: promote from entryQueue → players
             const playerData = queueSnap.val();
+
+            // Calculate max team size of any existing player
+            const existingPlayers = this.arena.gs.players;
+            let maxPokeCount = 0;
+            existingPlayers.forEach(p => {
+                const count = p.team.filter(poke => poke !== null && poke !== undefined).length;
+                if (count > maxPokeCount) {
+                    maxPokeCount = count;
+                }
+            });
+            if (maxPokeCount === 0) maxPokeCount = this.initialPokemonCount || 6;
+
+            // Calculate average HP percent, floor any pokemon's HP percentage to min 30% (0.3)
+            let totalPercentage = 0;
+            let totalPokeCount = 0;
+            existingPlayers.forEach(p => {
+                p.team.forEach(poke => {
+                    if (poke) {
+                        let percent = poke.currentHP / poke.maxHp;
+                        if (percent <= 0.3) {
+                            percent = 0.3;
+                        }
+                        totalPercentage += percent;
+                        totalPokeCount++;
+                    }
+                });
+            });
+            const avgPercent = totalPokeCount > 0 ? (totalPercentage / totalPokeCount) : 1.0;
+
             const assignedPokemon = {};
-            for (let i = 0; i < (this.initialPokemonCount || 6); i++) {
+            for (let i = 0; i < maxPokeCount; i++) {
                 const rolled = selectionSource[Math.floor(Math.random() * selectionSource.length)];
                 assignedPokemon[i] = rolled.Name || rolled.name;
             }
@@ -948,12 +977,14 @@ export class MultiplayerManager {
             // Immediately add to local game state — don't wait for _listenToLobby callback
             const alreadyInGame = this.arena.gs.players.find(sp => sp.id === targetPlayerId);
             if (!alreadyInGame) {
-                const newPlayer = new Player(targetPlayerId, playerData.name, this.initialPokemonCount || 6);
-                for (let i = 0; i < (this.initialPokemonCount || 6); i++) {
+                const newPlayer = new Player(targetPlayerId, playerData.name, maxPokeCount);
+                for (let i = 0; i < maxPokeCount; i++) {
                     const pokeId = assignedPokemon[i];
                     const result = this.arena.db.find(pokeId);
                     if (result) {
-                        newPlayer.team[i] = new Pokemon(result.foundNode, result.baseNode);
+                        const newPoke = new Pokemon(result.foundNode, result.baseNode);
+                        newPoke.currentHP = Math.max(1, Math.floor(newPoke.maxHp * avgPercent));
+                        newPlayer.team[i] = newPoke;
                     }
                 }
                 this.arena.gs.players.push(newPlayer);

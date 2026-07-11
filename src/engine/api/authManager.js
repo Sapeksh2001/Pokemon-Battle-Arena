@@ -13,7 +13,7 @@ import { auth } from '../../firebase.js';
 
 export class AuthManager {
     constructor() {
-        this.currentUser = null;
+        this.currentUser = undefined; // undefined = not yet resolved; null = signed out; object = signed in
         this.onAuthStateChangedCallbacks = [];
 
         onAuthStateChanged(auth, (user) => {

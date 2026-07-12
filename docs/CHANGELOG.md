@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-07-13
+- Implemented comprehensive move effects: drain (Giga Drain, etc.) and recoil (Brave Bird, etc.) from moves.json.
+- Added flinch volatile status effect blocking attacker turns.
+- Implemented Destiny Bond linking KO effects.
+- Added self-sacrifice move mechanics (Explosion, Memento, Healing Wish, etc.).
+- Implemented attacker self-stat changes (Close Combat, Flame Charge, etc.).
+- Added self-healing status moves (Recover, Roost, Moonlight, etc.).
+- Implemented Protect/Endure shield and block mechanics.
+- Added AOE/Multi-target support (Earthquake, Surf, etc.) hitting multiple foes or players.
+- Added Multi-hit moves support (Double Kick, Bonemerang, etc.) hitting multiple times.
+- Implemented decaying battlefield terrains (Electric Terrain).
+- Added trapping and DoT status effects (Bind, Leech Seed, etc.).
+- Allowed manual weather override from dropdown bypassing Delta Stream.
+- Removed bottom navigation footer from lobby game menu.
+
 ## 2026-06-28
 - Fixed moveset shuffle updates instantly.
 - Handled ailment visual icons order.

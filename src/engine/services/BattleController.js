@@ -213,23 +213,23 @@ export class BattleController {
             
             // ── Move Condition Warnings ──────────────────────────────────
             if (!remoteData && moveName) {
-                const nameLower = moveName.toLowerCase();
-                if (nameLower === 'dream eater' && !target.hasStatus('sleep')) {
-                    if (!confirm(`${moveName} requires the target to be asleep. Attack anyway?`)) return;
+                const nameClean = moveName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (nameClean === 'dreameater' && !target.hasStatus('sleep')) {
+                    if (!confirm(`${moveObj?.name || moveName} requires the target to be asleep. Attack anyway?`)) return;
                 }
-                if ((nameLower === 'snore' || nameLower === 'sleep talk') && !attacker.hasStatus('sleep')) {
-                    if (!confirm(`${moveName} requires the attacker to be asleep. Attack anyway?`)) return;
+                if ((nameClean === 'snore' || nameClean === 'sleeptalk') && !attacker.hasStatus('sleep')) {
+                    if (!confirm(`${moveObj?.name || moveName} requires the attacker to be asleep. Attack anyway?`)) return;
                 }
-                if ((nameLower === 'solar beam' || nameLower === 'solar blade') && 
+                if ((nameClean === 'solarbeam' || nameClean === 'solarblade') && 
                     !['harsh-sunlight', 'extreme-sunlight'].includes(this.weather)) {
-                    if (!confirm(`${moveName} takes 2 rounds to charge without sunlight. Attack anyway?`)) return;
+                    if (!confirm(`${moveObj?.name || moveName} takes 2 rounds to charge without sunlight. Attack anyway?`)) return;
                 }
             }
 
             if (isStatusMove) {
                 damage = 0;
                 effectiveness = 1;
-                msg = `${attacker.fullName} used status move ${moveName || 'Status Attack'} on ${target.fullName}!`;
+                msg = `${attacker.fullName} used status move ${moveObj?.name || moveName || 'Status Attack'} on ${target.fullName}!`;
             } else {
                 // ── Weather burn/freeze immunity checks ───────────────────────
                 if (this.wCfg?.statusImmune?.includes('burn') && effectiveness > 0) {
@@ -256,7 +256,7 @@ export class BattleController {
                         ? `${target.fullName}'s ${target.ability} made it immune!`
                         : `${target.fullName} is immune!`;
                 } else {
-                    msg = `${attacker.fullName} used a ${attackType} ${moveType} attack on ${target.fullName} for ${damage} damage!`;
+                    msg = `${attacker.fullName} used ${moveObj?.name || moveName || 'Attack'} on ${target.fullName} for ${damage} damage!`;
                     if (effectiveness > 1) msg += " It's super effective!";
                     if (effectiveness < 1 && effectiveness > 0) msg += " It's not very effective...";
                 }
@@ -265,12 +265,13 @@ export class BattleController {
             this.arena.log.add(msg, effectiveness === 0 ? 'action' : 'damage');
             this.arena._announce(msg);
 
-            const isDelayedMove = moveName === 'Future Sight' || moveName === 'Doom Desire';
+            const nameClean = moveName ? moveName.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+            const isDelayedMove = nameClean === 'futuresight' || nameClean === 'doomdesire';
 
             if (isDelayedMove) {
                 if (!this.arena.gs.delayedEffects) this.arena.gs.delayedEffects = [];
                 this.arena.gs.delayedEffects.push({
-                    name: moveName,
+                    name: moveObj?.name || moveName,
                     targetId: targetId,
                     damage: Math.max(20, Math.floor(attacker.getEffectiveStat('specialAttack') * 1.25)),
                     roundsLeft: 2

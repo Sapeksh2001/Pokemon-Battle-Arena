@@ -1597,8 +1597,8 @@ export class PokemonBattleArena {
             const md = MovesData[moveName];
             if (!md) return;
             const label = md.power > 0
-                ? `${moveName} (${md.type} · ${md.category} · ${md.power})`
-                : `${moveName} (${md.type} · ${md.category})`;
+                ? `${md.name || moveName} (${md.type} · ${md.category} · ${md.power})`
+                : `${md.name || moveName} (${md.type} · ${md.category})`;
             sel.add(new Option(label, moveName));
         });
 

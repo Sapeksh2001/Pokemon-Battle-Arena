@@ -27,8 +27,40 @@ async function loadJson(src, globalName) {
     if (!res.ok) {
         throw new Error(`Failed to load ${src}: ${res.status}`);
     }
-    const data = await res.json();
-    window[globalName] = data;
+    let data = await res.json();
+    if (globalName === 'MovesData') {
+        const normalized = {};
+        for (const [key, value] of Object.entries(data)) {
+            if (!value.name) value.name = key;
+            const normKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+            normalized[normKey] = value;
+        }
+        
+        // Proxy to support arbitrary capitalization/spaces during dynamic accesses
+        const proxy = new Proxy(normalized, {
+            get(target, prop) {
+                if (typeof prop === 'string') {
+                    const normProp = prop.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    if (normProp in target) {
+                        return target[normProp];
+                    }
+                }
+                return target[prop];
+            },
+            has(target, prop) {
+                if (typeof prop === 'string') {
+                    const normProp = prop.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    if (normProp in target) {
+                        return true;
+                    }
+                }
+                return prop in target;
+            }
+        });
+        window[globalName] = proxy;
+    } else {
+        window[globalName] = data;
+    }
     console.log(`[DataLoader] Loaded global window.${globalName}`);
 }
 

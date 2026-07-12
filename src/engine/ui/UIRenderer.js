@@ -369,9 +369,9 @@ export class UIRenderer {
             return `
                 <tr class="${bgClass} text-slate-800 border-b border-gray-300 last:border-0 align-middle">
                     <td class="p-0.5 pl-1 text-[#0f172a] text-[9px] sm:text-[10px] tracking-tight mc-tooltip align-middle">
-                        <span class="truncate block" title="${escapeHTML(m)}">${escapeHTML(m)}</span>
+                        <span class="truncate block" title="${escapeHTML(moveData.name || m)}">${escapeHTML(moveData.name || m)}</span>
                         <div class="mc-tooltip-content">
-                            <span class="mc-tooltip-title">${escapeHTML(m)}</span>
+                            <span class="mc-tooltip-title">${escapeHTML(moveData.name || m)}</span>
                             <span>Type: ${escapeHTML(type)}</span><br>
                             <span>Power: ${escapeHTML(String(power))}</span><br>
                             <span>Accuracy: ${escapeHTML(displayAcc)}</span>

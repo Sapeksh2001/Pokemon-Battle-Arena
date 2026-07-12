@@ -187,25 +187,7 @@ export default function LobbyView() {
           </div>
         </main>
 
-        {/* Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-2 bg-[#060e20]/90 backdrop-blur-xl border-t-4 border-[#6d758c]">
-          <div className="flex flex-col items-center justify-center bg-yellow-400 text-[#060e20] p-2 border-2 border-white step-animation cursor-pointer min-w-[80px]">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>swords</span>
-            <span className="font-label text-[8px] mt-1 uppercase">BATTLE</span>
-          </div>
-          <div className="flex flex-col items-center justify-center text-slate-400 p-2 hover:bg-slate-800 transition-colors cursor-pointer min-w-[80px]">
-            <span className="material-symbols-outlined">groups</span>
-            <span className="font-label text-[8px] mt-1 uppercase">ROOMS</span>
-          </div>
-          <div className="flex flex-col items-center justify-center text-slate-400 p-2 hover:bg-slate-800 transition-colors cursor-pointer min-w-[80px]">
-            <span className="material-symbols-outlined">person_pin</span>
-            <span className="font-label text-[8px] mt-1 uppercase">TRAINER</span>
-          </div>
-          <div className="flex flex-col items-center justify-center text-slate-400 p-2 hover:bg-slate-800 transition-colors cursor-pointer min-w-[80px]">
-            <span className="material-symbols-outlined">settings</span>
-            <span className="font-label text-[8px] mt-1 uppercase">SYSTEM</span>
-          </div>
-        </nav>
+
       </div>
 
       {/* Multiplayer Modals — rendered via React portals, no prompt() */}

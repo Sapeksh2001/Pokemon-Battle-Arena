@@ -24,6 +24,14 @@ export class Pokemon {
         this.statModifiers = {};         // key → delta from base stat
         this.statuses = {};         // e.g. { poison: true, burn: true }
         
+        // Battle state fields
+        this.destinyBondTarget = null;
+        this.flinched = false;
+        this.protected = false;
+        this.enduring = false;
+        this.lastMoveUsed = null;
+        this.trappedEffects = []; // array of { name: string, damagePercent: number, roundsLeft: number }
+        
         this.moves = [];
         this.ability = null;
         this.hiddenAbility = null;
@@ -206,7 +214,13 @@ export class Pokemon {
             cry: this.cry,
             tier: this.tier,
             data: this.data,
-            baseData: this.baseData
+            baseData: this.baseData,
+            destinyBondTarget: this.destinyBondTarget,
+            flinched: this.flinched,
+            protected: this.protected,
+            enduring: this.enduring,
+            lastMoveUsed: this.lastMoveUsed,
+            trappedEffects: this.trappedEffects ? JSON.parse(JSON.stringify(this.trappedEffects)) : []
         };
     }
 
@@ -244,6 +258,13 @@ export class Pokemon {
         if (json.sprite) p.sprite = json.sprite;
         if (json.cry) p.cry = json.cry;
         if (json.tier) p.tier = json.tier;
+        
+        p.destinyBondTarget = json.destinyBondTarget !== undefined ? json.destinyBondTarget : null;
+        p.flinched = json.flinched !== undefined ? json.flinched : false;
+        p.protected = json.protected !== undefined ? json.protected : false;
+        p.enduring = json.enduring !== undefined ? json.enduring : false;
+        p.lastMoveUsed = json.lastMoveUsed !== undefined ? json.lastMoveUsed : null;
+        p.trappedEffects = json.trappedEffects !== undefined ? JSON.parse(JSON.stringify(json.trappedEffects)) : [];
         return p;
     }
 }

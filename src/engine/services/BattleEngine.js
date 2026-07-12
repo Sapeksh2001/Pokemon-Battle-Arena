@@ -39,7 +39,7 @@ export class BattleEngine {
      * @param {AbilityEngine} abilityEngine
      * @returns {{ damage, effectiveness, blockedBy }}
      */
-    calculateDamage(attacker, defender, movePower, moveType, attackType, weather = 'none', move = null, abilityEngine = null) {
+    calculateDamage(attacker, defender, movePower, moveType, attackType, weather = 'none', move = null, abilityEngine = null, terrain = null) {
         // ── 0. Ability block check ─────────────────────────────────────────
         if (abilityEngine && move) {
             const blocked = abilityEngine.isBlockedByAbility(attacker, defender, move);
@@ -117,6 +117,22 @@ export class BattleEngine {
         if (abilityEngine && move) {
             const atkMult = abilityEngine.getAttackMultiplier(attacker, defender, move);
             effectivePower *= atkMult;
+        }
+
+        // Terrain move power modifier
+        if (terrain) {
+            if (terrain.type === 'electric' && effectiveMoveType === 'Electric') {
+                effectivePower *= 1.5;
+            }
+            if (terrain.type === 'grassy' && effectiveMoveType === 'Grass') {
+                effectivePower *= 1.5;
+            }
+            if (terrain.type === 'psychic' && effectiveMoveType === 'Psychic') {
+                effectivePower *= 1.5;
+            }
+            if (terrain.type === 'misty' && effectiveMoveType === 'Dragon') {
+                effectivePower *= 0.5;
+            }
         }
 
         // Ability defense modifier (defender)

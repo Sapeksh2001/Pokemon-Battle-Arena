@@ -39,7 +39,11 @@ export class Player {
         if (!target || target.isFainted()) return false;
         if (this.activePokemonIndex === slotIndex) return false;
         
-        this.getActivePokemon()?.clearStatuses();
+        const active = this.getActivePokemon();
+        if (active) {
+            active.clearStatuses();
+            active.destinyBondTarget = null;
+        }
         this.activePokemonIndex = slotIndex;
         return true;
     }

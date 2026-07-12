@@ -278,7 +278,7 @@ export class UIRenderer {
 
         // Moves & abilities (data from trusted dataset — innerHTML acceptable here)
         const movesEl = document.createElement('div');
-        movesEl.innerHTML = this._renderMovesAndAbilities(pokemon);
+        movesEl.innerHTML = this._renderMovesAndAbilities(pokemon, player);
         card.appendChild(movesEl.firstElementChild || movesEl);
 
         // Stat grid
@@ -304,7 +304,7 @@ export class UIRenderer {
     }
 
     /** Render moves and abilities section. */
-    _renderMovesAndAbilities(pokemon) {
+    _renderMovesAndAbilities(pokemon, player) {
         const escapeHTML = window.escapeHTML || (str => String(str).replace(/[&<>'"]/g, match => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
         }[match])));

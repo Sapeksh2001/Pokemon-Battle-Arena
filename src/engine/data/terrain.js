@@ -42,7 +42,7 @@ export const TERRAIN_CONFIG = {
         weakness2x: ['Flying', 'Water'],
         resistance05x: ['Dragon', 'Electric', 'Grass'],
         immune: ['Ground'],
-        movePowerBoost: { Electric: 1.5 },  // canonical: 1.5x (existing behaviour preserved)
+        movePowerBoost: { Electric: 1.2 },
     },
 
     grassy: {
@@ -50,7 +50,7 @@ export const TERRAIN_CONFIG = {
         weakness2x: ['Ground', 'Rock', 'Water'],
         resistance05x: ['Bug', 'Dragon', 'Fire', 'Flying', 'Grass', 'Poison', 'Steel'],
         immune: [],
-        movePowerBoost: { Grass: 1.5 },  // canonical: 1.5x (existing behaviour preserved)
+        movePowerBoost: { Grass: 1.2 },
     },
 
     ice: {
@@ -98,7 +98,7 @@ export const TERRAIN_CONFIG = {
         weakness2x: ['Fighting', 'Poison'],
         resistance05x: ['Psychic', 'Steel'],
         immune: ['Dark'],
-        movePowerBoost: { Psychic: 1.5 },  // canonical: 1.5x (existing behaviour preserved)
+        movePowerBoost: { Psychic: 1.2 },
     },
 
     bug: {

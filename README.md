@@ -232,21 +232,21 @@ Superior weather cannot be overridden by standard weather, and the rare **Delta 
 
 ### Terrain System (18 Types)
 
-Except for the neutral **Normal** terrain, each type-themed terrain applies defensive Def/SpD buffs/nerfs (based on weaknesses/resistances) and a stackable **+15% stat boost to Attack and Sp. Attack** for matching Pokémon types. It also provides a **1.2x power boost (1.5x for Electric/Grass/Psychic)** to matching move types.
+Except for the neutral **Normal** terrain, each type-themed terrain applies defensive Def/SpD buffs/nerfs (based on weaknesses/resistances) and a stackable **+15% stat boost to Attack and Sp. Attack** for matching Pokémon types. It also provides a **1.2x power boost** to matching move types.
 
 | Terrain | Move Type Boost | Active Type Boost (+15% Atk & SpA) | Dual-Type Def/SpD Modifiers (Weaknesses & Resistances) |
 |---------|-----------------|-----------------------------------|-------------------------------------------------------|
 | **Normal** | — | — | Neutral (No modifiers) |
 | **Fire** | Fire: 1.2x | Fire | **Weak (-10% to -20%):** Bug, Grass, Ice, Steel <br>**Resist (+10% to +20%):** Dragon, Fire, Rock, Water |
 | **Water** | Water: 1.2x | Water | **Weak (-10% to -20%):** Fire, Ground, Rock <br>**Resist (+10% to +20%):** Dragon, Grass, Water |
-| **Electric**| Electric: 1.5x | Electric | **Weak (-10% to -20%):** Flying, Water <br>**Resist (+10% to +20%):** Dragon, Electric, Grass <br>**Immune (+10%):** Ground |
-| **Grassy** | Grass: 1.5x | Grass | **Weak (-10% to -20%):** Ground, Rock, Water <br>**Resist (+10% to +20%):** Bug, Dragon, Fire, Flying, Grass, Poison, Steel |
+| **Electric**| Electric: 1.2x | Electric | **Weak (-10% to -20%):** Flying, Water <br>**Resist (+10% to +20%):** Dragon, Electric, Grass <br>**Immune (+10%):** Ground |
+| **Grassy** | Grass: 1.2x | Grass | **Weak (-10% to -20%):** Ground, Rock, Water <br>**Resist (+10% to +20%):** Bug, Dragon, Fire, Flying, Grass, Poison, Steel |
 | **Ice** | Ice: 1.2x | Ice | **Weak (-10% to -20%):** Dragon, Flying, Grass, Ground <br>**Resist (+10% to +20%):** Fire, Ice, Steel, Water |
 | **Fighting**| Fighting: 1.2x | Fighting | **Weak (-10% to -20%):** Dark, Ice, Normal, Rock, Steel <br>**Resist (+10% to +20%):** Bug, Fairy, Flying, Poison, Psychic <br>**Immune (+10%):** Ghost |
 | **Poison** | Poison: 1.2x | Poison | **Weak (-10% to -20%):** Fairy, Grass <br>**Resist (+10% to +20%):** Ghost, Ground, Poison, Rock <br>**Immune (+10%):** Steel |
 | **Ground** | Ground: 1.2x | Ground | **Weak (-10% to -20%):** Electric, Fire, Poison, Rock, Steel <br>**Resist (+10% to +20%):** Bug, Grass <br>**Immune (+10%):** Flying |
 | **Flying** | Flying: 1.2x | Flying | **Weak (-10% to -20%):** Bug, Fighting, Grass <br>**Resist (+10% to +20%):** Electric, Rock, Steel |
-| **Psychic** | Psychic: 1.5x | Psychic | **Weak (-10% to -20%):** Fighting, Poison <br>**Resist (+10% to +20%):** Psychic, Steel <br>**Immune (+10%):** Dark |
+| **Psychic** | Psychic: 1.2x | Psychic | **Weak (-10% to -20%):** Fighting, Poison <br>**Resist (+10% to +20%):** Psychic, Steel <br>**Immune (+10%):** Dark |
 | **Bug** | Bug: 1.2x | Bug | **Weak (-10% to -20%):** Dark, Grass, Psychic <br>**Resist (+10% to +20%):** Fairy, Fighting, Fire, Flying, Ghost, Poison, Steel |
 | **Rock** | Rock: 1.2x | Rock | **Weak (-10% to -20%):** Bug, Fire, Flying, Ice <br>**Resist (+10% to +20%):** Fighting, Ground, Steel |
 | **Ghost** | Ghost: 1.2x | Ghost | **Weak (-10% to -20%):** Ghost, Psychic <br>**Resist (+10% to +20%):** Dark <br>**Immune (+10%):** Normal |

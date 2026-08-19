@@ -1,6 +1,6 @@
 import { escapeHTML } from '../utils/helpers.js';
 import { WEATHER_CONFIG } from '../data/weather.js';
-import { getTerrainDefenseModifier } from '../data/terrain.js';
+import { getTerrainDefenseModifier, getTerrainMovePowerMultiplier } from '../data/terrain.js';
 
 // ==========================================
 // UI RENDERER (DOM Construction)
@@ -51,7 +51,9 @@ export class UIRenderer {
         const movesStr = pokemon.moves ? pokemon.moves.join(',') : '';
         const abilityStr = pokemon.ability?.name || '';
         const statusesStr = Object.keys(pokemon.statuses || {}).join(',');
-        return `${pokemon.fullName}:${pokemon.currentHP}:${pokemon.maxHp}:${statusesStr}:${activeState}:${selectedAttack}:${selectedStatus}:${typesStr}:${movesStr}:${abilityStr}:${teamStr}`;
+        const weather = this._gs.weather || 'none';
+        const terrain = this._gs.terrain ? (typeof this._gs.terrain === 'string' ? this._gs.terrain : this._gs.terrain.type) : 'none';
+        return `${pokemon.fullName}:${pokemon.currentHP}:${pokemon.maxHp}:${statusesStr}:${activeState}:${selectedAttack}:${selectedStatus}:${typesStr}:${movesStr}:${abilityStr}:${teamStr}:${weather}:${terrain}`;
     }
 
     _renderPlayerCards() {
@@ -345,23 +347,36 @@ export class UIRenderer {
             const wCfg = WEATHER_CONFIG[w] || {};
 
             if (power > 0) {
+                let mult = 1.0;
+                let isNullified = false;
+
+                // Weather modifiers
                 if (wCfg.moveModifiers && wCfg.moveModifiers[type] !== undefined) {
-                    const mult = wCfg.moveModifiers[type];
-                    if (mult > 1) {
-                        powerColor = 'text-green-600 font-bold';
-                        powerLabel = `${Math.floor(power * mult)} ↑`;
-                    } else if (mult < 1) {
-                        powerColor = 'text-red-500 font-bold';
-                        powerLabel = `${Math.floor(power * mult)} ↓`;
-                    }
+                    mult *= wCfg.moveModifiers[type];
                 }
                 if (wCfg.nullified && wCfg.nullified.includes(type)) {
-                    powerColor = 'text-red-700 line-through font-bold';
-                    powerLabel = '0 🚫';
+                    isNullified = true;
                 }
                 if (wCfg.nonFlyingHalved && type !== 'Flying') {
+                    mult *= 0.5;
+                }
+
+                // Terrain modifiers
+                const terrain = this._gs.terrain;
+                const terrainType = terrain ? (typeof terrain === 'string' ? terrain : terrain.type) : 'none';
+                if (terrainType && terrainType !== 'none') {
+                    mult *= getTerrainMovePowerMultiplier(terrainType, type);
+                }
+
+                if (isNullified || mult === 0) {
+                    powerColor = 'text-red-700 line-through font-bold';
+                    powerLabel = '0 🚫';
+                } else if (mult > 1) {
+                    powerColor = 'text-green-600 font-bold';
+                    powerLabel = `${Math.floor(power * mult)} ↑`;
+                } else if (mult < 1) {
                     powerColor = 'text-red-500 font-bold';
-                    powerLabel = `${Math.floor(power * 0.5)} ↓`;
+                    powerLabel = `${Math.floor(power * mult)} ↓`;
                 }
             }
 

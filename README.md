@@ -50,7 +50,8 @@ flowchart TD
 | Evolve / Devolve / Revive / Form Change | ✅ |
 | Trade Pokémon with tier selection | ✅ |
 | Shuffle moves on revive + Manual reshuffle | ✅ |
-| Dynamic terrain engine (18 terrain types) | ✅ |
+| Dynamic terrain engine (18 terrain types & Def/SpD scaling) | ✅ |
+| Active type terrain stat boosts (+15% Attack & Special Attack) | ✅ |
 | Save / Load game (Firebase + JSON) | ✅ |
 | Undo / Redo battle history | ✅ |
 | Pixelated holographic card effects (silver/gold) | ✅ |
@@ -60,11 +61,12 @@ flowchart TD
 | Weather engine (9 normal + superior weather types) | ✅ |
 | Ability engine (97+ passive abilities resolved) | ✅ |
 | Manual Ability/Hidden Ability triggers with tier limits | ✅ |
-| Partner Fusion validation (Calyrex, Necrozma, Kyurem) | ✅ |
+| Partner Fusion validation (Calyrex, Necrozma, Kyurem, Zygarde, Greninja) | ✅ |
 | Status category move processing & auto self-targeting | ✅ |
 | Delayed moves (Future Sight, Doom Desire) | ✅ |
-| Dynamic weather power adjustments visual styling | ✅ |
+| Color-coded stat & move power visual indicators (green/red) | ✅ |
 | Strict type immunity secondary effect prevention | ✅ |
+| Distortion-free high-quality fullscreen sprite scaling | ✅ |
 
 ---
 

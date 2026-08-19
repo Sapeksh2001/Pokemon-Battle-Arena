@@ -13,7 +13,7 @@
     "category": "Special",
     "power": 20,
     "accuracy": 100,
-    "effect": "User recovers half the HP inflicted on opponent.",
+    "effect": "Heals 20% of damage dealt",
     "gameEffect": "Heals 20% of damage dealt",
     "flags": {
       "protect": 1,
@@ -60,7 +60,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Sharply raises user's Defense.",
+    "effect": "Raise Def by 2 stages",
     "gameEffect": "Raise Def by 2 stages"
   },
   "Acid Downpour": {
@@ -116,7 +116,7 @@
     "category": "Physical",
     "power": 60,
     "accuracy": "&infin;",
-    "effect": "Ignores Accuracy and Evasiveness.",
+    "effect": "15% chance to KO opponent",
     "gameEffect": "15% chance to KO opponent",
     "flags": {
       "contact": 1,
@@ -131,7 +131,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 95,
-    "effect": "High critical hit ratio.",
+    "effect": "Hits all opponents and 25% chance to deal 1.5x damage for each",
     "gameEffect": "Hits all opponents and 25% chance to deal 1.5x damage for each",
     "flags": {
       "protect": 1,
@@ -145,7 +145,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Gives target priority in the next turn.",
+    "effect": "Forces someone to attack first in the next round",
     "gameEffect": "Forces someone to attack first in the next round"
   },
   "Agility": {
@@ -154,7 +154,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Sharply raises user's Speed.",
+    "effect": "Raises user speed by 2 stages",
     "gameEffect": "Raises user speed by 2 stages"
   },
   "Air Cutter": {
@@ -216,7 +216,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User switches with opposite teammate.",
+    "effect": "makes your teammate switch pokemon",
     "gameEffect": "makes your teammate switch pokemon",
     "priority": 2
   },
@@ -226,7 +226,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Sharply raises user's Special Defense.",
+    "effect": "Raise sp def by 2 stage",
     "gameEffect": "Raise sp def by 2 stage"
   },
   "Anchor Shot": {
@@ -306,7 +306,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Restores a little HP each turn.",
+    "effect": "During Rain, heal 30% HP. Cannot use consecutively",
     "gameEffect": "During Rain, heal 30% HP. Cannot use consecutively"
   },
   "Aqua Step": {
@@ -369,7 +369,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Cures all status problems in your party.",
+    "effect": "Cures all status aliments of all your pokemon",
     "gameEffect": "Cures all status aliments of all your pokemon",
     "flags": {
       "distance": 1
@@ -381,7 +381,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises Special Defense of an ally.",
+    "effect": "Raise your and your teammate's Sp def by 10%",
     "gameEffect": "Raise your and your teammate's Sp def by 10%"
   },
   "Assist": {
@@ -398,7 +398,7 @@
     "category": "Physical",
     "power": 60,
     "accuracy": 100,
-    "effect": "Power doubles if opponent already took damage in the same turn.",
+    "effect": "If the target has already taken damage, the move has double power",
     "gameEffect": "If the target has already taken damage, the move has double power",
     "flags": {
       "contact": 1,
@@ -411,7 +411,7 @@
     "category": "Physical",
     "power": 30,
     "accuracy": 100,
-    "effect": "May cause flinching.",
+    "effect": "50% Chance to Stun foe",
     "gameEffect": "50% Chance to Stun foe",
     "flags": {
       "contact": 1,
@@ -450,7 +450,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "If opponent is the opposite gender, it's less likely to attack.",
+    "effect": "Infatuate a foe",
     "gameEffect": "Infatuate a foe",
     "flags": {
       "protect": 1
@@ -506,7 +506,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Halves damage from Physical and Special attacks for five turns.",
+    "effect": "Can only be used during hail. Halves damage on your team for next 3 turns",
     "gameEffect": "Can only be used during hail. Halves damage on your team for next 3 turns"
   },
   "Autotomize": {
@@ -515,7 +515,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Reduces weight and sharply raises Speed.",
+    "effect": "Reduce Def by 1 stage and raise speed by 1 stage",
     "gameEffect": "Reduce Def by 1 stage and raise speed by 1 stage"
   },
   "Avalanche": {
@@ -553,7 +553,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Always goes first. Lowers the target's attack.",
+    "effect": "lower target's sp atk by 1 stage",
     "gameEffect": "lower target's sp atk by 1 stage",
     "priority": 1,
     "flags": {
@@ -621,7 +621,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User switches out and gives stat changes to the incoming Pokémon.",
+    "effect": "Switch out mid battle. The next pokemon you send, will have any 3 stats boosted by 30%",
     "gameEffect": "Switch out mid battle. The next pokemon you send, will have any 3 stats boosted by 30%"
   },
   "Beak Blast": {
@@ -643,7 +643,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 100,
-    "effect": "Each Pokémon in user's party attacks.",
+    "effect": "This move's power = base atk/10 + 5, This move hits once for each unfainted Pokemon on your team",
     "gameEffect": "This move's power = base atk/10 + 5, This move hits once for each unfainted Pokemon on your team",
     "flags": {
       "protect": 1
@@ -680,7 +680,7 @@
     "category": "Special",
     "power": 120,
     "accuracy": 90,
-    "effect": "User must have consumed a Berry.",
+    "effect": "Destroy's the foe's item card",
     "gameEffect": "Destroy's the foe's item card",
     "flags": {
       "protect": 1
@@ -721,7 +721,7 @@
     "category": "Physical",
     "power": 15,
     "accuracy": 85,
-    "effect": "Traps opponent, damaging them for 4-5 turns.",
+    "effect": "consecutively damage 5% on foe for next 3 rounds and for can't switch",
     "gameEffect": "consecutively damage 5% on foe for next 3 rounds and for can't switch",
     "flags": {
       "contact": 1,
@@ -769,7 +769,7 @@
     "category": "Special",
     "power": 75,
     "accuracy": 100,
-    "effect": "Lowers opponent's Attack.",
+    "effect": "50% chance to freeze foe. This move's power is doubled if opponent is suffering from any ailment",
     "gameEffect": "50% chance to freeze foe. This move's power is doubled if opponent is suffering from any ailment",
     "flags": {
       "protect": 1
@@ -837,7 +837,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 80,
-    "effect": "May lower opponent's Speed.",
+    "effect": "Deep freeze foe",
     "gameEffect": "Deep freeze foe",
     "flags": {
       "protect": 1,
@@ -856,7 +856,7 @@
     "category": "Special",
     "power": 110,
     "accuracy": 70,
-    "effect": "May freeze opponent.",
+    "effect": "30% chance to freeze foe. Hits two adajacent players",
     "gameEffect": "30% chance to freeze foe. Hits two adajacent players",
     "flags": {
       "protect": 1,
@@ -900,7 +900,7 @@
     "category": "Special",
     "power": 130,
     "accuracy": 85,
-    "effect": "May burn opponent.",
+    "effect": "50% chance to deeply burn",
     "gameEffect": "50% chance to deeply burn",
     "flags": {
       "protect": 1
@@ -928,7 +928,7 @@
     "category": "Physical",
     "power": 85,
     "accuracy": 100,
-    "effect": "May paralyze opponent.",
+    "effect": "25% chance to paralyze foe",
     "gameEffect": "25% chance to paralyze foe",
     "flags": {
       "contact": 1,
@@ -957,7 +957,7 @@
     "category": "Physical",
     "power": 130,
     "accuracy": 85,
-    "effect": "May paralyze opponent.",
+    "effect": "50% chance to nuero paralyze",
     "gameEffect": "50% chance to nuero paralyze",
     "flags": {
       "contact": 1,
@@ -989,7 +989,7 @@
     "category": "Physical",
     "power": 25,
     "accuracy": 90,
-    "effect": "Hits 2-5 times in one turn.",
+    "effect": "Hits 1 to 5 times. depends on continuous toss wins. 25 more power is added to the attack for every successful hit just for that turn",
     "gameEffect": "Hits 1 to 5 times. depends on continuous toss wins. 25 more power is added to the attack for every successful hit just for that turn",
     "flags": {
       "protect": 1
@@ -1001,7 +1001,7 @@
     "category": "Physical",
     "power": 50,
     "accuracy": 90,
-    "effect": "Hits twice in one turn.",
+    "effect": "Hits twice",
     "gameEffect": "Hits twice",
     "flags": {
       "protect": 1
@@ -1025,7 +1025,7 @@
     "category": "Physical",
     "power": 85,
     "accuracy": 85,
-    "effect": "Springs up on first turn, attacks on second. May paralyze opponent.",
+    "effect": "Goes on a bouncing rampage, dodging all moves in the round. Lands with an attack on the next round.",
     "gameEffect": "Goes on a bouncing rampage, dodging all moves in the round. Lands with an attack on the next round.",
     "flags": {
       "contact": 1,
@@ -1071,7 +1071,7 @@
     "category": "Physical",
     "power": 120,
     "accuracy": 100,
-    "effect": "User receives recoil damage.",
+    "effect": "recoil dmg 30%",
     "gameEffect": "recoil dmg 30%",
     "flags": {
       "contact": 1,
@@ -1089,7 +1089,7 @@
     "category": "Physical",
     "power": 60,
     "accuracy": 100,
-    "effect": "Hits multiple opponents and lowers their attack.",
+    "effect": "Hits 2 adjacent foes and lower their atk by 20%",
     "gameEffect": "Hits 2 adjacent foes and lower their atk by 20%",
     "flags": {
       "contact": 1,
@@ -1128,7 +1128,7 @@
     "category": "Special",
     "power": 65,
     "accuracy": 100,
-    "effect": "Power doubles if opponent's HP is less than 50%.",
+    "effect": "25% Chance to Burn Foe",
     "gameEffect": "25% Chance to Burn Foe",
     "flags": {
       "protect": 1
@@ -1216,7 +1216,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises user's Attack and Defense.",
+    "effect": "Raise atk and def by 10%",
     "gameEffect": "Raise atk and def by 10%"
   },
   "Bulldoze": {
@@ -1256,7 +1256,7 @@
     "category": "Physical",
     "power": 25,
     "accuracy": 100,
-    "effect": "Hits 2-5 times in one turn.",
+    "effect": "Hits 3 times",
     "gameEffect": "Hits 3 times",
     "flags": {
       "protect": 1,
@@ -1269,7 +1269,7 @@
     "category": "Special",
     "power": 130,
     "accuracy": 100,
-    "effect": "To inflict massive damage, the user burns itself out. After using this move, the user will no longer be Fire type.",
+    "effect": "The User won't be a fire type once this move has been used and Deeply Burn foe",
     "gameEffect": "The User won't be a fire type once this move has been used and Deeply Burn foe",
     "flags": {
       "protect": 1
@@ -1319,7 +1319,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises user's Special Attack and Special Defense.",
+    "effect": "Raise sp. Atk by 2 stage",
     "gameEffect": "Raise sp. Atk by 2 stage"
   },
   "Camouflage": {
@@ -1379,7 +1379,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises user's Special Defense and next Electric move's power increases.",
+    "effect": "Raises Electric moves power to 1.2x for the next round",
     "gameEffect": "Raises Electric moves power to 1.2x for the next round"
   },
   "Charge Beam": {
@@ -1402,7 +1402,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Sharply lowers opponent's Attack.",
+    "effect": "Lower foe's attack by 2 stages",
     "gameEffect": "Lower foe's attack by 2 stages",
     "flags": {
       "protect": 1
@@ -1516,7 +1516,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Raises all user's stats but loses HP.",
+    "effect": "You sacrifice half of your 30% health but raise all your stats by 3 stages",
     "gameEffect": "You sacrifice half of your 30% health but raise all your stats by 3 stages",
     "flags": {
       "sound": 1
@@ -1539,7 +1539,7 @@
     "category": "Special",
     "power": 50,
     "accuracy": "-",
-    "effect": "Removes all of the target's stat changes.",
+    "effect": "Increase acc by 10",
     "gameEffect": "Increase acc by 10",
     "flags": {
       "protect": 1
@@ -1551,7 +1551,7 @@
     "category": "Physical",
     "power": 120,
     "accuracy": 100,
-    "effect": "Lowers user's Defense and Special Defense.",
+    "effect": "Lowers self Def and Sp Def by 1 stage",
     "gameEffect": "Lowers self Def and Sp Def by 1 stage",
     "flags": {
       "contact": 1,
@@ -1576,7 +1576,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises user's Attack, Defense and Accuracy.",
+    "effect": "Raise self Atk and Def by 1 stage",
     "gameEffect": "Raise self Atk and Def by 1 stage"
   },
   "Collision Course": {
@@ -1585,7 +1585,7 @@
     "category": "Physical",
     "power": 100,
     "accuracy": 100,
-    "effect": "Boosted even more if it's super-effective.",
+    "effect": "When this move is super effective, it's 4x instead of 2x",
     "gameEffect": "When this move is super effective, it's 4x instead of 2x",
     "flags": {
       "contact": 1,
@@ -1626,7 +1626,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 100,
-    "effect": "Deals more damage to the opponent that last inflicted damage on it.",
+    "effect": "Can only be used on Pokemon that damaged this Pokemon. Add target's atk stat to this move's power during damage calculation",
     "gameEffect": "Can only be used on Pokemon that damaged this Pokemon. Add target's atk stat to this move's power during damage calculation",
     "flags": {
       "contact": 1,
@@ -1650,7 +1650,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Confuses opponent.",
+    "effect": "Confuses foe",
     "gameEffect": "Confuses foe",
     "flags": {
       "protect": 1
@@ -1719,7 +1719,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Copies opponent's last move.",
+    "effect": "Copies a move that was used this round",
     "gameEffect": "Copies a move that was used this round"
   },
   "Core Enforcer": {
@@ -1728,7 +1728,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 100,
-    "effect": "Suppresses the target's ability if the target has already moved.",
+    "effect": "Ignores Abilities",
     "gameEffect": "Ignores Abilities",
     "flags": {
       "protect": 1
@@ -1759,7 +1759,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises user's Defense and Special Defense.",
+    "effect": "Raise Def and SpDef by 10%",
     "gameEffect": "Raise Def and SpDef by 10%"
   },
   "Cotton Guard": {
@@ -1768,7 +1768,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Drastically raises user's Defense.",
+    "effect": "Raise user's def by 30%",
     "gameEffect": "Raise user's def by 30%"
   },
   "Cotton Spore": {
@@ -1777,7 +1777,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Sharply lowers opponent's Speed.",
+    "effect": "Lowers foe's Speed by 2 stages",
     "gameEffect": "Lowers foe's Speed by 2 stages",
     "flags": {
       "protect": 1
@@ -1789,7 +1789,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 100,
-    "effect": "When hit by a Physical Attack, user strikes back with 2x power.",
+    "effect": "The next damage you receive, return double of that to the damager.",
     "gameEffect": "The next damage you receive, return double of that to the damager.",
     "priority": -5,
     "flags": {
@@ -1856,7 +1856,7 @@
     "category": "Physical",
     "power": 70,
     "accuracy": 100,
-    "effect": "High critical hit ratio. May poison opponent.",
+    "effect": "50% chance to poison foe",
     "gameEffect": "50% chance to poison foe",
     "flags": {
       "contact": 1,
@@ -1874,7 +1874,7 @@
     "category": "Physical",
     "power": 80,
     "accuracy": 100,
-    "effect": "May lower opponent's Defense.",
+    "effect": "Has 25% chance to stun foe for the ongoing round",
     "gameEffect": "Has 25% chance to stun foe for the ongoing round",
     "flags": {
       "contact": 1,
@@ -1894,7 +1894,7 @@
     "category": "Physical",
     "power": 75,
     "accuracy": 95,
-    "effect": "May lower opponent's Defense.",
+    "effect": "50% chance to lower foe's defence",
     "gameEffect": "50% chance to lower foe's defence",
     "flags": {
       "contact": 1,
@@ -1913,7 +1913,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 100,
-    "effect": "More powerful when opponent has higher HP.",
+    "effect": "It's power depends on 200 * (foe's hp / max hp)",
     "gameEffect": "It's power depends on 200 * (foe's hp / max hp)",
     "flags": {
       "contact": 1,
@@ -1926,7 +1926,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Ghosts lose 50% of max HP and curse the opponent; Non-Ghosts raise Attack, Defense and lower Speed.",
+    "effect": "The user Looses 30% of max HP and curses a foe. The cursed foe looses 30% HP every turn from now",
     "gameEffect": "The user Looses 30% of max HP and curses a foe. The cursed foe looses 30% HP every turn from now"
   },
   "Cut": {
@@ -1948,7 +1948,7 @@
     "category": "Special",
     "power": 80,
     "accuracy": 100,
-    "effect": "May cause flinching.",
+    "effect": "30% chance to stun",
     "gameEffect": "30% chance to stun",
     "flags": {
       "protect": 1,
@@ -1965,7 +1965,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 50,
-    "effect": "Puts all adjacent opponents to sleep.",
+    "effect": "Puts foe into Deep sleep",
     "gameEffect": "Puts foe into Deep sleep",
     "flags": {
       "protect": 1
@@ -1989,7 +1989,7 @@
     "category": "Special",
     "power": 80,
     "accuracy": 100,
-    "effect": "Hits all adjacent opponents.",
+    "effect": "Hits two foes at once",
     "gameEffect": "Hits two foes at once",
     "flags": {
       "protect": 1
@@ -2036,7 +2036,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "If the user faints, the opponent also faints.",
+    "effect": "The Foe effected by this move will die whenever the user dies. This effect cancels when either pokemon switches out",
     "gameEffect": "The Foe effected by this move will die whenever the user dies. This effect cancels when either pokemon switches out"
   },
   "Detect": {
@@ -2045,7 +2045,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Protects the user, but may fail if used consecutively.",
+    "effect": "Protects from all attacks in this round. doesn't work consecutively (Priority Move)",
     "gameEffect": "Protects from all attacks in this round. doesn't work consecutively (Priority Move)",
     "priority": 4
   },
@@ -2077,7 +2077,7 @@
     "category": "Physical",
     "power": 80,
     "accuracy": 100,
-    "effect": "Digs underground on first turn, attacks on second. Can also escape from caves.",
+    "effect": "USer hides underground this turn, emerges and attacks next turn",
     "gameEffect": "USer hides underground this turn, emerges and attacks next turn",
     "flags": {
       "contact": 1,
@@ -2105,7 +2105,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Opponent can't use its last attack for a few turns.",
+    "effect": "Disable a foe's last used move for next 2 rounds",
     "gameEffect": "Disable a foe's last used move for next 2 rounds",
     "flags": {
       "protect": 1
@@ -2129,7 +2129,7 @@
     "category": "Special",
     "power": 80,
     "accuracy": 100,
-    "effect": "May paralyze opponent.",
+    "effect": "Hits all opponents",
     "gameEffect": "Hits all opponents",
     "flags": {
       "protect": 1
@@ -2182,7 +2182,7 @@
     "category": "Special",
     "power": 140,
     "accuracy": 100,
-    "effect": "Damage occurs 2 turns later.",
+    "effect": "Hits the Foe you select, After 2 rounds",
     "gameEffect": "Hits the Foe you select, After 2 rounds"
   },
   "Double Hit": {
@@ -2191,7 +2191,7 @@
     "category": "Physical",
     "power": 35,
     "accuracy": 90,
-    "effect": "Hits twice in one turn.",
+    "effect": "Hit Twice",
     "gameEffect": "Hit Twice",
     "flags": {
       "contact": 1,
@@ -2204,7 +2204,7 @@
     "category": "Physical",
     "power": 60,
     "accuracy": 100,
-    "effect": "Hits twice in one turn; may cause flinching.",
+    "effect": "HIt Twice",
     "gameEffect": "HIt Twice",
     "flags": {
       "contact": 1,
@@ -2222,7 +2222,7 @@
     "category": "Physical",
     "power": 30,
     "accuracy": 100,
-    "effect": "Hits twice in one turn.",
+    "effect": "Hits Twice",
     "gameEffect": "Hits Twice",
     "flags": {
       "contact": 1,
@@ -2235,7 +2235,7 @@
     "category": "Physical",
     "power": 120,
     "accuracy": 100,
-    "effect": "After using this move, the user will no longer be Electric type.",
+    "effect": "Hits two opponents of your choice",
     "gameEffect": "Hits two opponents of your choice",
     "flags": {
       "contact": 1,
@@ -2260,7 +2260,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises user's Evasiveness.",
+    "effect": "Raise evasion by two stages",
     "gameEffect": "Raise evasion by two stages"
   },
   "Double-Edge": {
@@ -2269,7 +2269,7 @@
     "category": "Physical",
     "power": 120,
     "accuracy": 100,
-    "effect": "User receives recoil damage.",
+    "effect": "recoil damage to self 35%",
     "gameEffect": "recoil damage to self 35%",
     "flags": {
       "contact": 1,
@@ -2286,7 +2286,7 @@
     "category": "Special",
     "power": 130,
     "accuracy": 90,
-    "effect": "Sharply lowers user's Special Attack.",
+    "effect": "Hits all opponents but loose sp atk by 20%",
     "gameEffect": "Hits all opponents but loose sp atk by 20%",
     "flags": {
       "protect": 1
@@ -2301,7 +2301,7 @@
     "category": "Physical",
     "power": 120,
     "accuracy": 100,
-    "effect": "Lowers user's Defense and Special Defense.",
+    "effect": "Lower self def, sp def by 1 stage",
     "gameEffect": "Lower self def, sp def by 1 stage",
     "flags": {
       "contact": 1,
@@ -2319,7 +2319,7 @@
     "category": "Special",
     "power": 60,
     "accuracy": 100,
-    "effect": "May paralyze opponent.",
+    "effect": "30% chance to paralyze opponent",
     "gameEffect": "30% chance to paralyze opponent",
     "flags": {
       "protect": 1
@@ -2355,7 +2355,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises user's Attack and Speed.",
+    "effect": "Raise power of your Dragon type moves by 20",
     "gameEffect": "Raise power of your Dragon type moves by 20"
   },
   "Dragon Darts": {
@@ -2364,7 +2364,7 @@
     "category": "Physical",
     "power": 50,
     "accuracy": 100,
-    "effect": "User attacks twice.",
+    "effect": "Hit 2 to 5 times. Depends on continuous toss wins.",
     "gameEffect": "Hit 2 to 5 times. Depends on continuous toss wins.",
     "flags": {
       "protect": 1
@@ -2399,7 +2399,7 @@
     "category": "Special",
     "power": 85,
     "accuracy": 100,
-    "effect": "",
+    "effect": "30% chance to stun",
     "gameEffect": "30% chance to stun",
     "flags": {
       "protect": 1,
@@ -2452,7 +2452,7 @@
     "category": "Physical",
     "power": 75,
     "accuracy": 100,
-    "effect": "User recovers half the HP inflicted on opponent.",
+    "effect": "Heals self by 25% of the damage dealt",
     "gameEffect": "Heals self by 25% of the damage dealt",
     "flags": {
       "contact": 1,
@@ -2471,7 +2471,7 @@
     "category": "Special",
     "power": 50,
     "accuracy": 100,
-    "effect": "User recovers most the HP inflicted on opponent.",
+    "effect": "heal yourself by 10% of the damage dealt",
     "gameEffect": "heal yourself by 10% of the damage dealt",
     "flags": {
       "contact": 1,
@@ -2489,7 +2489,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 100,
-    "effect": "User recovers half the HP inflicted on a sleeping opponent.",
+    "effect": "Only works on sleeping pokemon, User heals 50% of dmg dealt",
     "gameEffect": "Only works on sleeping pokemon, User heals 50% of dmg dealt",
     "flags": {
       "protect": 1,
@@ -2531,7 +2531,7 @@
     "category": "Physical",
     "power": 80,
     "accuracy": 100,
-    "effect": "Lowers opponent's Speed.",
+    "effect": "Lowers foe's speed by 20%",
     "gameEffect": "Lowers foe's speed by 20%",
     "flags": {
       "protect": 1
@@ -2561,7 +2561,7 @@
     "category": "Physical",
     "power": 40,
     "accuracy": 90,
-    "effect": "The user slams the target with its wings. The target is hit twice in a row.",
+    "effect": "Hits twice",
     "gameEffect": "Hits twice",
     "flags": {
       "contact": 1,
@@ -2574,7 +2574,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 100,
-    "effect": "Damage doubles if opponent is Dynamaxed.",
+    "effect": "Double damage in dynamaxed opponent and ends their dynamax mode",
     "gameEffect": "Double damage in dynamaxed opponent and ends their dynamax mode",
     "flags": {
       "protect": 1
@@ -2586,7 +2586,7 @@
     "category": "Physical",
     "power": 100,
     "accuracy": 50,
-    "effect": "Confuses opponent.",
+    "effect": "Confuses foe on hit",
     "gameEffect": "Confuses foe on hit",
     "flags": {
       "contact": 1,
@@ -2621,7 +2621,7 @@
     "category": "Physical",
     "power": 100,
     "accuracy": 100,
-    "effect": "Power is doubled if opponent is underground from using Dig.",
+    "effect": "Damages everyone except self 1.5x damage to underground pokemon",
     "gameEffect": "Damages everyone except self 1.5x damage to underground pokemon",
     "flags": {
       "protect": 1
@@ -2633,7 +2633,7 @@
     "category": "Special",
     "power": 40,
     "accuracy": 100,
-    "effect": "Power increases each turn.",
+    "effect": "Hits all players",
     "gameEffect": "Hits all players",
     "flags": {
       "protect": 1,
@@ -2646,7 +2646,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Sharply lowers opponent's Special Attack.",
+    "effect": "Lowers foe's Sp Atk by 2 stages",
     "gameEffect": "Lowers foe's Sp Atk by 2 stages",
     "flags": {
       "protect": 1
@@ -2685,7 +2685,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Prevents all Pokémon from falling asleep for 5 turns.",
+    "effect": "Start an electric terrain where Electric type moves are boosted by 1.5x",
     "gameEffect": "Start an electric terrain where Electric type moves are boosted by 1.5x"
   },
   "Electrify": {
@@ -2705,7 +2705,7 @@
     "category": "Special",
     "power": 0,
     "accuracy": 100,
-    "effect": "The faster the user, the stronger the attack.",
+    "effect": "Power of this move = Self Speed - Foe's Speed",
     "gameEffect": "Power of this move = Self Speed - Foe's Speed",
     "flags": {
       "protect": 1,
@@ -2718,7 +2718,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 100,
-    "effect": "Boosted even more if it's super-effective.",
+    "effect": "When this move is super effective, its 4x instead of 2x",
     "gameEffect": "When this move is super effective, its 4x instead of 2x",
     "flags": {
       "contact": 1,
@@ -2785,7 +2785,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Forces opponent to keep using its last move for 3 turns.",
+    "effect": "Makes the Foe repeat the last move it used for next 3 turns",
     "gameEffect": "Makes the Foe repeat the last move it used for next 3 turns",
     "flags": {
       "protect": 1
@@ -2809,7 +2809,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Always left with at least 1 HP, but may fail if used consecutively.",
+    "effect": "Let's you survive the next deathblow with 1 hp",
     "gameEffect": "Let's you survive the next deathblow with 1 hp",
     "priority": 4
   },
@@ -2819,7 +2819,7 @@
     "category": "Special",
     "power": 90,
     "accuracy": 100,
-    "effect": "May lower opponent's Special Defense.",
+    "effect": "30% chance to lower Doe's Sp Def by 10%",
     "gameEffect": "30% chance to lower Doe's Sp Def by 10%",
     "flags": {
       "protect": 1,
@@ -2838,7 +2838,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Makes target's ability same as user's.",
+    "effect": "Use your target's ability",
     "gameEffect": "Use your target's ability",
     "flags": {
       "protect": 1
@@ -2850,7 +2850,7 @@
     "category": "Special",
     "power": 150,
     "accuracy": 100,
-    "effect": "Stronger when the user's HP is higher.",
+    "effect": "Hits all foes",
     "gameEffect": "Hits all foes",
     "flags": {
       "protect": 1
@@ -2898,7 +2898,7 @@
     "category": "Physical",
     "power": 250,
     "accuracy": 100,
-    "effect": "User faints.",
+    "effect": "The User Dies",
     "gameEffect": "The User Dies",
     "flags": {
       "protect": 1
@@ -2910,7 +2910,7 @@
     "category": "Special",
     "power": 80,
     "accuracy": 100,
-    "effect": "May cause flinching.",
+    "effect": "50% chance to confuse foe",
     "gameEffect": "50% chance to confuse foe",
     "flags": {
       "protect": 1
@@ -2934,7 +2934,7 @@
     "category": "Physical",
     "power": 80,
     "accuracy": 100,
-    "effect": "User attacks first.",
+    "effect": "HIghest Priority move",
     "gameEffect": "HIghest Priority move",
     "priority": 2,
     "flags": {
@@ -2980,7 +2980,7 @@
     "category": "Physical",
     "power": 40,
     "accuracy": 100,
-    "effect": "User attacks first, foe flinches. Only usable on first turn.",
+    "effect": "50% chance to stun foe. Priority Move",
     "gameEffect": "50% chance to stun foe. Priority Move",
     "priority": 3,
     "flags": {
@@ -2998,7 +2998,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Sharply lowers opponent's Special Defense.",
+    "effect": "Lowers foe's Sp Def by 2 Stages",
     "gameEffect": "Lowers foe's Sp Def by 2 Stages",
     "flags": {
       "protect": 1
@@ -3034,7 +3034,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Sharply lowers opponent's Attack.",
+    "effect": "Lower target's attack by 2 stages",
     "gameEffect": "Lower target's attack by 2 stages",
     "flags": {
       "protect": 1
@@ -3046,7 +3046,7 @@
     "category": "Physical",
     "power": 30,
     "accuracy": 100,
-    "effect": "Only hits if opponent uses Protect or Detect in the same turn.",
+    "effect": "Removes Barriers",
     "gameEffect": "Removes Barriers",
     "priority": 2
   },
@@ -3128,7 +3128,7 @@
     "category": "Special",
     "power": 0,
     "accuracy": 100,
-    "effect": "Inflicts damage equal to the user's remaining HP. User faints.",
+    "effect": "Deal damage to the opponent equal to your max Hp, and sacrifice yourself. No calculations",
     "gameEffect": "Deal damage to the opponent equal to your max Hp, and sacrifice yourself. No calculations",
     "flags": {
       "protect": 1
@@ -3155,7 +3155,7 @@
     "category": "Physical",
     "power": 65,
     "accuracy": 95,
-    "effect": "May cause flinching and/or burn opponent.",
+    "effect": "30% chance to burn foe",
     "gameEffect": "30% chance to burn foe",
     "flags": {
       "contact": 1,
@@ -3198,7 +3198,7 @@
     "category": "Physical",
     "power": 75,
     "accuracy": 100,
-    "effect": "May burn opponent.",
+    "effect": "20% chance to burn foe",
     "gameEffect": "20% chance to burn foe",
     "flags": {
       "contact": 1,
@@ -3216,7 +3216,7 @@
     "category": "Special",
     "power": 35,
     "accuracy": 85,
-    "effect": "Traps opponent, damaging them for 4-5 turns.",
+    "effect": "Foe is trapped in Fire for 2 rounds and looses 5% HP. Depends on type. And trapped foe cannot switch.",
     "gameEffect": "Foe is trapped in Fire for 2 rounds and looses 5% HP. Depends on type. And trapped foe cannot switch.",
     "flags": {
       "protect": 1
@@ -3254,7 +3254,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 30,
-    "effect": "One-Hit-KO, if it hits.",
+    "effect": "One hit KO but with very low chance",
     "gameEffect": "One hit KO but with very low chance",
     "flags": {
       "protect": 1
@@ -3266,7 +3266,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 100,
-    "effect": "The lower the user's HP, the higher the power.",
+    "effect": "Lower your HP, higher the power. HP <10% pow160  <20% 140 <30% 120 <40% 100 and so on.",
     "gameEffect": "Lower your HP, higher the power. HP <10% pow160  <20% 140 <30% 120 <40% 100 and so on.",
     "flags": {
       "contact": 1,
@@ -3290,7 +3290,7 @@
     "category": "Physical",
     "power": 50,
     "accuracy": 100,
-    "effect": "Raises user's Speed.",
+    "effect": "Raises self speed by 1 stage",
     "gameEffect": "Raises self speed by 1 stage",
     "flags": {
       "contact": 1,
@@ -3337,7 +3337,7 @@
     "category": "Physical",
     "power": 120,
     "accuracy": 100,
-    "effect": "User receives recoil damage. May burn opponent.",
+    "effect": "30% recoil damage",
     "gameEffect": "30% recoil damage",
     "flags": {
       "contact": 1,
@@ -3386,7 +3386,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Confuses opponent, but raises its Special Attack.",
+    "effect": "Raise target's atk by 10% and confuse it",
     "gameEffect": "Raise target's atk by 10% and confuse it",
     "flags": {
       "protect": 1
@@ -3398,7 +3398,7 @@
     "category": "Special",
     "power": 130,
     "accuracy": 90,
-    "effect": "Sharply lowers user's Special Attack.",
+    "effect": "Lower self SpAtk by 10%",
     "gameEffect": "Lower self SpAtk by 10%",
     "flags": {
       "protect": 1
@@ -3413,7 +3413,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 100,
-    "effect": "Power depends on held item.",
+    "effect": "To use this move, you have to return item cards. For every item card you return, the move has 50 more power",
     "gameEffect": "To use this move, you have to return item cards. For every item card you return, the move has 50 more power",
     "flags": {
       "protect": 1
@@ -3531,7 +3531,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Increases critical hit ratio.",
+    "effect": "user's next move will deal 1.2x dmg",
     "gameEffect": "user's next move will deal 1.2x dmg"
   },
   "Focus Punch": {
@@ -3540,7 +3540,7 @@
     "category": "Physical",
     "power": 150,
     "accuracy": 100,
-    "effect": "If the user is hit before attacking, it flinches instead.",
+    "effect": "Focuses for the attack in this round. Launches it next round. But Focusing will stop on recieving damage.",
     "gameEffect": "Focuses for the attack in this round. Launches it next round. But Focusing will stop on recieving damage.",
     "priority": -3,
     "flags": {
@@ -3591,7 +3591,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Adds Grass type to opponent.",
+    "effect": "Sacrifice 30% health, and Curse an opponent. The cursed foe will transfer 30% health to you every round",
     "gameEffect": "Sacrifice 30% health, and Curse an opponent. The cursed foe will transfer 30% health to you every round",
     "flags": {
       "protect": 1
@@ -3630,7 +3630,7 @@
     "category": "Special",
     "power": 70,
     "accuracy": 100,
-    "effect": "May freeze opponent. Super-effective against Water types.",
+    "effect": "This move is super effective on water",
     "gameEffect": "This move is super effective on water",
     "flags": {
       "protect": 1
@@ -3646,7 +3646,7 @@
     "category": "Special",
     "power": 90,
     "accuracy": 100,
-    "effect": "May freeze opponent.",
+    "effect": "75% chance to freeze foe",
     "gameEffect": "75% chance to freeze foe",
     "flags": {
       "protect": 1
@@ -3684,7 +3684,7 @@
     "category": "Special",
     "power": 60,
     "accuracy": 90,
-    "effect": "Always results in a critical hit.",
+    "effect": "25% chance to freeze foe",
     "gameEffect": "25% chance to freeze foe",
     "flags": {
       "protect": 1
@@ -3708,7 +3708,7 @@
     "category": "Physical",
     "power": 15,
     "accuracy": 85,
-    "effect": "Hits 2-5 times in one turn.",
+    "effect": "Hits 4 times",
     "gameEffect": "Hits 4 times",
     "flags": {
       "contact": 1,
@@ -3721,7 +3721,7 @@
     "category": "Physical",
     "power": 40,
     "accuracy": 95,
-    "effect": "Power increases each turn.",
+    "effect": "Raises power by 10 after every use",
     "gameEffect": "Raises power by 10 after every use",
     "flags": {
       "contact": 1,
@@ -3735,7 +3735,7 @@
     "category": "Physical",
     "power": 18,
     "accuracy": 80,
-    "effect": "Hits 2-5 times in one turn.",
+    "effect": "Hits 5 times",
     "gameEffect": "Hits 5 times",
     "flags": {
       "contact": 1,
@@ -3748,7 +3748,7 @@
     "category": "Physical",
     "power": 100,
     "accuracy": 100,
-    "effect": "Power increases if Fusion Flare is used in the same turn.",
+    "effect": "If any fire type move has been used in this round, then double the power",
     "gameEffect": "If any fire type move has been used in this round, then double the power",
     "flags": {
       "protect": 1
@@ -3760,7 +3760,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 100,
-    "effect": "Power increases if Fusion Bolt is used in the same turn.",
+    "effect": "If any electric type move has been used in this round, then double the power",
     "gameEffect": "If any electric type move has been used in this round, then double the power",
     "flags": {
       "protect": 1
@@ -3772,7 +3772,7 @@
     "category": "Special",
     "power": 120,
     "accuracy": 100,
-    "effect": "Damage occurs 2 turns later.",
+    "effect": "Hits the Foe you select, After 2 rounds",
     "gameEffect": "Hits the Foe you select, After 2 rounds"
   },
   "G-Max Befuddle": {
@@ -4045,7 +4045,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Cancels out the effect of the opponent's Ability.",
+    "effect": "Disable a pokemon's ability",
     "gameEffect": "Disable a pokemon's ability",
     "flags": {
       "protect": 1
@@ -4096,7 +4096,7 @@
     "category": "Special",
     "power": 75,
     "accuracy": 100,
-    "effect": "User recovers half the HP inflicted on opponent.",
+    "effect": "Heals 50% of the dmg dealt",
     "gameEffect": "Heals 50% of the dmg dealt",
     "flags": {
       "protect": 1,
@@ -4113,7 +4113,7 @@
     "category": "Physical",
     "power": 150,
     "accuracy": 90,
-    "effect": "User must recharge next turn.",
+    "effect": "Can't attack next round",
     "gameEffect": "Can't attack next round",
     "flags": {
       "contact": 1,
@@ -4156,7 +4156,7 @@
     "category": "Special",
     "power": 65,
     "accuracy": 95,
-    "effect": "Lowers opponent's Speed.",
+    "effect": "Hits two adjacent foes and lower their speed by 10%",
     "gameEffect": "Hits two adjacent foes and lower their speed by 10%",
     "flags": {
       "protect": 1
@@ -4186,7 +4186,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Paralyzes opponent.",
+    "effect": "Paralyzes opponent",
     "gameEffect": "Paralyzes opponent",
     "flags": {
       "protect": 1
@@ -4301,7 +4301,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises user's Attack and Special Attack.",
+    "effect": "Raise sp atk by 1 stage",
     "gameEffect": "Raise sp atk by 1 stage"
   },
   "Grudge": {
@@ -4318,7 +4318,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Averages Defense and Special Defense with the target.",
+    "effect": "Average your and your target's def and sp def",
     "gameEffect": "Average your and your target's def and sp def",
     "flags": {
       "protect": 1
@@ -4349,7 +4349,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 30,
-    "effect": "One-Hit-KO, if it hits.",
+    "effect": "1 hit KO",
     "gameEffect": "1 hit KO",
     "flags": {
       "contact": 1,
@@ -4390,7 +4390,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 100,
-    "effect": "The slower the user, the stronger the attack.",
+    "effect": "Power of this move = Foe's speed - self speed",
     "gameEffect": "Power of this move = Foe's speed - self speed",
     "flags": {
       "contact": 1,
@@ -4404,7 +4404,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Non-Ice types are damaged for 5 turns.",
+    "effect": "Starts weather as Hailstorm for next 5 turns",
     "gameEffect": "Starts weather as Hailstorm for next 5 turns"
   },
   "Hammer Arm": {
@@ -4449,7 +4449,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises user's Defense.",
+    "effect": "Raise Def by 10%",
     "gameEffect": "Raise Def by 10%"
   },
   "Haze": {
@@ -4458,7 +4458,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Resets all stat changes.",
+    "effect": "Remove any stat changes from the target",
     "gameEffect": "Remove any stat changes from the target"
   },
   "Head Charge": {
@@ -4483,7 +4483,7 @@
     "category": "Physical",
     "power": 150,
     "accuracy": 80,
-    "effect": "User receives recoil damage.",
+    "effect": "50% recoil damage",
     "gameEffect": "50% recoil damage",
     "flags": {
       "contact": 1,
@@ -4500,7 +4500,7 @@
     "category": "Physical",
     "power": 70,
     "accuracy": 100,
-    "effect": "May cause flinching.",
+    "effect": "30% chance to stun",
     "gameEffect": "30% chance to stun",
     "flags": {
       "contact": 1,
@@ -4568,7 +4568,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Restores half the target's max HP.",
+    "effect": "Heal HP any pokemon of your own team, whether in play or out play by 30%",
     "gameEffect": "Heal HP any pokemon of your own team, whether in play or out play by 30%",
     "flags": {
       "protect": 1,
@@ -4582,7 +4582,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "The user faints and the next Pokémon released is fully healed.",
+    "effect": "User Sacrifices itself in order to fully heal and restore health all other pokemon in team",
     "gameEffect": "User Sacrifices itself in order to fully heal and restore health all other pokemon in team",
     "flags": {
       "heal": 1
@@ -4621,7 +4621,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 100,
-    "effect": "The heavier the user, the stronger the attack.",
+    "effect": "The power of this move is Self Def - Foe's Def",
     "gameEffect": "The power of this move is Self Def - Foe's Def",
     "flags": {
       "contact": 1,
@@ -4650,7 +4650,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 100,
-    "effect": "The heavier the user, the stronger the attack.",
+    "effect": "The power of this move is Self Def - Foe's Def",
     "gameEffect": "The power of this move is Self Def - Foe's Def",
     "flags": {
       "contact": 1,
@@ -4663,7 +4663,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "In Double Battles, boosts the power of the partner's move.",
+    "effect": "Doubles someone's move's power for the round. Cannot use on self",
     "gameEffect": "Doubles someone's move's power for the round. Cannot use on self",
     "priority": 5
   },
@@ -4673,7 +4673,7 @@
     "category": "Special",
     "power": 65,
     "accuracy": 100,
-    "effect": "Inflicts more damage if the target has a status condition.",
+    "effect": "If Opponent is suffering from a status ailment, double power",
     "gameEffect": "If Opponent is suffering from a status ailment, double power",
     "flags": {
       "protect": 1
@@ -4708,7 +4708,7 @@
     "category": "Physical",
     "power": 130,
     "accuracy": 90,
-    "effect": "If it misses, the user loses half their HP.",
+    "effect": "If it Misses, damage returned on self",
     "gameEffect": "If it Misses, damage returned on self",
     "flags": {
       "contact": 1,
@@ -4741,7 +4741,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises user's Attack and Accuracy.",
+    "effect": "Your next move will have 1.2x Atk and infinite accuracy",
     "gameEffect": "Your next move will have 1.2x Atk and infinite accuracy"
   },
   "Horn Attack": {
@@ -4774,7 +4774,7 @@
     "category": "Physical",
     "power": 75,
     "accuracy": 100,
-    "effect": "User recovers half the HP inflicted on opponent.",
+    "effect": "Recover 30% HP of the damage dealt",
     "gameEffect": "Recover 30% HP of the damage dealt",
     "flags": {
       "contact": 1,
@@ -4792,7 +4792,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises Attack of allies.",
+    "effect": "Raises atk of all teammates by 10%",
     "gameEffect": "Raises atk of all teammates by 10%",
     "flags": {
       "sound": 1
@@ -4804,7 +4804,7 @@
     "category": "Special",
     "power": 110,
     "accuracy": 70,
-    "effect": "May confuse opponent.",
+    "effect": "Damages all foes",
     "gameEffect": "Damages all foes",
     "flags": {
       "protect": 1,
@@ -4863,7 +4863,7 @@
     "category": "Special",
     "power": 150,
     "accuracy": 90,
-    "effect": "User must recharge next turn.",
+    "effect": "User Can't Attack next turn",
     "gameEffect": "User Can't Attack next turn",
     "flags": {
       "protect": 1
@@ -4903,7 +4903,7 @@
     "category": "Special",
     "power": 90,
     "accuracy": 100,
-    "effect": "",
+    "effect": "Hits all players",
     "gameEffect": "Hits all players",
     "flags": {
       "protect": 1,
@@ -4916,7 +4916,7 @@
     "category": "Physical",
     "power": 100,
     "accuracy": "&infin;",
-    "effect": "Lowers user's Defense. Can strike through Protect/Detect.",
+    "effect": "Summons a random legendary pokemon to do an additional move. Also switches to normal form",
     "gameEffect": "Summons a random legendary pokemon to do an additional move. Also switches to normal form",
     "selfBoosts": {
       "def": -1
@@ -4928,7 +4928,7 @@
     "category": "Special",
     "power": 80,
     "accuracy": "&infin;",
-    "effect": "Can strike through Protect/Detect.",
+    "effect": "Summons a random non-legendary pokemon to do an additional move. Also switches to Unbound form",
     "gameEffect": "Summons a random non-legendary pokemon to do an additional move. Also switches to Unbound form"
   },
   "Hypnosis": {
@@ -4937,7 +4937,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 60,
-    "effect": "Puts opponent to sleep.",
+    "effect": "puts foe to sleep",
     "gameEffect": "puts foe to sleep",
     "flags": {
       "protect": 1
@@ -4962,7 +4962,7 @@
     "category": "Special",
     "power": 90,
     "accuracy": 100,
-    "effect": "May freeze opponent.",
+    "effect": "50% chsnce to freeze foe",
     "gameEffect": "50% chsnce to freeze foe",
     "flags": {
       "protect": 1
@@ -4993,7 +4993,7 @@
     "category": "Physical",
     "power": 65,
     "accuracy": 95,
-    "effect": "May cause flinching and/or freeze opponent.",
+    "effect": "30% Chance to Freeze Foe",
     "gameEffect": "30% Chance to Freeze Foe",
     "flags": {
       "contact": 1,
@@ -5023,7 +5023,7 @@
     "category": "Physical",
     "power": 75,
     "accuracy": 100,
-    "effect": "May freeze opponent.",
+    "effect": "20% chance to freeze foe",
     "gameEffect": "20% chance to freeze foe",
     "flags": {
       "contact": 1,
@@ -5109,7 +5109,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Opponent is unable to use moves that the user also knows.",
+    "effect": "Opponent cannot move this round and next round. this move doesn't work consecutively",
     "gameEffect": "Opponent cannot move this round and next round. this move doesn't work consecutively"
   },
   "Incinerate": {
@@ -5144,7 +5144,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 50,
-    "effect": "Burns opponent.",
+    "effect": "Badly Burns foe",
     "gameEffect": "Badly Burns foe",
     "flags": {
       "protect": 1
@@ -5168,7 +5168,7 @@
     "category": "Special",
     "power": 20,
     "accuracy": 100,
-    "effect": "Traps opponent, damaging them for 4-5 turns.",
+    "effect": "consecutively damage 5% on foe for next 5 rounds and for can't switch",
     "gameEffect": "consecutively damage 5% on foe for next 5 rounds and for can't switch",
     "flags": {
       "contact": 1,
@@ -5181,7 +5181,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User restores HP each turn. User cannot escape/switch.",
+    "effect": "Plant a seed in the ground. It will restore 20% health of your present pokemon for next 5 rounds",
     "gameEffect": "Plant a seed in the ground. It will restore 20% health of your present pokemon for next 5 rounds"
   },
   "Instruct": {
@@ -5210,7 +5210,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Sharply raises user's Defense.",
+    "effect": "Increases Def by 2 stages",
     "gameEffect": "Increases Def by 2 stages"
   },
   "Iron Head": {
@@ -5264,7 +5264,7 @@
     "category": "Physical",
     "power": 80,
     "accuracy": 100,
-    "effect": "Prevents user and opponent from switching out.",
+    "effect": "Foe can't switch out anymore",
     "gameEffect": "Foe can't switch out anymore",
     "flags": {
       "contact": 1,
@@ -5358,7 +5358,7 @@
     "category": "Physical",
     "power": 65,
     "accuracy": 100,
-    "effect": "Removes opponent's held item for the rest of the battle.",
+    "effect": "Removes an item card from the opponent",
     "gameEffect": "Removes an item card from the opponent",
     "flags": {
       "contact": 1,
@@ -5395,7 +5395,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User's next attack is guaranteed to result in a critical hit.",
+    "effect": "User's next attack will deal 1.5x dmg",
     "gameEffect": "User's next attack will deal 1.5x dmg"
   },
   "Lash Out": {
@@ -5416,7 +5416,7 @@
     "category": "Physical",
     "power": 140,
     "accuracy": 100,
-    "effect": "Can only be used after all other moves are used.",
+    "effect": "Can't be used until all other moves have been used",
     "gameEffect": "Can't be used until all other moves have been used",
     "flags": {
       "contact": 1,
@@ -5510,7 +5510,7 @@
     "category": "Physical",
     "power": 80,
     "accuracy": 100,
-    "effect": "User recovers half the HP inflicted on opponent.",
+    "effect": "recover 40% health of the damage dealt",
     "gameEffect": "recover 40% health of the damage dealt",
     "flags": {
       "contact": 1,
@@ -5528,7 +5528,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 90,
-    "effect": "Drains HP from opponent each turn.",
+    "effect": "Plants parasitic seed on foe that transfers 10% HP at the end of every turn",
     "gameEffect": "Plants parasitic seed on foe that transfers 10% HP at the end of every turn",
     "flags": {
       "protect": 1
@@ -5540,7 +5540,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Lowers opponent's Defense.",
+    "effect": "lowers def by 1 stage",
     "gameEffect": "lowers def by 1 stage",
     "flags": {
       "protect": 1
@@ -5563,7 +5563,7 @@
     "category": "Physical",
     "power": 30,
     "accuracy": 100,
-    "effect": "May paralyze opponent.",
+    "effect": "25% chance to paralyze foe",
     "gameEffect": "25% chance to paralyze foe",
     "flags": {
       "contact": 1,
@@ -5580,7 +5580,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User and teammates recover HP.",
+    "effect": "Recover 25% hp",
     "gameEffect": "Recover 25% hp",
     "flags": {
       "heal": 1
@@ -5607,7 +5607,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Halves damage from Special attacks for 5 turns.",
+    "effect": "Halves dmg from next 5 Sp Atks",
     "gameEffect": "Halves dmg from next 5 Sp Atks"
   },
   "Light That Burns the Sky": {
@@ -5624,7 +5624,7 @@
     "category": "Physical",
     "power": 85,
     "accuracy": 100,
-    "effect": "May lower opponent's Defense.",
+    "effect": "50% chance to lower foe's Def.",
     "gameEffect": "50% chance to lower foe's Def.",
     "flags": {
       "contact": 1,
@@ -5643,7 +5643,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User's next attack is guaranteed to hit.",
+    "effect": "User's next move is infinite Accuracy on the targeted pokemon",
     "gameEffect": "User's next move is infinite Accuracy on the targeted pokemon",
     "flags": {
       "protect": 1
@@ -5666,7 +5666,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 100,
-    "effect": "The heavier the opponent, the stronger the attack.",
+    "effect": "move's power = foe's def - foe's speed",
     "gameEffect": "move's power = foe's def - foe's speed",
     "flags": {
       "contact": 1,
@@ -5679,7 +5679,7 @@
     "category": "Physical",
     "power": 65,
     "accuracy": 100,
-    "effect": "Lowers opponent's Speed.",
+    "effect": "power of this move = Foe's Def - Foe's Speed",
     "gameEffect": "power of this move = Foe's Def - Foe's Speed",
     "flags": {
       "contact": 1,
@@ -5698,7 +5698,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Opponent cannot land critical hits for 5 turns.",
+    "effect": "Immune to deathblows for this round, Doesn't work if used consecutively",
     "gameEffect": "Immune to deathblows for this round, Doesn't work if used consecutively"
   },
   "Lumina Crash": {
@@ -5724,7 +5724,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Heals user's status conditions and recovers HP.",
+    "effect": "Heals 30% HP and refreshes status and has 50% chance to dodge the next attack. Cannot use consecutively",
     "gameEffect": "Heals 30% HP and refreshes status and has 50% chance to dodge the next attack. Cannot use consecutively",
     "flags": {
       "heal": 1
@@ -5736,7 +5736,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "The user faints but the next Pokémon released is fully healed.",
+    "effect": "The user sacrifices itself, but revives two pokemon in return",
     "gameEffect": "The user sacrifices itself, but revives two pokemon in return",
     "flags": {
       "heal": 1
@@ -5817,7 +5817,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Suppresses the effects of held items for five turns.",
+    "effect": "Prohibits use of items for next 3 rounds",
     "gameEffect": "Prohibits use of items for next 3 rounds"
   },
   "Magical Leaf": {
@@ -5875,7 +5875,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User becomes immune to Ground-type moves for 5 turns.",
+    "effect": "Make's all pokemon's in the field immune to ground type moves for 5 turns and adds 10 power to electric moves",
     "gameEffect": "Make's all pokemon's in the field immune to ground type moves for 5 turns and adds 10 power to electric moves"
   },
   "Magnetic Flux": {
@@ -5906,7 +5906,7 @@
     "category": "Special",
     "power": 120,
     "accuracy": 100,
-    "effect": "Lowers user's Special Attack. Money is earned after the battle.",
+    "effect": "30% chance on reducing each stat of the foe by 10%",
     "gameEffect": "30% chance on reducing each stat of the foe by 10%",
     "flags": {
       "protect": 1
@@ -6139,7 +6139,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Opponent cannot flee or switch.",
+    "effect": "Foe can't escape anymore",
     "gameEffect": "Foe can't escape anymore"
   },
   "Meditate": {
@@ -6156,7 +6156,7 @@
     "category": "Special",
     "power": 40,
     "accuracy": 100,
-    "effect": "User recovers half the HP inflicted on opponent.",
+    "effect": "Heals itself 25% of dmg dealt",
     "gameEffect": "Heals itself 25% of dmg dealt",
     "flags": {
       "protect": 1,
@@ -6210,7 +6210,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "User faints, sharply lowers opponent's Attack and Special Attack.",
+    "effect": "User sacrifices itself for lowering foe's Atk and Sp Atk by 3 stages",
     "gameEffect": "User sacrifices itself for lowering foe's Atk and Sp Atk by 3 stages",
     "flags": {
       "protect": 1
@@ -6230,7 +6230,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 100,
-    "effect": "Deals damage equal to 1.5x opponent's attack.",
+    "effect": "No Calculation. Deal Damage according to 0.5x of foe's Attack",
     "gameEffect": "No Calculation. Deal Damage according to 0.5x of foe's Attack",
     "flags": {
       "protect": 1
@@ -6257,7 +6257,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 85,
-    "effect": "Sharply lowers opponent's Special Defense.",
+    "effect": "Lowers sp. atk of foe by 20%",
     "gameEffect": "Lowers sp. atk of foe by 20%",
     "flags": {
       "protect": 1,
@@ -6308,7 +6308,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User performs almost any move in the game at random.",
+    "effect": "Uses a random move from all the moves listed in the attack chart",
     "gameEffect": "Uses a random move from all the moves listed in the attack chart"
   },
   "Mighty Cleave": {
@@ -6340,7 +6340,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Copies the opponent's last move.",
+    "effect": "Copies the last move used in the game.",
     "gameEffect": "Copies the last move used in the game.",
     "flags": {
       "protect": 1
@@ -6352,7 +6352,7 @@
     "category": "Special",
     "power": 150,
     "accuracy": 100,
-    "effect": "User receives recoil damage.",
+    "effect": "Hits all opponents but you scrifice 50% of your health to use this move",
     "gameEffect": "Hits all opponents but you scrifice 50% of your health to use this move",
     "flags": {
       "protect": 1
@@ -6364,7 +6364,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User's next attack is guaranteed to hit.",
+    "effect": "You can dodge the next move used by the opposing Pokemon you used this move on",
     "gameEffect": "You can dodge the next move used by the opposing Pokemon you used this move on",
     "flags": {
       "protect": 1
@@ -6376,7 +6376,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Sharply raises user's Evasiveness.",
+    "effect": "increase self evasion by 2 stages",
     "gameEffect": "increase self evasion by 2 stages"
   },
   "Miracle Eye": {
@@ -6396,7 +6396,7 @@
     "category": "Special",
     "power": 0,
     "accuracy": 100,
-    "effect": "When hit by a Special Attack, user strikes back with 2x power.",
+    "effect": "Takes a stance. Returns 2x damage when hit by a special move. Priority Move",
     "gameEffect": "Takes a stance. Returns 2x damage when hit by a special move. Priority Move",
     "priority": -5,
     "flags": {
@@ -6434,7 +6434,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User's stats cannot be changed for a period of time.",
+    "effect": "User's stats cannot be effected for next 2 rounds",
     "gameEffect": "User's stats cannot be effected for next 2 rounds"
   },
   "Mist Ball": {
@@ -6472,7 +6472,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Protects the field from status conditions for 5 turns.",
+    "effect": "Lowers foe's Accuracy by 1 stage",
     "gameEffect": "Lowers foe's Accuracy by 1 stage"
   },
   "Moonblast": {
@@ -6498,7 +6498,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 100,
-    "effect": "Ignores the target's ability.",
+    "effect": "Choose this attack's type from Dark, Ghost, Psychic, Dragon, Fairy, Poison",
     "gameEffect": "Choose this attack's type from Dark, Ghost, Psychic, Dragon, Fairy, Poison",
     "flags": {
       "protect": 1
@@ -6510,7 +6510,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User recovers HP. Amount varies with the weather.",
+    "effect": "Recover 40% self hp",
     "gameEffect": "Recover 40% self hp",
     "flags": {
       "heal": 1
@@ -6607,7 +6607,7 @@
     "category": "Special",
     "power": 20,
     "accuracy": 100,
-    "effect": "Lowers opponent's Accuracy.",
+    "effect": "lower foe's accuracy by 10%",
     "gameEffect": "lower foe's accuracy by 10%",
     "flags": {
       "protect": 1
@@ -6642,7 +6642,7 @@
     "category": "Physical",
     "power": 120,
     "accuracy": 100,
-    "effect": "Type matches Memory item held.",
+    "effect": "choose type of this attack from (dark, ghost, psychic, fairy, dragon)",
     "gameEffect": "choose type of this attack from (dark, ghost, psychic, fairy, dragon)",
     "flags": {
       "contact": 1,
@@ -6686,7 +6686,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Sharply raises user's Special Attack.",
+    "effect": "Raise  sp atk by 20%",
     "gameEffect": "Raise  sp atk by 20%"
   },
   "Natural Gift": {
@@ -6706,7 +6706,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Uses a certain move based on the current terrain.",
+    "effect": "User chooses move type from (Fire,Water, grass,flying,ground,ice), Atk or Sp Atk, 70 power fixed",
     "gameEffect": "User chooses move type from (Fire,Water, grass,flying,ground,ice), Atk or Sp Atk, 70 power fixed"
   },
   "Nature's Madness": {
@@ -6715,7 +6715,7 @@
     "category": "Special",
     "power": 0,
     "accuracy": 90,
-    "effect": "Halves the foe's HP.",
+    "effect": "Halves Opponent's HP",
     "gameEffect": "Halves Opponent's HP",
     "flags": {
       "protect": 1
@@ -6751,7 +6751,7 @@
     "category": "Special",
     "power": 85,
     "accuracy": 95,
-    "effect": "May lower opponent's Accuracy.",
+    "effect": "50% chance to lower foe's accuracy by 15%",
     "gameEffect": "50% chance to lower foe's accuracy by 15%",
     "flags": {
       "protect": 1
@@ -6769,7 +6769,7 @@
     "category": "Special",
     "power": 0,
     "accuracy": 100,
-    "effect": "Inflicts damage equal to user's level.",
+    "effect": "Ignores every condition, calculation and deals simple 40 dmg",
     "gameEffect": "Ignores every condition, calculation and deals simple 40 dmg",
     "flags": {
       "protect": 1
@@ -6813,7 +6813,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Lowers opponent's Attack and Special Attack.",
+    "effect": "Lower all foe's Atk and Sp Atk by 20%",
     "gameEffect": "Lower all foe's Atk and Sp Atk by 20%",
     "flags": {
       "protect": 1,
@@ -6841,7 +6841,7 @@
     "category": "Physical",
     "power": 20,
     "accuracy": 100,
-    "effect": "Paralyzes opponent.",
+    "effect": "25% chance to paralyze foe",
     "gameEffect": "25% chance to paralyze foe",
     "flags": {
       "contact": 1,
@@ -6858,7 +6858,7 @@
     "category": "Special",
     "power": 80,
     "accuracy": 100,
-    "effect": "User recovers most of the HP inflicted on opponent.",
+    "effect": "Recovers 75% hp of the damage dealt",
     "gameEffect": "Recovers 75% hp of the damage dealt",
     "flags": {
       "protect": 1,
@@ -6876,7 +6876,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Protects the user and sharply lowers Defence on contact.",
+    "effect": "Protect from all damage this round. No consecutive use. When a foe attacks during obstruct reduce def by 20%",
     "gameEffect": "Protect from all damage this round. No consecutive use. When a foe attacks during obstruct reduce def by 20%",
     "priority": 4
   },
@@ -6959,7 +6959,7 @@
     "category": "Special",
     "power": 110,
     "accuracy": 85,
-    "effect": "Hits all adjacent opponents.",
+    "effect": "Hit all foes",
     "gameEffect": "Hit all foes",
     "flags": {
       "protect": 1
@@ -6971,7 +6971,7 @@
     "category": "Physical",
     "power": 120,
     "accuracy": 100,
-    "effect": "User attacks for 2-3 turns but then becomes confused.",
+    "effect": "Once used, User is confused for the next round",
     "gameEffect": "Once used, User is confused for the next round",
     "flags": {
       "contact": 1,
@@ -6996,7 +6996,7 @@
     "category": "Special",
     "power": 130,
     "accuracy": 90,
-    "effect": "Sharply lowers user's Special Attack.",
+    "effect": "user's sp.atk -10%",
     "gameEffect": "user's sp.atk -10%",
     "flags": {
       "protect": 1
@@ -7011,7 +7011,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "The user's and opponent's HP becomes the average of both.",
+    "effect": "Average your and your target's HP",
     "gameEffect": "Average your and your target's HP",
     "flags": {
       "protect": 1
@@ -7023,7 +7023,7 @@
     "category": "Special",
     "power": 65,
     "accuracy": 100,
-    "effect": "User recovers half the HP inflicted on opponent.",
+    "effect": "Recover 50% hp from the damage dealt",
     "gameEffect": "Recover 50% hp from the damage dealt",
     "flags": {
       "protect": 1,
@@ -7040,7 +7040,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Lowers opponent's Attack and Special Attack then switches out.",
+    "effect": "Lower all foe's atk and sp atk by 2 stages and sacrifice yourself",
     "gameEffect": "Lower all foe's atk and sp atk by 2 stages and sacrifice yourself",
     "flags": {
       "protect": 1,
@@ -7064,7 +7064,7 @@
     "category": "Physical",
     "power": 50,
     "accuracy": 100,
-    "effect": "Power doubles if the user was attacked first.",
+    "effect": "when used on an opponent that has damaged the user, power of move is doubled",
     "gameEffect": "when used on an opponent that has damaged the user, power of move is doubled",
     "flags": {
       "contact": 1,
@@ -7090,7 +7090,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Any Pokémon in play when this attack is used faints in 3 turns.",
+    "effect": "All pokemon in play will faint automatically after 4 rounds if they don't switch out. Can't be used for next 4 turns",
     "gameEffect": "All pokemon in play will faint automatically after 4 rounds if they don't switch out. Can't be used for next 4 turns",
     "flags": {
       "sound": 1,
@@ -7103,7 +7103,7 @@
     "category": "Physical",
     "power": 90,
     "accuracy": 100,
-    "effect": "Hits all adjacent Pokémon.",
+    "effect": "Hits two adjacent players.",
     "gameEffect": "Hits two adjacent players.",
     "flags": {
       "protect": 1,
@@ -7128,7 +7128,7 @@
     "category": "Physical",
     "power": 90,
     "accuracy": 100,
-    "effect": "Disappears on first turn, attacks on second. Can strike through Protect/Detect.",
+    "effect": "Become Invisible this turn. Reveal yourself and attack the next turn.",
     "gameEffect": "Become Invisible this turn. Reveal yourself and attack the next turn.",
     "flags": {
       "contact": 1
@@ -7140,7 +7140,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 100,
-    "effect": "Uses Attack or Special Attack stat, whichever is higher.",
+    "effect": "This move is physical if user's physical Attack is higher than sp atk",
     "gameEffect": "This move is physical if user's physical Attack is higher than sp atk",
     "flags": {
       "protect": 1
@@ -7163,7 +7163,7 @@
     "category": "Physical",
     "power": 25,
     "accuracy": 95,
-    "effect": "Hits 2-5 times in one turn.",
+    "effect": "Hits 1 to 5 times. depends on continuous toss wins",
     "gameEffect": "Hits 1 to 5 times. depends on continuous toss wins",
     "flags": {
       "protect": 1
@@ -7175,7 +7175,7 @@
     "category": "Physical",
     "power": 100,
     "accuracy": 100,
-    "effect": "Changes Normal-type moves to Electric-type moves.",
+    "effect": "Change your foe's normal type moves to electric type",
     "gameEffect": "Change your foe's normal type moves to electric type",
     "flags": {
       "contact": 1,
@@ -7189,7 +7189,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Lowers opponent's Attack. Always hits.",
+    "effect": "Lower foe's atk by 10%",
     "gameEffect": "Lower foe's atk by 10%"
   },
   "Play Rough": {
@@ -7216,7 +7216,7 @@
     "category": "Physical",
     "power": 60,
     "accuracy": 100,
-    "effect": "If the opponent is holding a berry, its effect is stolen by user.",
+    "effect": "Pluck away an item card from an opponent. This effect can be used only once for each foe",
     "gameEffect": "Pluck away an item card from an opponent. This effect can be used only once for each foe",
     "flags": {
       "contact": 1,
@@ -7230,7 +7230,7 @@
     "category": "Physical",
     "power": 50,
     "accuracy": 100,
-    "effect": "May badly poison opponent.",
+    "effect": "50% chance to poison foe",
     "gameEffect": "50% chance to poison foe",
     "flags": {
       "contact": 1,
@@ -7248,7 +7248,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 90,
-    "effect": "Poisons opponent.",
+    "effect": "Poisons opponent",
     "gameEffect": "Poisons opponent",
     "flags": {
       "protect": 1
@@ -7260,7 +7260,7 @@
     "category": "Physical",
     "power": 80,
     "accuracy": 100,
-    "effect": "May poison the opponent.",
+    "effect": "30% chance to poison",
     "gameEffect": "30% chance to poison",
     "flags": {
       "contact": 1,
@@ -7277,7 +7277,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 75,
-    "effect": "Poisons opponent.",
+    "effect": "Poisons opponent 75% chance",
     "gameEffect": "Poisons opponent 75% chance",
     "flags": {
       "protect": 1
@@ -7289,7 +7289,7 @@
     "category": "Physical",
     "power": 15,
     "accuracy": 100,
-    "effect": "May poison the opponent.",
+    "effect": "Hits twice",
     "gameEffect": "Hits twice",
     "flags": {
       "protect": 1
@@ -7305,7 +7305,7 @@
     "category": "Physical",
     "power": 50,
     "accuracy": 100,
-    "effect": "High critical hit ratio. May poison opponent.",
+    "effect": "25% chance to poison foe",
     "gameEffect": "25% chance to poison foe",
     "flags": {
       "contact": 1,
@@ -7445,7 +7445,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User and opponent swap Attack and Special Attack.",
+    "effect": "Swap any pokemon's Atk and SpAtk",
     "gameEffect": "Swap any pokemon's Atk and SpAtk",
     "flags": {
       "protect": 1
@@ -7457,7 +7457,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User's own Attack and Defense switch.",
+    "effect": "Switch anybody's attack and defense stat",
     "gameEffect": "Switch anybody's attack and defense stat"
   },
   "Power Trip": {
@@ -7466,7 +7466,7 @@
     "category": "Physical",
     "power": 20,
     "accuracy": 100,
-    "effect": "The user boasts its strength and attacks the target. The more the user's stats are raised, the greater the move's power.",
+    "effect": "This moves power is multiplied by the no. of stages your stats have increased",
     "gameEffect": "This moves power is multiplied by the no. of stages your stats have increased",
     "flags": {
       "contact": 1,
@@ -7491,7 +7491,7 @@
     "category": "Physical",
     "power": 40,
     "accuracy": 100,
-    "effect": "Raises Attack.",
+    "effect": "Increase self Atk by 10%",
     "gameEffect": "Increase self Atk by 10%",
     "flags": {
       "contact": 1,
@@ -7508,7 +7508,7 @@
     "category": "Physical",
     "power": 120,
     "accuracy": 85,
-    "effect": "Hits all adjacent opponents.",
+    "effect": "Hits all players",
     "gameEffect": "Hits all players",
     "flags": {
       "protect": 1
@@ -7531,7 +7531,7 @@
     "category": "Special",
     "power": 160,
     "accuracy": 100,
-    "effect": "The user shoots powerful lasers using the power of a prism. The user can't move on the next turn.",
+    "effect": "Need to recharge 1 round after using it",
     "gameEffect": "Need to recharge 1 round after using it",
     "flags": {
       "protect": 1
@@ -7543,7 +7543,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Protects the user, but may fail if used consecutively.",
+    "effect": "Protects from all moves but fails when used consecutively (Priority Move)",
     "gameEffect": "Protects from all moves but fails when used consecutively (Priority Move)",
     "priority": 4
   },
@@ -7581,7 +7581,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Copies the opponent's stat changes.",
+    "effect": "Copies opponent's stat changes",
     "gameEffect": "Copies opponent's stat changes"
   },
   "Psychic": {
@@ -7644,7 +7644,7 @@
     "category": "Special",
     "power": 140,
     "accuracy": 90,
-    "effect": "Sharply lowers user's Special Attack.",
+    "effect": "Lower self SpAtk by 10%",
     "gameEffect": "Lower self SpAtk by 10%",
     "flags": {
       "protect": 1
@@ -7671,7 +7671,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Transfers user's status condition to the opponent.",
+    "effect": "Transfer a status ailment from one pokemon to another",
     "gameEffect": "Transfer a status ailment from one pokemon to another",
     "flags": {
       "protect": 1
@@ -7698,7 +7698,7 @@
     "category": "Special",
     "power": 80,
     "accuracy": 100,
-    "effect": "Inflicts damage based on the target's Defense, not Special Defense.",
+    "effect": "50% chance to stun opponent for the round",
     "gameEffect": "50% chance to stun opponent for the round",
     "flags": {
       "protect": 1
@@ -7710,7 +7710,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 100,
-    "effect": "Inflicts damage based on the target's Defense, not Special Defense.",
+    "effect": "Damage is calculated based on opponent's defense",
     "gameEffect": "Damage is calculated based on opponent's defense",
     "flags": {
       "protect": 1
@@ -7780,7 +7780,7 @@
     "category": "Physical",
     "power": 120,
     "accuracy": 90,
-    "effect": "May burn opponent.",
+    "effect": "Hits two adjacent pokemon.",
     "gameEffect": "Hits two adjacent pokemon.",
     "flags": {
       "protect": 1,
@@ -7808,7 +7808,7 @@
     "category": "Physical",
     "power": 40,
     "accuracy": 100,
-    "effect": "User attacks first.",
+    "effect": "Priority move",
     "gameEffect": "Priority move",
     "priority": 1,
     "flags": {
@@ -7822,7 +7822,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Protects the user's team from high-priority moves.",
+    "effect": "Protects from priority moves",
     "gameEffect": "Protects from priority moves",
     "priority": 3
   },
@@ -7832,7 +7832,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises user's Special Attack, Special Defense and Speed.",
+    "effect": "Raises self Atk and Sp Atk by 1 Stage",
     "gameEffect": "Raises self Atk and Sp Atk by 1 Stage"
   },
   "Rage": {
@@ -7853,7 +7853,7 @@
     "category": "Physical",
     "power": 50,
     "accuracy": 100,
-    "effect": "The more times the user has been hit by attacks, the greater the move's power.",
+    "effect": "Add 50 to the move's power every time its used",
     "gameEffect": "Add 50 to the move's power every time its used",
     "flags": {
       "contact": 1,
@@ -7867,7 +7867,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Forces attacks to hit user, not team-mates.",
+    "effect": "The next attack that hits the user will be reflected back to the attacker",
     "gameEffect": "The next attack that hits the user will be reflected back to the attacker",
     "priority": 2
   },
@@ -7900,7 +7900,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Makes it rain for 5 turns.",
+    "effect": "Start rainfall 5 rounds",
     "gameEffect": "Start rainfall 5 rounds"
   },
   "Rapid Spin": {
@@ -7966,7 +7966,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User recovers half its max HP.",
+    "effect": "Heal 40% HP. Cannot use consequitvely",
     "gameEffect": "Heal 40% HP. Cannot use consequitvely",
     "flags": {
       "heal": 1
@@ -7986,7 +7986,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Halves damage from Physical attacks for 5 turns.",
+    "effect": "Halves dmg from next 5 Physical Atks",
     "gameEffect": "Halves dmg from next 5 Physical Atks"
   },
   "Reflect Type": {
@@ -8014,7 +8014,7 @@
     "category": "Special",
     "power": 75,
     "accuracy": 100,
-    "effect": "May put the target to sleep.",
+    "effect": "Hits all pokemon. 50% chance to put each into deep sleep",
     "gameEffect": "Hits all pokemon. 50% chance to put each into deep sleep",
     "flags": {
       "protect": 1,
@@ -8031,7 +8031,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User sleeps for 2 turns, but user is fully healed.",
+    "effect": "Heal yourself completely but fall asleep, doesn't work consecutively",
     "gameEffect": "Heal yourself completely but fall asleep, doesn't work consecutively",
     "flags": {
       "heal": 1
@@ -8043,7 +8043,7 @@
     "category": "Physical",
     "power": 70,
     "accuracy": 100,
-    "effect": "Inflicts double damage if a teammate fainted on the last turn.",
+    "effect": "If a pokemon in your team fainted the previous turn. This move's power is doubled",
     "gameEffect": "If a pokemon in your team fainted the previous turn. This move's power is doubled",
     "flags": {
       "contact": 1,
@@ -8079,7 +8079,7 @@
     "category": "Physical",
     "power": 60,
     "accuracy": 100,
-    "effect": "Power increases if user was hit first.",
+    "effect": "the move deals 1.5x dmg on the foe that damaged the user in this round or previous round",
     "gameEffect": "the move deals 1.5x dmg on the foe that damaged the user in this round or previous round",
     "priority": -4,
     "flags": {
@@ -8093,7 +8093,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 100,
-    "effect": "The lower the user's HP, the higher the power.",
+    "effect": "Move's power is equal to the power of the pervious move that hit the user",
     "gameEffect": "Move's power is equal to the power of the pervious move that hit the user",
     "flags": {
       "contact": 1,
@@ -8128,7 +8128,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "In battles, the opponent switches. In the wild, the Pokémon runs.",
+    "effect": "Makes the target switch out",
     "gameEffect": "Makes the target switch out",
     "priority": -6,
     "flags": {
@@ -8141,7 +8141,7 @@
     "category": "Special",
     "power": 150,
     "accuracy": 90,
-    "effect": "User must recharge next turn.",
+    "effect": "Hits all players. This move damages the previous usable pokemon the opponent used.",
     "gameEffect": "Hits all players. This move damages the previous usable pokemon the opponent used.",
     "flags": {
       "protect": 1
@@ -8153,7 +8153,7 @@
     "category": "Physical",
     "power": 25,
     "accuracy": 90,
-    "effect": "Hits 2-5 times in one turn.",
+    "effect": "Hits 2 to 5 times. Depends on continuous toss wins",
     "gameEffect": "Hits 2 to 5 times. Depends on continuous toss wins",
     "flags": {
       "protect": 1,
@@ -8182,7 +8182,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Sharply raises user's Speed.",
+    "effect": "raise speed by 20%",
     "gameEffect": "raise speed by 20%"
   },
   "Rock Slide": {
@@ -8191,7 +8191,7 @@
     "category": "Physical",
     "power": 75,
     "accuracy": 90,
-    "effect": "May cause flinching.",
+    "effect": "50% chance to stun foe",
     "gameEffect": "50% chance to stun foe",
     "flags": {
       "protect": 1
@@ -8225,7 +8225,7 @@
     "category": "Physical",
     "power": 50,
     "accuracy": 90,
-    "effect": "",
+    "effect": "25% chance to stun foe",
     "gameEffect": "25% chance to stun foe",
     "flags": {
       "protect": 1
@@ -8254,7 +8254,7 @@
     "category": "Physical",
     "power": 150,
     "accuracy": 90,
-    "effect": "User must recharge next turn.",
+    "effect": "Recharge next round",
     "gameEffect": "Recharge next round",
     "flags": {
       "protect": 1,
@@ -8267,7 +8267,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User copies the opponent's Ability.",
+    "effect": "Copies foe's ability",
     "gameEffect": "Copies foe's ability"
   },
   "Rolling Kick": {
@@ -8292,7 +8292,7 @@
     "category": "Physical",
     "power": 30,
     "accuracy": 90,
-    "effect": "Doubles in power each turn for 5 turns.",
+    "effect": "On using it once, you will have to use it 3 times more, it's power increases by 10 on every use",
     "gameEffect": "On using it once, you will have to use it 3 times more, it's power increases by 10 on every use",
     "flags": {
       "contact": 1,
@@ -8305,7 +8305,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User recovers half of its max HP and loses the Flying type temporarily.",
+    "effect": "Heal 40% HP. Cannot use consequitvely",
     "gameEffect": "Heal 40% HP. Cannot use consequitvely",
     "flags": {
       "heal": 1
@@ -8366,7 +8366,7 @@
     "category": "Physical",
     "power": 90,
     "accuracy": 100,
-    "effect": "Ignores opponent's stat changes.",
+    "effect": "Ignores foe's stat changes when calculating damage",
     "gameEffect": "Ignores foe's stat changes when calculating damage",
     "flags": {
       "contact": 1,
@@ -8380,7 +8380,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "The user's party is protected from status conditions.",
+    "effect": "Protects from status conditions for next 5 rounds",
     "gameEffect": "Protects from status conditions for next 5 rounds"
   },
   "Salt Cure": {
@@ -8415,7 +8415,7 @@
     "category": "Physical",
     "power": 35,
     "accuracy": 85,
-    "effect": "Traps opponent, damaging them for 4-5 turns.",
+    "effect": "Prevents foe from switching out",
     "gameEffect": "Prevents foe from switching out",
     "flags": {
       "protect": 1
@@ -8427,7 +8427,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 80,
-    "effect": "May burn target.",
+    "effect": "Deeply burn foe",
     "gameEffect": "Deeply burn foe",
     "flags": {
       "protect": 1,
@@ -8444,7 +8444,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Creates a sandstorm for 5 turns.",
+    "effect": "Sets Weather as SandStorm for next 5 turns",
     "gameEffect": "Sets Weather as SandStorm for next 5 turns",
     "flags": {
       "wind": 1
@@ -8501,7 +8501,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Sharply lowers opponent's Speed.",
+    "effect": "Lowers foe's Speed by 2 stages",
     "gameEffect": "Lowers foe's Speed by 2 stages",
     "flags": {
       "protect": 1
@@ -8540,7 +8540,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 85,
-    "effect": "Sharply lowers opponent's Defense.",
+    "effect": "Decreases Def by 2 stages",
     "gameEffect": "Decreases Def by 2 stages",
     "flags": {
       "protect": 1,
@@ -8636,7 +8636,7 @@
     "category": "Physical",
     "power": 0,
     "accuracy": 100,
-    "effect": "Inflicts damage equal to user's level.",
+    "effect": "Without any damage calculation deal 100 damage",
     "gameEffect": "Without any damage calculation deal 100 damage",
     "flags": {
       "contact": 1,
@@ -8649,7 +8649,7 @@
     "category": "Physical",
     "power": 200,
     "accuracy": 100,
-    "effect": "User faints.",
+    "effect": "sacrifice yourself and hit all opponents",
     "gameEffect": "sacrifice yourself and hit all opponents",
     "flags": {
       "protect": 1
@@ -8708,7 +8708,7 @@
     "category": "Physical",
     "power": 120,
     "accuracy": 100,
-    "effect": "Disappears on first turn, attacks on second. Can strike through Protect/Detect.",
+    "effect": "Hide in the void. Appear any time next round and launch your attack. Hits all players",
     "gameEffect": "Hide in the void. Appear any time next round and launch your attack. Hits all players",
     "flags": {
       "contact": 1
@@ -8770,7 +8770,7 @@
     "category": "Special",
     "power": 0,
     "accuracy": 30,
-    "effect": "One-Hit-KO, if it hits.",
+    "effect": "One hit KO but with very low chance",
     "gameEffect": "One hit KO but with very low chance",
     "flags": {
       "protect": 1
@@ -8797,7 +8797,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Sharply raises user's Attack, Special Attack and Speed but lowers Defense and Special Defense.",
+    "effect": "lower user's def and sp. def by 10% and raise user's atk, sp. atk, speed by 20%",
     "gameEffect": "lower user's def and sp. def by 10% and raise user's atk, sp. atk, speed by 20%"
   },
   "Shell Trap": {
@@ -8806,7 +8806,7 @@
     "category": "Special",
     "power": 150,
     "accuracy": 100,
-    "effect": "Deals more damage to opponent if hit by a Physical move.",
+    "effect": "Takes a stance. If pokemon makes contact with it: Shell trap hits (Priority move)",
     "gameEffect": "Takes a stance. If pokemon makes contact with it: Shell trap hits (Priority move)",
     "priority": -3,
     "flags": {
@@ -8827,7 +8827,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises user's Attack and sharply raises Speed.",
+    "effect": "Raise self atk and spd by 10%",
     "gameEffect": "Raise self atk and spd by 10%"
   },
   "Shock Wave": {
@@ -8896,7 +8896,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Changes target's ability to Simple.",
+    "effect": "Change target's ability to simple",
     "gameEffect": "Change target's ability to simple",
     "flags": {
       "protect": 1
@@ -8908,7 +8908,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 55,
-    "effect": "Puts opponent to sleep.",
+    "effect": "put each foe to sleep",
     "gameEffect": "put each foe to sleep",
     "flags": {
       "protect": 1,
@@ -8953,7 +8953,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "The user swaps Abilities with the opponent.",
+    "effect": "Swap ability with an opponent",
     "gameEffect": "Swap ability with an opponent",
     "flags": {
       "protect": 1
@@ -8965,7 +8965,7 @@
     "category": "Physical",
     "power": 70,
     "accuracy": 90,
-    "effect": "Lowers opponent's Sp. Attack.",
+    "effect": "Lower foe's sp atk by 10%",
     "gameEffect": "Lower foe's sp atk by 10%",
     "flags": {
       "contact": 1,
@@ -8984,7 +8984,7 @@
     "category": "Physical",
     "power": 130,
     "accuracy": 100,
-    "effect": "Raises Defense on first turn, attacks on second.",
+    "effect": "Raises def by 2 stage In this turn. Lands the attack next turn",
     "gameEffect": "Raises def by 2 stage In this turn. Lands the attack next turn",
     "flags": {
       "contact": 1,
@@ -8997,7 +8997,7 @@
     "category": "Physical",
     "power": 140,
     "accuracy": 90,
-    "effect": "Charges on first turn, attacks on second. May cause flinching. High critical hit ratio.",
+    "effect": "Takes one round to prepare",
     "gameEffect": "Takes one round to prepare",
     "flags": {
       "protect": 1,
@@ -9076,7 +9076,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 75,
-    "effect": "Puts opponent to sleep.",
+    "effect": "75% chance to make foe fall asleep",
     "gameEffect": "75% chance to make foe fall asleep",
     "flags": {
       "protect": 1
@@ -9088,7 +9088,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User performs one of its own moves while sleeping.",
+    "effect": "Use one of your moves at random",
     "gameEffect": "Use one of your moves at random"
   },
   "Sludge": {
@@ -9097,7 +9097,7 @@
     "category": "Special",
     "power": 65,
     "accuracy": 100,
-    "effect": "May poison opponent.",
+    "effect": "25% chance to posion foe",
     "gameEffect": "25% chance to posion foe",
     "flags": {
       "protect": 1
@@ -9129,7 +9129,7 @@
     "category": "Special",
     "power": 95,
     "accuracy": 100,
-    "effect": "May poison opponent.",
+    "effect": "Hits two adjacent opponents and 30% chance to poison them",
     "gameEffect": "Hits two adjacent opponents and 30% chance to poison them",
     "flags": {
       "protect": 1
@@ -9145,7 +9145,7 @@
     "category": "Physical",
     "power": 50,
     "accuracy": 100,
-    "effect": "Makes Flying-type Pokémon vulnerable to Ground moves.",
+    "effect": "If used on a flying type foe, it removes their immunity to ground type moves",
     "gameEffect": "If used on a flying type foe, it removes their immunity to ground type moves",
     "flags": {
       "protect": 1
@@ -9196,7 +9196,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Lowers opponent's Accuracy.",
+    "effect": "Lower accuracy of all foes by 1 stage",
     "gameEffect": "Lower accuracy of all foes by 1 stage",
     "flags": {
       "protect": 1
@@ -9208,7 +9208,7 @@
     "category": "Physical",
     "power": 35,
     "accuracy": 100,
-    "effect": "Traps opponent, damaging them for 4-5 turns.",
+    "effect": "Opponent can't escape. 5% damage for next 3 rounds",
     "gameEffect": "Opponent can't escape. 5% damage for next 3 rounds",
     "flags": {
       "contact": 1,
@@ -9221,7 +9221,7 @@
     "category": "Special",
     "power": 55,
     "accuracy": 95,
-    "effect": "Lowers opponent's Special Attack.",
+    "effect": "Foe's Atk and Sp Atk down by 1 stage",
     "gameEffect": "Foe's Atk and Sp Atk down by 1 stage",
     "flags": {
       "protect": 1,
@@ -9276,7 +9276,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises Defense of Ice types for 5 turns.",
+    "effect": "Raise Def of all Ice type pokemons in play by 4 stages. Cannot be used again until the stats are reset.",
     "gameEffect": "Raise Def of all Ice type pokemons in play by 4 stages. Cannot be used again until the stats are reset."
   },
   "Soak": {
@@ -9285,7 +9285,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Changes the target's type to water.",
+    "effect": "change a pokemon's type to water",
     "gameEffect": "change a pokemon's type to water",
     "flags": {
       "protect": 1
@@ -9308,7 +9308,7 @@
     "category": "Special",
     "power": 120,
     "accuracy": 100,
-    "effect": "Charges on first turn, attacks on second.",
+    "effect": "Takes 1 turn to charge",
     "gameEffect": "Takes 1 turn to charge",
     "flags": {
       "protect": 1
@@ -9355,7 +9355,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 95,
-    "effect": "High critical hit ratio.",
+    "effect": "Hits all players. Force opponent to switch out to a random pokemon and that pokemon takes the damage.",
     "gameEffect": "Hits all players. Force opponent to switch out to a random pokemon and that pokemon takes the damage.",
     "flags": {
       "protect": 1
@@ -9422,7 +9422,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "The user exchanges Speed stats with the target.",
+    "effect": "Swap any two pokemon's speed stat",
     "gameEffect": "Swap any two pokemon's speed stat",
     "flags": {
       "protect": 1
@@ -9467,7 +9467,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Damages opponents switching into battle.",
+    "effect": "The next pokemons sent on the field will take 10% dmg unless flying type",
     "gameEffect": "The next pokemons sent on the field will take 10% dmg unless flying type"
   },
   "Spiky Shield": {
@@ -9485,7 +9485,7 @@
     "category": "Physical",
     "power": 100,
     "accuracy": 100,
-    "effect": "Harshly lowers user’s Speed.",
+    "effect": "lower self spd by 10%",
     "gameEffect": "lower self spd by 10%",
     "flags": {
       "contact": 1,
@@ -9519,7 +9519,7 @@
     "category": "Physical",
     "power": 80,
     "accuracy": 100,
-    "effect": "Prevents the opponent from switching out.",
+    "effect": "Foe can't switch out anymore",
     "gameEffect": "Foe can't switch out anymore",
     "flags": {
       "protect": 1
@@ -9534,7 +9534,7 @@
     "category": "Special",
     "power": 0,
     "accuracy": 100,
-    "effect": "Power depends on how many times the user performed Stockpile.",
+    "effect": "Power of this move = 20 * no of item cards you have",
     "gameEffect": "Power of this move = 20 * no of item cards you have",
     "flags": {
       "protect": 1
@@ -9546,7 +9546,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "The opponent's last move loses 2-5 PP.",
+    "effect": "target Can't use the same move next round",
     "gameEffect": "target Can't use the same move next round",
     "flags": {
       "protect": 1
@@ -9589,7 +9589,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Puts opponent to sleep.",
+    "effect": "50% chance to put foe to deep sleep",
     "gameEffect": "50% chance to put foe to deep sleep",
     "flags": {
       "protect": 1
@@ -9631,7 +9631,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Damages opponents switching into battle.",
+    "effect": "Spread pointy rocks on the surface. After that, any non flying pokemon comes to play will get 10% damage",
     "gameEffect": "Spread pointy rocks on the surface. After that, any non flying pokemon comes to play will get 10% damage"
   },
   "Steam Eruption": {
@@ -9717,7 +9717,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Stores energy for use with Spit Up and Swallow.",
+    "effect": "Raise Def and SpDef by 10%",
     "gameEffect": "Raise Def and SpDef by 10%"
   },
   "Stoked Sparksurfer": {
@@ -9766,7 +9766,7 @@
     "category": "Physical",
     "power": 65,
     "accuracy": 90,
-    "effect": "Sets up Stealth Rock.",
+    "effect": "Continuous damage to foe for next 3 rounds. 5% dmg",
     "gameEffect": "Continuous damage to foe for next 3 rounds. 5% dmg",
     "flags": {
       "contact": 1,
@@ -9841,7 +9841,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "The user restores its HP by the same amount as the target's Attack stat. It also lowers the target's Attack stat.",
+    "effect": "Lower opponents Atk stat by 1 stage and restore HP = Amt of Atk lowered",
     "gameEffect": "Lower opponents Atk stat by 1 stage and restore HP = Amt of Atk lowered",
     "flags": {
       "protect": 1,
@@ -9854,7 +9854,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 95,
-    "effect": "Sharply lowers opponent's Speed.",
+    "effect": "Lower foe's speed by 10%",
     "gameEffect": "Lower foe's speed by 10%",
     "flags": {
       "protect": 1
@@ -9903,7 +9903,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 75,
-    "effect": "Paralyzes opponent.",
+    "effect": "Paralyzes Foe 75% chance",
     "gameEffect": "Paralyzes Foe 75% chance",
     "flags": {
       "protect": 1
@@ -9931,7 +9931,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Uses HP to creates a decoy that takes hits.",
+    "effect": "Put a substitute in your position. That substitute has 150 HP and it will take damage in your stead.  You don't take any damage until your substitute dies. Cannot use consequtively",
     "gameEffect": "Put a substitute in your position. That substitute has 150 HP and it will take damage in your stead.  You don't take any damage until your substitute dies. Cannot use consequtively"
   },
   "Subzero Slammer": {
@@ -9948,7 +9948,7 @@
     "category": "Physical",
     "power": 70,
     "accuracy": 100,
-    "effect": "User attacks first, but only works if opponent is readying an attack.",
+    "effect": "Lets you attack first",
     "gameEffect": "Lets you attack first",
     "priority": 1,
     "flags": {
@@ -9962,7 +9962,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Makes it sunny for 5 turns.",
+    "effect": "Sets Weather Condition as Harsh Sunlight for 5 rounds",
     "gameEffect": "Sets Weather Condition as Harsh Sunlight for 5 rounds"
   },
   "Sunsteel Strike": {
@@ -9971,7 +9971,7 @@
     "category": "Physical",
     "power": 100,
     "accuracy": 100,
-    "effect": "Ignores the target's ability.",
+    "effect": "35% chance to burn foe",
     "gameEffect": "35% chance to burn foe",
     "flags": {
       "contact": 1,
@@ -10044,7 +10044,7 @@
     "category": "Special",
     "power": 90,
     "accuracy": 100,
-    "effect": "Hits all adjacent Pokémon.",
+    "effect": "Hits all players",
     "gameEffect": "Hits all players",
     "flags": {
       "protect": 1
@@ -10056,7 +10056,7 @@
     "category": "Physical",
     "power": 25,
     "accuracy": 100,
-    "effect": "Always results in a critical hit and ignores stat changes.",
+    "effect": "Hit foe Three times while ignoring stat changes",
     "gameEffect": "Hit foe Three times while ignoring stat changes",
     "flags": {
       "contact": 1,
@@ -10070,7 +10070,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 85,
-    "effect": "Confuses opponent, but sharply raises its Attack.",
+    "effect": "Raises foe's Atk by 2 stages and confuses them",
     "gameEffect": "Raises foe's Atk by 2 stages and confuses them",
     "flags": {
       "protect": 1
@@ -10082,7 +10082,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "The more times the user has performed Stockpile, the more HP is recovered.",
+    "effect": "The no of times this pokemon has been hit, heal it 40 hp for each.",
     "gameEffect": "The no of times this pokemon has been hit, heal it 40 hp for each.",
     "flags": {
       "heal": 1
@@ -10094,7 +10094,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 75,
-    "effect": "Confuses opponent.",
+    "effect": "30% chance to confuse opponent",
     "gameEffect": "30% chance to confuse opponent",
     "flags": {
       "protect": 1
@@ -10106,7 +10106,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Lowers opponent's Evasiveness.",
+    "effect": "Sets all pokemon's evasion to normal",
     "gameEffect": "Sets all pokemon's evasion to normal",
     "flags": {
       "protect": 1
@@ -10230,7 +10230,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Lowers opponent's Defense.",
+    "effect": "Lowers foe'a def by 10%",
     "gameEffect": "Lowers foe'a def by 10%",
     "flags": {
       "protect": 1
@@ -10242,7 +10242,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Doubles Speed for 4 turns.",
+    "effect": "Double's speed for the next round",
     "gameEffect": "Double's speed for the next round",
     "flags": {
       "wind": 1
@@ -10254,7 +10254,7 @@
     "category": "Physical",
     "power": 90,
     "accuracy": 85,
-    "effect": "User receives recoil damage.",
+    "effect": "Recoil Dmg of 10%",
     "gameEffect": "Recoil Dmg of 10%",
     "flags": {
       "contact": 1,
@@ -10290,7 +10290,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Opponent can only use moves that attack.",
+    "effect": "Taunted foe can only use physical attacks for next 5 rounds",
     "gameEffect": "Taunted foe can only use physical attacks for next 5 rounds",
     "flags": {
       "protect": 1
@@ -10318,7 +10318,7 @@
     "category": "Special",
     "power": 120,
     "accuracy": 100,
-    "effect": "Type depends on the Drive being held.",
+    "effect": "Choose type of this move from Normal,Ice,Water,Fire,Electric",
     "gameEffect": "Choose type of this move from Normal,Ice,Water,Fire,Electric",
     "flags": {
       "protect": 1
@@ -10360,7 +10360,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Allows user to flee wild battles; also warps player to last PokéCenter.",
+    "effect": "switch out",
     "gameEffect": "switch out",
     "priority": -6
   },
@@ -10427,7 +10427,7 @@
     "category": "Physical",
     "power": 90,
     "accuracy": 100,
-    "effect": "Makes Flying-type Pokémon vulnerable to Ground moves.",
+    "effect": "Also hits Flying type",
     "gameEffect": "Also hits Flying type",
     "flags": {
       "protect": 1
@@ -10439,7 +10439,7 @@
     "category": "Physical",
     "power": 90,
     "accuracy": 100,
-    "effect": "Opponent cannot flee or switch.",
+    "effect": "Foe can't switch out anymore",
     "gameEffect": "Foe can't switch out anymore",
     "flags": {
       "protect": 1
@@ -10451,7 +10451,7 @@
     "category": "Physical",
     "power": 120,
     "accuracy": 100,
-    "effect": "User attacks for 2-3 turns but then becomes confused.",
+    "effect": "Confuses itself if used consecutively",
     "gameEffect": "Confuses itself if used consecutively",
     "flags": {
       "contact": 1,
@@ -10464,7 +10464,7 @@
     "category": "Physical",
     "power": 80,
     "accuracy": 100,
-    "effect": "Prevents use of sound moves for two turns.",
+    "effect": "Disable any sound based moves the foe has",
     "gameEffect": "Disable any sound based moves the foe has",
     "flags": {
       "contact": 1,
@@ -10480,7 +10480,7 @@
     "category": "Special",
     "power": 110,
     "accuracy": 70,
-    "effect": "May paralyze opponent.",
+    "effect": "Never misses in Rain. Else 50% chance to hit Paralyzes opponent",
     "gameEffect": "Never misses in Rain. Else 50% chance to hit Paralyzes opponent",
     "flags": {
       "protect": 1
@@ -10507,7 +10507,7 @@
     "category": "Physical",
     "power": 65,
     "accuracy": 95,
-    "effect": "May cause flinching and/or paralyze opponent.",
+    "effect": "30% chance to paralyze foe",
     "gameEffect": "30% chance to paralyze foe",
     "flags": {
       "contact": 1,
@@ -10521,7 +10521,7 @@
     "category": "Physical",
     "power": 75,
     "accuracy": 100,
-    "effect": "May paralyze opponent.",
+    "effect": "20% chance to paralyze foe",
     "gameEffect": "20% chance to paralyze foe",
     "flags": {
       "contact": 1,
@@ -10554,7 +10554,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 90,
-    "effect": "Paralyzes opponent.",
+    "effect": "Paralyzes Foe",
     "gameEffect": "Paralyzes Foe",
     "flags": {
       "protect": 1
@@ -10566,7 +10566,7 @@
     "category": "Special",
     "power": 90,
     "accuracy": 100,
-    "effect": "May paralyze opponent.",
+    "effect": "30% chance to paralysis",
     "gameEffect": "30% chance to paralysis",
     "flags": {
       "protect": 1
@@ -10594,7 +10594,7 @@
     "category": "Physical",
     "power": 90,
     "accuracy": 100,
-    "effect": "Lowers opponent's Defense.",
+    "effect": "Lower foe's Def stat by 20%",
     "gameEffect": "Lower foe's Def stat by 20%",
     "flags": {
       "contact": 1,
@@ -10613,7 +10613,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Lowers opponent's Attack and Defense.",
+    "effect": "Lower foe's def and atk by 10%",
     "gameEffect": "Lower foe's def and atk by 10%",
     "flags": {
       "protect": 1
@@ -10633,7 +10633,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Reverses stat changes of opponent.",
+    "effect": "Reverses the stat changes",
     "gameEffect": "Reverses the stat changes",
     "flags": {
       "protect": 1
@@ -10660,7 +10660,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Opponent cannot use the same move in a row.",
+    "effect": "The foe cannot use same moves in a row",
     "gameEffect": "The foe cannot use same moves in a row",
     "flags": {
       "protect": 1
@@ -10672,7 +10672,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 90,
-    "effect": "Badly poisons opponent.",
+    "effect": "Badly Poison the foe",
     "gameEffect": "Badly Poison the foe",
     "flags": {
       "protect": 1
@@ -10692,7 +10692,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Poisons opponent and lowers its Speed.",
+    "effect": "Effects all opponents and has 50% chance to bad poison",
     "gameEffect": "Effects all opponents and has 50% chance to bad poison",
     "flags": {
       "protect": 1
@@ -10719,7 +10719,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "User takes on the form and attacks of the opponent.",
+    "effect": "transforms into any of the pokemon on play. Copies attacks. doesn't copy stat",
     "gameEffect": "transforms into any of the pokemon on play. Copies attacks. doesn't copy stat"
   },
   "Tri Attack": {
@@ -10728,7 +10728,7 @@
     "category": "Special",
     "power": 80,
     "accuracy": 100,
-    "effect": "May paralyze, burn or freeze opponent.",
+    "effect": "Choose this attack's type from Grass, Water, Fire",
     "gameEffect": "Choose this attack's type from Grass, Water, Fire",
     "flags": {
       "protect": 1
@@ -10743,7 +10743,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Swaps held items with the opponent.",
+    "effect": "Swap set of item cards with someone",
     "gameEffect": "Swap set of item cards with someone",
     "flags": {
       "protect": 1
@@ -10775,7 +10775,7 @@
     "category": "Physical",
     "power": 90,
     "accuracy": 100,
-    "effect": "High critical hit ratio. May lower opponent's Defense or cause them to flinch.",
+    "effect": "30% chance to lower foe's def by 3 stages",
     "gameEffect": "30% chance to lower foe's def by 3 stages",
     "flags": {
       "protect": 1
@@ -10903,7 +10903,7 @@
     "category": "Physical",
     "power": 70,
     "accuracy": 100,
-    "effect": "User switches out immediately after attacking.",
+    "effect": "User has option to switch out",
     "gameEffect": "User has option to switch out",
     "flags": {
       "contact": 1,
@@ -10933,7 +10933,7 @@
     "category": "Special",
     "power": 90,
     "accuracy": 100,
-    "effect": "User attacks for 3 turns and prevents sleep.",
+    "effect": "Raise your Sp Atk by 1 stage",
     "gameEffect": "Raise your Sp Atk by 1 stage",
     "flags": {
       "protect": 1,
@@ -10946,7 +10946,7 @@
     "category": "Physical",
     "power": 180,
     "accuracy": 95,
-    "effect": "Lowers user's Defense, Special Defense and Speed.",
+    "effect": "Lower self def, sp def & speed by 10%",
     "gameEffect": "Lower self def, sp def & speed by 10%",
     "flags": {
       "contact": 1,
@@ -10988,7 +10988,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Lowers poisoned opponent's Special Attack and Speed.",
+    "effect": "If the target is poisoned, lower all its stats by 10%",
     "gameEffect": "If the target is poisoned, lower all its stats by 10%",
     "flags": {
       "protect": 1
@@ -11056,7 +11056,7 @@
     "category": "Special",
     "power": 70,
     "accuracy": 100,
-    "effect": "User must switch out after attacking.",
+    "effect": "After dealing Damage, the pokemon can choose to switch out",
     "gameEffect": "After dealing Damage, the pokemon can choose to switch out",
     "flags": {
       "protect": 1
@@ -11122,7 +11122,7 @@
     "category": "Special",
     "power": 60,
     "accuracy": 100,
-    "effect": "May confuse opponent.",
+    "effect": "20% chance to confuse foe",
     "gameEffect": "20% chance to confuse foe",
     "flags": {
       "protect": 1,
@@ -11139,7 +11139,7 @@
     "category": "Special",
     "power": 15,
     "accuracy": 100,
-    "effect": "Hits 2-5 times in one turn.",
+    "effect": "Hits 2 to 5 times. Depending on continuous toss.",
     "gameEffect": "Hits 2 to 5 times. Depending on continuous toss.",
     "priority": 1,
     "flags": {
@@ -11238,7 +11238,7 @@
     "category": "Physical",
     "power": 75,
     "accuracy": 100,
-    "effect": "Always results in a critical hit and ignores stat changes.",
+    "effect": "Ignore stat changes and all barriers and does 1.5x damage. Priority Move",
     "gameEffect": "Ignore stat changes and all barriers and does 1.5x damage. Priority Move",
     "flags": {
       "contact": 1,
@@ -11267,7 +11267,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Protects the user's team from multi-target attacks.",
+    "effect": "Protects user from moves that damage multiple opponents",
     "gameEffect": "Protects user from moves that damage multiple opponents",
     "priority": 3
   },
@@ -11277,7 +11277,7 @@
     "category": "Physical",
     "power": 90,
     "accuracy": 100,
-    "effect": "User receives recoil damage.",
+    "effect": "33% chance to paralyze and 20% recoil",
     "gameEffect": "33% chance to paralyze and 20% recoil",
     "flags": {
       "contact": 1,
@@ -11294,7 +11294,7 @@
     "category": "Special",
     "power": 100,
     "accuracy": 80,
-    "effect": "May paralyze target.",
+    "effect": "Neuro Paralyzes the foe",
     "gameEffect": "Neuro Paralyzes the foe",
     "flags": {
       "protect": 1,
@@ -11311,7 +11311,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 85,
-    "effect": "Burns opponent.",
+    "effect": "Burns Target",
     "gameEffect": "Burns Target",
     "flags": {
       "protect": 1
@@ -11336,7 +11336,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "The user recovers HP in the following turn.",
+    "effect": "Wishes for healing. Heals after two turns by 50%",
     "gameEffect": "Wishes for healing. Heals after two turns by 50%",
     "flags": {
       "heal": 1
@@ -11356,7 +11356,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Swaps every Pokémon's Defense and Special Defense for 5 turns.",
+    "effect": "Swap everyone's SpDef and Def for 2 rounds. Swap again at the end of 2 rounds.",
     "gameEffect": "Swap everyone's SpDef and Def for 2 rounds. Swap again at the end of 2 rounds."
   },
   "Wood Hammer": {
@@ -11381,7 +11381,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Raises user's Attack and Special Attack.",
+    "effect": "Raises self Atk and SpAtk by 1 stage",
     "gameEffect": "Raises self Atk and SpAtk by 1 stage"
   },
   "Worry Seed": {
@@ -11390,7 +11390,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": 100,
-    "effect": "Changes the opponent's Ability to Insomnia.",
+    "effect": "User can't fall asleep for next 3 rounds",
     "gameEffect": "User can't fall asleep for next 3 rounds",
     "flags": {
       "protect": 1
@@ -11439,7 +11439,7 @@
     "category": "Status",
     "power": 0,
     "accuracy": "-",
-    "effect": "Puts opponent to sleep in the next turn.",
+    "effect": "foe will fall asleep at the end of next round",
     "gameEffect": "foe will fall asleep at the end of next round",
     "flags": {
       "protect": 1
@@ -11451,7 +11451,7 @@
     "category": "Special",
     "power": 120,
     "accuracy": 50,
-    "effect": "Paralyzes opponent.",
+    "effect": "Paralyzes foe",
     "gameEffect": "Paralyzes foe",
     "flags": {
       "protect": 1,
@@ -11484,7 +11484,7 @@
     "category": "Physical",
     "power": 80,
     "accuracy": 100,
-    "effect": "May cause flinching.",
+    "effect": "30% chance to flinch",
     "gameEffect": "30% chance to flinch",
     "flags": {
       "contact": 1,

@@ -1,6 +1,7 @@
 import { applyModification } from '../utils/helpers.js';
 import { Pokemon } from '../models/Pokemon.js';
 import { WEATHER_CONFIG } from '../data/weather.js';
+import { TERRAIN_CONFIG } from '../data/terrain.js';
 
 export class BattleController {
     constructor(arena) {
@@ -173,7 +174,58 @@ export class BattleController {
             return;
         }
 
-        if (attacker.hasStatus('paralysis') && !remoteData && Math.random() < 0.5) {
+        // Sleep & Deep Sleep Check (Snore / Sleep Talk bypass)
+        const nameCleanEarly = moveName ? moveName.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        const isAsleep = attacker.hasStatus('sleep') || attacker.hasStatus('deep_sleep') || attacker.hasStatus('deepsleep');
+        if (isAsleep && !['snore', 'sleeptalk'].includes(nameCleanEarly)) {
+            const slpMsg = `${attacker.fullName} is fast asleep and couldn't move!`;
+            this.arena._notify(slpMsg, 'action');
+            this.arena.log.add(`[SLEEP] ${slpMsg}`, 'action');
+            this.arena.renderer.renderAll();
+            return;
+        }
+
+        // Frozen Check
+        const isFrozen = attacker.hasStatus('freeze') || attacker.hasStatus('frozen');
+        if (isFrozen) {
+            const frzMsg = `${attacker.fullName} is frozen solid and couldn't move!`;
+            this.arena._notify(frzMsg, 'action');
+            this.arena.log.add(`[FROZEN] ${frzMsg}`, 'action');
+            this.arena.renderer.renderAll();
+            return;
+        }
+
+        // Confusion Check (50% chance to hurt self for 50 dmg; 25% chance to snap out if able to move)
+        if (attacker.hasStatus('confusion') && !remoteData) {
+            if (Math.random() < 0.5) {
+                attacker.takeDamage(50);
+                this._applyHPChange(attacker, attackerPlayer.id, attacker.currentHP, 'Confusion');
+                const confHitMsg = `${attacker.fullName} is confused and hurt itself in confusion for 50 damage!`;
+                this.arena._notify(confHitMsg, 'damage');
+                this.arena.log.add(`[CONFUSION] ${confHitMsg}`, 'damage');
+                this.arena.renderer.renderAll();
+                return;
+            } else {
+                if (Math.random() < 0.25) {
+                    attacker.removeStatus('confusion');
+                    const cureMsg = `${attacker.fullName} snapped out of confusion!`;
+                    this.arena._notify(cureMsg, 'heal');
+                    this.arena.log.add(`[CONFUSION] ${cureMsg}`, 'heal');
+                }
+            }
+        }
+
+        // Paralysis & Neuro Paralysis Check
+        const isParalyzed = attacker.hasStatus('paralysis') || attacker.hasStatus('neuro_paralysis') || attacker.hasStatus('neuroparalysis');
+        if (attacker.hasStatus('neuro_paralysis') || attacker.hasStatus('neuroparalysis')) {
+            const moveObjEarly = window.MovesData && moveName ? window.MovesData[moveName] : null;
+            if (moveObjEarly && moveObjEarly.priority > 0) {
+                this.arena._announce(`${attacker.fullName} cannot use priority moves due to Neuro Paralysis!`, true);
+                return;
+            }
+        }
+
+        if (isParalyzed && !remoteData && Math.random() < 0.5) {
             this.arena._notify(`${attacker.fullName} is paralyzed and couldn't move!`, 'damage');
             this.arena.audio.playCry(attacker);
 
@@ -427,6 +479,34 @@ export class BattleController {
                 if (tDamage > 0) {
                     this.arena._showDamageNumber(tPlayer.id, tDamage, tEffectiveness >= 2 ? 'critical' : 'damage');
                     
+                    // Thawing on Fire, Steel, or Fighting hit
+                    if ((tPoke.hasStatus('freeze') || tPoke.hasStatus('frozen')) && ['Fire', 'Steel', 'Fighting'].includes(moveType)) {
+                        tPoke.removeStatus('freeze');
+                        tPoke.removeStatus('frozen');
+                        this.arena._notify(`${tPoke.fullName} thawed out!`, 'heal');
+                        this.arena.log.add(`[THAW] ${tPoke.fullName} thawed out from the ${moveType} move!`, 'heal');
+                    }
+
+                    // Wake up on damage (50% for Sleep, 30% for Deep Sleep)
+                    if (tPoke.hasStatus('sleep') && Math.random() < 0.5) {
+                        tPoke.removeStatus('sleep');
+                        this.arena._notify(`${tPoke.fullName} woke up upon taking damage!`, 'heal');
+                        this.arena.log.add(`[SLEEP] ${tPoke.fullName} woke up!`, 'heal');
+                    }
+                    if ((tPoke.hasStatus('deep_sleep') || tPoke.hasStatus('deepsleep')) && Math.random() < 0.3) {
+                        tPoke.removeStatus('deep_sleep');
+                        tPoke.removeStatus('deepsleep');
+                        this.arena._notify(`${tPoke.fullName} woke up from deep sleep upon taking damage!`, 'heal');
+                        this.arena.log.add(`[DEEP SLEEP] ${tPoke.fullName} woke up from deep sleep!`, 'heal');
+                    }
+
+                    // Infatuation end on damage (50% chance)
+                    if (tPoke.hasStatus('infatuation') && Math.random() < 0.5) {
+                        tPoke.removeStatus('infatuation');
+                        this.arena._notify(`${tPoke.fullName} is no longer infatuated!`, 'heal');
+                        this.arena.log.add(`[INFATUATION] ${tPoke.fullName} is no longer infatuated!`, 'heal');
+                    }
+
                     // Drain and Recoil (Category A & B)
                     if (move.drain) {
                         const healAmt = Math.floor(tDamage * move.drain[0] / move.drain[1]);
@@ -501,7 +581,7 @@ export class BattleController {
 
                 // Extremely Harsh Sunlight severe burn
                 if (this.wCfg.fireSevereBurn && moveType === 'Fire' && tDamage > 0) {
-                    tPoke.applyStatus('burn');
+                    tPoke.applyStatus('severe_burn');
                     this._notify(`${tPoke.fullName} was severely burned by the extreme sunlight!`, 'action');
                 }
             });
@@ -599,10 +679,34 @@ export class BattleController {
                 }
             }
 
-            // Terrain Setting (Category J)
-            if (nameClean === 'electricterrain') {
-                this.arena.gs.terrain = { type: 'electric', roundsLeft: 5 };
-                this.arena.log.add(`[TERRAIN] Electric Terrain is active!`, 'action');
+            // Terrain Setting (Category J) — all 17 terrain types
+            const TERRAIN_MOVE_MAP = {
+                'electricterrain': 'electric',
+                'grassyterrain': 'grassy',
+                'psychicterrain': 'psychic',
+                'mistyterrain': 'fairy',
+                'fireterrain': 'fire',
+                'waterterrain': 'water',
+                'iceterrain': 'ice',
+                'fightingterrain': 'fighting',
+                'poisonterrain': 'poison',
+                'groundterrain': 'ground',
+                'flyingterrain': 'flying',
+                'bugterrain': 'bug',
+                'rockterrain': 'rock',
+                'ghostterrain': 'ghost',
+                'dragonterrain': 'dragon',
+                'darkterrain': 'dark',
+                'steelterrain': 'steel',
+                'fairyterrain': 'fairy',
+            };
+            const terrainKey = TERRAIN_MOVE_MAP[nameClean];
+            if (terrainKey) {
+                const tCfg = TERRAIN_CONFIG[terrainKey];
+                this.arena.gs.terrain = { type: terrainKey, roundsLeft: 5 };
+                const label = tCfg?.label || terrainKey;
+                this.arena.log.add(`[TERRAIN] ${label} is now active!`, 'action');
+                this.arena._announce(`${label} covers the battlefield!`);
             }
 
             // Attacker self stat changes (Category E)
@@ -727,9 +831,16 @@ export class BattleController {
 
         // Terrain duration reduction
         if (this.arena.gs.terrain) {
+            // Normalize legacy bare-string format
+            if (typeof this.arena.gs.terrain === 'string') {
+                this.arena.gs.terrain = { type: this.arena.gs.terrain, roundsLeft: 5 };
+            }
             this.arena.gs.terrain.roundsLeft--;
             if (this.arena.gs.terrain.roundsLeft <= 0) {
-                this.arena.log.add(`[TERRAIN] The terrain wore off.`, 'action');
+                const tCfg = TERRAIN_CONFIG[this.arena.gs.terrain.type];
+                const label = tCfg?.label || this.arena.gs.terrain.type;
+                this.arena.log.add(`[TERRAIN] ${label} wore off.`, 'action');
+                this.arena._announce(`${label} faded from the battlefield.`);
                 this.arena.gs.terrain = null;
             }
         }

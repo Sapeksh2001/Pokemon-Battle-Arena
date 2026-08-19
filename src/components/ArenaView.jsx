@@ -194,6 +194,26 @@ export default function ArenaView() {
                         <option value="dune-storm">🏜 Dune (Sup)</option>
                         <option value="delta-stream">💨 Delta (Sup)</option>
                       </select>
+                      <select id="terrain-select" className="w-full bg-[#1e293b] border border-outline-variant text-[10px] text-white focus:border-yellow-400 focus:ring-0 p-1 mt-1">
+                        <option value="none">🏔 No Terrain</option>
+                        <option value="fire">🔥 Fire Terrain</option>
+                        <option value="water">💧 Water Terrain</option>
+                        <option value="electric">⚡ Electric Terrain</option>
+                        <option value="grassy">🌿 Grassy Terrain</option>
+                        <option value="ice">❄️ Ice Terrain</option>
+                        <option value="fighting">🥊 Fighting Terrain</option>
+                        <option value="poison">☠️ Poison Terrain</option>
+                        <option value="ground">🏜️ Ground Terrain</option>
+                        <option value="flying">🌬️ Flying Terrain</option>
+                        <option value="psychic">🔮 Psychic Terrain</option>
+                        <option value="bug">🐛 Bug Terrain</option>
+                        <option value="rock">🪨 Rock Terrain</option>
+                        <option value="ghost">👻 Ghost Terrain</option>
+                        <option value="dragon">🐉 Dragon Terrain</option>
+                        <option value="dark">🌑 Dark Terrain</option>
+                        <option value="steel">⚙️ Steel Terrain</option>
+                        <option value="fairy">🧚 Fairy Terrain</option>
+                      </select>
                     </div>
                     
                     <div className="border-t border-outline-variant pt-2 mt-2">

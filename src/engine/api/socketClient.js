@@ -276,6 +276,7 @@ export class MultiplayerManager {
 
         await set(playerRef, {
             name: trainerName,
+            uid: authManager.currentUser?.uid || null,
             isHost: true,
             isReady: false
         });
@@ -352,6 +353,7 @@ export class MultiplayerManager {
         const playerRef = ref(db, `rooms/${roomId}/${path}/${this.playerId}`);
         await set(playerRef, {
             name: playerName,
+            uid: authManager.currentUser?.uid || null,
             isHost: this.isHost,
             isReady: false,
             joinedAt: Date.now()

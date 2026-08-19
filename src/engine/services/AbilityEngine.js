@@ -124,22 +124,28 @@ export class AbilityEngine {
             this._setWeather('dune-storm', pokemon);
         }
 
-        // Grassy Surge → grass terrain (simplified: grass moves +50%, ice/flying -50%)
+        // Grassy Surge → grassy terrain
         if (a === 'grassysurge') {
-            this.gs.terrain = 'grassy';
+            this.gs.terrain = { type: 'grassy', roundsLeft: 5 };
             this._notify(`${pokemon.fullName} created a Grassy Terrain!`, 'action');
         }
 
         // Electric Surge → electric terrain
         if (a === 'electricsurge') {
-            this.gs.terrain = 'electric';
+            this.gs.terrain = { type: 'electric', roundsLeft: 5 };
             this._notify(`${pokemon.fullName} created an Electric Terrain!`, 'action');
         }
 
         // Psychic Surge → psychic terrain
         if (a === 'psychicsurge') {
-            this.gs.terrain = 'psychic';
+            this.gs.terrain = { type: 'psychic', roundsLeft: 5 };
             this._notify(`${pokemon.fullName} created a Psychic Terrain!`, 'action');
+        }
+
+        // Misty Surge → fairy terrain
+        if (a === 'mistysurge') {
+            this.gs.terrain = { type: 'fairy', roundsLeft: 5 };
+            this._notify(`${pokemon.fullName} created a Fairy Terrain (Misty)!`, 'action');
         }
 
         // Teravolt → burn foe
@@ -342,19 +348,8 @@ export class AbilityEngine {
 
         // Soundproof: ignore sound moves (handled in onDefend)
 
-        // Terrain-based: Grassy Surge, Electric Surge, Psychic Surge
-        if (this.gs?.terrain === 'grassy') {
-            if (moveType === 'Grass') mult *= 1.50;
-            if (moveType === 'Ice' || moveType === 'Flying') mult *= 0.50;
-        }
-        if (this.gs?.terrain === 'electric') {
-            if (moveType === 'Electric') mult *= 1.50;
-            if (moveType === 'Steel' || moveType === 'Water') mult *= 0.50;
-        }
-        if (this.gs?.terrain === 'psychic') {
-            if (moveType === 'Psychic') mult *= 1.50;
-            if (moveType === 'Ghost' || moveType === 'Bug') mult *= 0.50;
-        }
+        // Terrain move-power boosts are now handled data-driven in BattleEngine
+        // via TERRAIN_CONFIG[terrain.type].movePowerBoost — no duplicate logic here.
 
         return mult;
     }

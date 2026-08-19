@@ -10,9 +10,11 @@ const cleanBaseUrl = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
 const DATA_FILES = [
     { src: `${cleanBaseUrl}data/pokemon.json`,       global: 'MergedPokemonData',    label: 'Pokémon data'   },
     { src: `${cleanBaseUrl}data/abilities.json`,     global: 'AbilitiesData',         label: 'Abilities'      },
+    { src: `${cleanBaseUrl}data/abilities_data.json`,global: 'AbilitiesDetailedData', label: 'Abilities detail'},
     { src: `${cleanBaseUrl}data/abilities_map.json`, global: 'PokemonAbilitiesMap',   label: 'Abilities map'  },
     { src: `${cleanBaseUrl}data/moves.json`,         global: 'MovesData',             label: 'Move data'      },
     { src: `${cleanBaseUrl}data/movesets.json`,      global: 'MovesetsData',          label: 'Move sets'      },
+    { src: `${cleanBaseUrl}data/attack_chart.json`,  global: 'AttackChartData',       label: 'Attack chart'   },
 ];
 
 /**

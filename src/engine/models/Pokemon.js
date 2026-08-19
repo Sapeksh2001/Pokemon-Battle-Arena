@@ -97,11 +97,17 @@ export class Pokemon {
     /** Returns the effective value of a stat after applying in-battle modifiers. */
     getEffectiveStat(statName) {
         let val = this.stats[statName] + (this.statModifiers[statName] || 0);
-        if (statName === 'attack' && this.hasStatus('burn')) {
-            val = Math.floor(val * 0.8);
+        if (statName === 'attack') {
+            if (this.hasStatus('severe_burn') || this.hasStatus('severe-burn') || this.hasStatus('severeburn')) {
+                val = Math.floor(val * 0.5); // Severe Burn: Attack lowered by 50%
+            } else if (this.hasStatus('burn')) {
+                val = Math.floor(val * 0.8); // Burn: Attack lowered by 20%
+            }
         }
-        if (statName === 'speed' && this.hasStatus('paralysis')) {
-            val = Math.floor(val * 0.5);
+        if (statName === 'speed') {
+            if (this.hasStatus('paralysis') || this.hasStatus('neuro_paralysis') || this.hasStatus('neuro-paralysis') || this.hasStatus('neuroparalysis')) {
+                val = Math.floor(val * 0.5); // Paralysis & Neuro Paralysis: Speed halved
+            }
         }
         return Math.max(1, val);
     }
@@ -142,17 +148,35 @@ export class Pokemon {
     }
 
     applyStatus(status) {
-        if (status === 'poison' || status === 'bad_poison' || status === 'toxic') {
+        if (!status) return false;
+        const norm = String(status).toLowerCase().replace(/[\s\-]/g, '_');
+        
+        // Overcoat ability immunity
+        const ab = (this.ability || '').toLowerCase().replace(/[\s\-]/g, '');
+        if (ab === 'overcoat') return false;
+
+        // Type immunities per data/Ailments.txt
+        if (['poison', 'bad_poison', 'toxic'].includes(norm)) {
             if (this.types.includes('Steel') || this.types.includes('Poison')) return false;
         }
-        if (status === 'burn' && this.types.includes('Fire')) return false;
-        if (status === 'paralysis' && (this.types.includes('Ground') || this.types.includes('Electric'))) return false;
+        if (['burn', 'severe_burn', 'severeburn'].includes(norm) && this.types.includes('Fire')) return false;
+        if (['paralysis', 'neuro_paralysis', 'neuroparalysis'].includes(norm) && (this.types.includes('Ground') || this.types.includes('Electric'))) return false;
+        if (['freeze', 'frozen'].includes(norm) && this.types.includes('Ice')) return false;
         
-        this.statuses[status] = { duration: 0 };
+        this.statuses[norm] = { duration: 0 };
         return true;
     }
-    removeStatus(status) { delete this.statuses[status]; }
-    hasStatus(status) { return !!this.statuses[status]; }
+    removeStatus(status) {
+        if (!status) return;
+        const norm = String(status).toLowerCase().replace(/[\s\-]/g, '_');
+        delete this.statuses[norm];
+        delete this.statuses[status];
+    }
+    hasStatus(status) {
+        if (!status) return false;
+        const norm = String(status).toLowerCase().replace(/[\s\-]/g, '_');
+        return !!(this.statuses[norm] || this.statuses[status]);
+    }
 
     clearStatuses() {
         this.statuses = {};

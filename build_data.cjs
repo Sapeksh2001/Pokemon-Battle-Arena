@@ -118,6 +118,7 @@ function enrichMoves(showdownMoves, attackChart) {
         // Override/supplement with game-specific attack chart effect
         if (ac && ac.effect) {
             entry.gameEffect = ac.effect;
+            entry.effect = ac.effect;
         }
 
         enrichedMoves[moveName] = entry;
@@ -202,6 +203,19 @@ function buildAbilitiesData(xlsxAbilities, showdownAbilities, attackChart) {
         const abilitiesData = buildAbilitiesData(xlsxAbilities, showdownAbilities, attackChart);
         fs.writeFileSync('public/data/abilities_data.json', JSON.stringify(abilitiesData, null, 2));
         console.log('✓ Saved abilities_data.json');
+
+        // Build public/data/abilities.json with game-specific descriptions
+        const abilitiesJson = {};
+        for (const [id, a] of Object.entries(abilitiesData)) {
+            abilitiesJson[a.name] = {
+                name: a.name,
+                description: a.gameDesc || a.desc || '',
+                desc: a.desc || '',
+                gameDesc: a.gameDesc || ''
+            };
+        }
+        fs.writeFileSync('public/data/abilities.json', JSON.stringify(abilitiesJson, null, 2));
+        console.log('✓ Saved abilities.json');
 
         // Build attack chart json for game use
         const attackChartJson = {};

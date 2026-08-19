@@ -3,6 +3,7 @@
 // ==========================================
 
 import { WEATHER_CONFIG, SUN_MOVES, THUNDER_ACCURACY_MOVES } from '../data/weather.js';
+import { getTerrainDefenseModifier, getTerrainMovePowerMultiplier } from '../data/terrain.js';
 
 export class BattleEngine {
     constructor(chart) {
@@ -119,19 +120,11 @@ export class BattleEngine {
             effectivePower *= atkMult;
         }
 
-        // Terrain move power modifier
+        // Terrain move power modifier (data-driven, stackable)
         if (terrain) {
-            if (terrain.type === 'electric' && effectiveMoveType === 'Electric') {
-                effectivePower *= 1.5;
-            }
-            if (terrain.type === 'grassy' && effectiveMoveType === 'Grass') {
-                effectivePower *= 1.5;
-            }
-            if (terrain.type === 'psychic' && effectiveMoveType === 'Psychic') {
-                effectivePower *= 1.5;
-            }
-            if (terrain.type === 'misty' && effectiveMoveType === 'Dragon') {
-                effectivePower *= 0.5;
+            const tType = typeof terrain === 'string' ? terrain : terrain.type;
+            if (tType) {
+                effectivePower *= getTerrainMovePowerMultiplier(tType, effectiveMoveType);
             }
         }
 
@@ -173,6 +166,15 @@ export class BattleEngine {
         let adjustedD = d;
         if (wCfg.rockSpDefBoost && attackType === 'special' && defender.types.includes('Rock')) {
             adjustedD = d * 1.50;
+        }
+
+        // Terrain-based Def/SpD modifier (stackable with weather & ability)
+        if (terrain) {
+            const tType = typeof terrain === 'string' ? terrain : terrain.type;
+            if (tType) {
+                const terrainDefMod = getTerrainDefenseModifier(tType, defender.types);
+                adjustedD *= terrainDefMod;
+            }
         }
 
         // ── 5. Custom damage formula ──────────────────────────────────────

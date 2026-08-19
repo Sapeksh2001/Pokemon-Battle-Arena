@@ -364,7 +364,8 @@ export class UIRenderer {
                 }
             }
 
-            const moveDesc = moveData.effect ? `<span class="mc-tooltip-desc">${escapeHTML(moveData.effect)}</span>` : '';
+            const effectText = moveData.gameEffect || moveData.effect || '';
+            const moveDesc = effectText ? `<span class="mc-tooltip-desc">${escapeHTML(effectText)}</span>` : '';
 
             return `
                 <tr class="${bgClass} text-slate-800 border-b border-gray-300 last:border-0 align-middle">
@@ -394,11 +395,11 @@ export class UIRenderer {
 
         const abilityData = pokemon.ability && window.AbilitiesData && window.AbilitiesData[pokemon.ability]
             ? window.AbilitiesData[pokemon.ability] : null;
-        const abilityDesc = abilityData && abilityData.description ? abilityData.description : '';
+        const abilityDesc = abilityData ? (abilityData.gameDesc || abilityData.description || abilityData.desc || '') : '';
 
         const hiddenAbilityData = pokemon.hiddenAbility && window.AbilitiesData && window.AbilitiesData[pokemon.hiddenAbility]
             ? window.AbilitiesData[pokemon.hiddenAbility] : null;
-        const hiddenAbilityDesc = hiddenAbilityData && hiddenAbilityData.description ? hiddenAbilityData.description : '';
+        const hiddenAbilityDesc = hiddenAbilityData ? (hiddenAbilityData.gameDesc || hiddenAbilityData.description || hiddenAbilityData.desc || '') : '';
 
         return `
             <div class="w-full flex-shrink-0 mt-1 mb-1 bg-[#f8f9fa] text-black rounded-xl border-2 border-[#1e293b]" style="text-shadow: none;">
@@ -614,6 +615,14 @@ export class UIRenderer {
         const sel = document.getElementById('weather-select');
         if (sel) {
             sel.value = w;
+        }
+
+        // Sync terrain selector
+        const terrain = this._gs.terrain;
+        const tSel = document.getElementById('terrain-select');
+        if (tSel) {
+            const tVal = terrain ? (typeof terrain === 'string' ? terrain : terrain.type) : 'none';
+            tSel.value = tVal || 'none';
         }
     }
 

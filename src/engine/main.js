@@ -1777,6 +1777,21 @@ export class PokemonBattleArena {
             const newWeather = e.target.value;
             this.setWeatherDirect(newWeather, false, true);
         });
+        document.getElementById('terrain-select')?.addEventListener('change', e => {
+            const val = e.target.value;
+            if (val === 'none') {
+                this.gs.terrain = null;
+                this._notify('Terrain cleared.', 'action');
+                this.log.add('[TERRAIN] Terrain cleared.', 'action');
+            } else {
+                this.gs.terrain = { type: val, roundsLeft: 5 };
+                const label = val.charAt(0).toUpperCase() + val.slice(1);
+                this._notify(`${label} Terrain is now active!`, 'action');
+                this.log.add(`[TERRAIN] ${label} Terrain is now active!`, 'action');
+            }
+            this.renderer.renderAll();
+            this.saveLocalState();
+        });
 
         // Attack buttons
         // Stat update

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-08-20
+- Implemented comprehensive type-based terrain system with 17 active terrains (Normal is neutral) applying Def/SpD modifiers based on type matchups (-20% to +20%).
+- Integrated stackable move power boosts (1.2x boost for matching move type, 1.5x for Electric/Grassy/Psychic, and 0.5x dragon nerf for Misty/Fairy).
+- Added manual Terrain selection dropdown in the Arena View UI.
+- Expanded terrain-setting moves (fireterrain, waterterrain, etc.) and implemented Misty Surge ability.
+- Corrected and fully aligned weather-based after-effects and ailment mappings (burn, severe burn, paralysis, neuro paralysis, sleep, deep sleep, frozen thaw logic, and confusion snap-out/self-damage checks).
+- Solved fullscreen sprite distortion with crisp/pixelated interpolation filters.
+- Resolved Burn visual button contrast bug in the ailments control pane.
+
 ## 2026-07-13
 - Implemented comprehensive move effects: drain (Giga Drain, etc.) and recoil (Brave Bird, etc.) from moves.json.
 - Added flinch volatile status effect blocking attacker turns.

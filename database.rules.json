@@ -7,24 +7,24 @@
 
         "players": {
           "$player_id": {
-            ".write": "auth != null"
+            ".write": "auth != null && (newData.child('uid').val() === auth.uid || data.parent().parent().child('hostUid').val() === auth.uid)"
           }
         },
         "actions": {
           "$action_id": {
-            ".write": "auth != null && !data.exists()"
+            ".write": "auth != null && !data.exists() && (data.parent().parent().child('hostUid').val() === auth.uid || (root.child('rooms').child($room_id).child('players').child(newData.child('sender').val()).child('uid').val() === auth.uid && (newData.child('action').val() === 'switch_pokemon' || newData.child('action').val() === 'form_change' || newData.child('action').val() === 'trade_pokemon' || newData.child('action').val() === 'attack' || newData.child('action').val() === 'evolve' || newData.child('action').val() === 'devolve')))"
           }
         },
         "entryQueue": {
           "$player_id": {
-            ".write": "auth != null"
+            ".write": "auth != null && (newData.child('uid').val() === auth.uid || data.parent().parent().child('hostUid').val() === auth.uid)"
           }
         },
         "state": {
-          ".write": "auth != null"
+          ".write": "auth != null && data.parent().child('hostUid').val() === auth.uid"
         },
         "settings": {
-          ".write": "auth != null"
+          ".write": "auth != null && data.parent().child('hostUid').val() === auth.uid"
         }
       }
     },

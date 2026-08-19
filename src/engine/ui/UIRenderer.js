@@ -635,7 +635,7 @@ export class UIRenderer {
     }
 
     _updateWeatherView() {
-        const w = this._gs.weather;
+        const w = this._gs.weather || 'none';
 
         // Toggle all weather overlays
         const overlays = {

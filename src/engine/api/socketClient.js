@@ -802,7 +802,7 @@ export class MultiplayerManager {
         return {
             players: gs.players.map(p => p.toJSON()),
             round: gs.round,
-            weather: gs.weather || null,
+            weather: gs.weather || 'none',
             activeTurnPlayerId: gs.activeTurnPlayerId || null,
             selectedAttackTargetId: gs.selectedAttackTargetId || null,
             selectedStatusTargetId: gs.selectedStatusTargetId || null,
@@ -814,7 +814,7 @@ export class MultiplayerManager {
         const gs = this.arena.gs;
         gs.players = (state.players || []).map(p => Player.fromJSON(p, this.arena.db));
         gs.round = state.round || 1;
-        gs.weather = state.weather || null;
+        gs.weather = state.weather || 'none';
         gs.activeTurnPlayerId = state.activeTurnPlayerId || null;
         gs.selectedAttackTargetId = state.selectedAttackTargetId || null;
         gs.selectedStatusTargetId = state.selectedStatusTargetId || null;

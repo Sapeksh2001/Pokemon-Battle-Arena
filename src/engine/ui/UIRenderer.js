@@ -1,5 +1,6 @@
 import { escapeHTML } from '../utils/helpers.js';
 import { WEATHER_CONFIG } from '../data/weather.js';
+import { getTerrainDefenseModifier } from '../data/terrain.js';
 
 // ==========================================
 // UI RENDERER (DOM Construction)
@@ -472,19 +473,63 @@ export class UIRenderer {
         ].join('');
     }
 
-    /** Stat value row. Applies colour coding for modifiers. */
+    /** Stat value row. Applies colour coding and arrows for active modifiers (stat mods, weather, terrain, and status ailments). */
     _renderStatValues(pokemon) {
-        const isParalyzed = pokemon.hasStatus('paralyze');
+        const isParalyzed = pokemon.hasStatus('paralyze') || pokemon.hasStatus('paralysis') || pokemon.hasStatus('neuro_paralysis') || pokemon.hasStatus('neuro-paralysis') || pokemon.hasStatus('neuroparalysis');
+        const w = this._gs.weather || 'none';
+        const wCfg = WEATHER_CONFIG[w] || {};
+        const terrain = this._gs.terrain;
+        const terrainType = terrain ? (typeof terrain === 'string' ? terrain : terrain.type) : 'none';
+
         return Object.entries(pokemon.stats)
             .filter(([key]) => key !== 'hp')
             .map(([key]) => {
-                const mod = pokemon.statModifiers[key] || 0;
-                let colorClass = mod > 0 ? 'text-green-400' : mod < 0 ? 'text-red-400' : '';
-                if (key === 'speed' && isParalyzed) colorClass = 'stat-paralyzed';
-                const effective = key === 'speed' && isParalyzed
-                    ? Math.floor(pokemon.getEffectiveStat('speed') / 2)
-                    : pokemon.getEffectiveStat(key);
-                return `<div class="${colorClass}">${effective}</div>`;
+                const baseVal = pokemon.stats[key];
+                let val = baseVal + (pokemon.statModifiers[key] || 0);
+
+                // Apply status effects
+                if (key === 'attack') {
+                    if (pokemon.hasStatus('severe_burn') || pokemon.hasStatus('severe-burn') || pokemon.hasStatus('severeburn')) {
+                        val = Math.floor(val * 0.5);
+                    } else if (pokemon.hasStatus('burn')) {
+                        val = Math.floor(val * 0.8);
+                    }
+                }
+                if (key === 'speed') {
+                    if (isParalyzed) {
+                        val = Math.floor(val * 0.5);
+                    }
+                    if (wCfg.flyingSpeedDouble && pokemon.types.includes('Flying')) {
+                        val = val * 2;
+                    }
+                }
+
+                // Apply weather effects (Rock SpDef boost in sandstorm)
+                if (key === 'specialDefence' && wCfg.rockSpDefBoost && pokemon.types.includes('Rock')) {
+                    val = Math.floor(val * 1.5);
+                }
+
+                // Apply terrain-based defense/SpDef modifiers
+                if (terrainType && terrainType !== 'none') {
+                    if (key === 'defence' || key === 'specialDefence') {
+                        const terrainDefMod = getTerrainDefenseModifier(terrainType, pokemon.types);
+                        val = Math.floor(val * terrainDefMod);
+                    }
+                }
+
+                const effective = Math.max(1, val);
+
+                let colorClass = '';
+                let arrow = '';
+                if (effective > baseVal) {
+                    colorClass = 'text-green-400 font-bold';
+                    arrow = ' ↑';
+                } else if (effective < baseVal) {
+                    colorClass = 'text-red-400 font-bold';
+                    arrow = ' ↓';
+                }
+
+                return `<div class="${colorClass}">${effective}${arrow}</div>`;
             }).join('');
     }
 

@@ -3,7 +3,7 @@
 // ==========================================
 
 import { WEATHER_CONFIG, SUN_MOVES, THUNDER_ACCURACY_MOVES } from '../data/weather.js';
-import { getTerrainDefenseModifier, getTerrainMovePowerMultiplier } from '../data/terrain.js';
+import { getTerrainDefenseModifier, getTerrainMovePowerMultiplier, getTerrainStatMultiplier } from '../data/terrain.js';
 
 export class BattleEngine {
     constructor(chart) {
@@ -159,7 +159,15 @@ export class BattleEngine {
             defMult = abilityEngine.getStatModifierFromAbility(defender, attackType === 'physical' ? 'defence' : 'specialDefence');
         }
 
-        const a = offStat * offMult;
+        let adjustedOff = offStat;
+        if (terrain) {
+            const tType = typeof terrain === 'string' ? terrain : terrain.type;
+            const statName = attackType === 'physical' ? 'attack' : 'specialAttack';
+            const terrainStatMod = getTerrainStatMultiplier(tType, attacker.types, statName);
+            adjustedOff = Math.floor(offStat * terrainStatMod);
+        }
+
+        const a = adjustedOff * offMult;
         const d = defStat * defMult;
 
         // Rock SpDef boost in sandstorm

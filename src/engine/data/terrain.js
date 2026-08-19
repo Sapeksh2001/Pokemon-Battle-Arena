@@ -210,3 +210,40 @@ export function getTerrainMovePowerMultiplier(terrainType, moveType) {
     if (!cfg || !cfg.movePowerBoost) return 1.0;
     return cfg.movePowerBoost[moveType] ?? 1.0;
 }
+
+export const TERRAIN_BOOSTED_TYPES = {
+    fire: 'Fire',
+    water: 'Water',
+    electric: 'Electric',
+    grassy: 'Grass',
+    ice: 'Ice',
+    fighting: 'Fighting',
+    poison: 'Poison',
+    ground: 'Ground',
+    flying: 'Flying',
+    psychic: 'Psychic',
+    bug: 'Bug',
+    rock: 'Rock',
+    ghost: 'Ghost',
+    dragon: 'Dragon',
+    dark: 'Dark',
+    steel: 'Steel',
+    fairy: 'Fairy'
+};
+
+/**
+ * Calculate the Attack/SpA modifier a terrain applies to an attacking/active Pokémon.
+ *
+ * @param {string}   terrainType   — key into TERRAIN_CONFIG (e.g. 'fire')
+ * @param {string[]} pokemonTypes  — the Pokémon's type array
+ * @param {string}   statName      — 'attack' or 'specialAttack'
+ * @returns {number} multiplier to apply to the stat (1.15 if matched, 1.0 otherwise)
+ */
+export function getTerrainStatMultiplier(terrainType, pokemonTypes, statName) {
+    if (statName !== 'attack' && statName !== 'specialAttack') return 1.0;
+    const type = TERRAIN_BOOSTED_TYPES[terrainType];
+    if (type && pokemonTypes.includes(type)) {
+        return 1.15;
+    }
+    return 1.0;
+}

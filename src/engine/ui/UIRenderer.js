@@ -1,6 +1,6 @@
 import { escapeHTML } from '../utils/helpers.js';
 import { WEATHER_CONFIG } from '../data/weather.js';
-import { getTerrainDefenseModifier, getTerrainMovePowerMultiplier } from '../data/terrain.js';
+import { getTerrainDefenseModifier, getTerrainMovePowerMultiplier, getTerrainStatMultiplier } from '../data/terrain.js';
 
 // ==========================================
 // UI RENDERER (DOM Construction)
@@ -529,6 +529,10 @@ export class UIRenderer {
                     if (key === 'defence' || key === 'specialDefence') {
                         const terrainDefMod = getTerrainDefenseModifier(terrainType, pokemon.types);
                         val = Math.floor(val * terrainDefMod);
+                    }
+                    if (key === 'attack' || key === 'specialAttack') {
+                        const terrainStatMod = getTerrainStatMultiplier(terrainType, pokemon.types, key);
+                        val = Math.floor(val * terrainStatMod);
                     }
                 }
 

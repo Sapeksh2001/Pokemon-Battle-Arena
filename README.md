@@ -205,6 +205,54 @@ erDiagram
     USER ||--|{ SAVED_GAME : "up to 20"
 ```
 
+## Weather & Terrain Systems
+
+The simulator implements a rich dynamic Weather and Terrain engine that modifies move powers, player stats, and applies status protections or end-round damage.
+
+### Weather System (9 Normal & Superior Types)
+
+Superior weather cannot be overridden by standard weather, and the rare **Delta Stream** is untouchable even by other superior weather types.
+
+| Weather | Category | Move Power Modifiers | Tick Damage | Secondary Effects |
+|---------|----------|----------------------|-------------|-------------------|
+| **None** (Clear) | Neutral | — | — | Default behavior |
+| **Sandstorm** | Standard | Sunlight moves halved | 5% HP/round (Immune: Rock, Ground, Steel) | Rock-type Sp. Defense $\times$ 1.5 |
+| **Hail** | Standard | Sunlight moves halved | 5% HP/round (Immune: Ice) | Blizzard never misses |
+| **Rain** | Standard | Water: 1.5x, Fire: 0.5x | — | Burn status immunity; Thunder & Hurricane never miss |
+| **Harsh Sunlight**| Standard | Fire: 1.5x, Water: 0.5x | — | Freeze status immunity; Synthesis/Moonlight heals 66% |
+| **Heavy Rain** (Sup)| Superior | Water: 2.0x, Fire/Rock/Ground: 0x | — | Burn status immunity; Electric/Thunder never miss & are super-effective |
+| **Extreme Sun** (Sup)| Superior | Fire: 2.0x, Water/Ice/Bug: 0x | — | Freeze status immunity; Fire moves inflict 100% burn |
+| **Snow Storm** (Sup) | Superior | Ice: 1.5x, Fire/Grass/Ground/Flying/Rock/Bug/Dragon: 0.5x | 10% HP/round (scaling +5% every 2 turns) | Ice moves become 2x accurate; Water moves converted to Ice |
+| **Dune Storm** (Sup) | Superior | Ground: 1.5x, Grass/Bug/Fairy/Electric/Water: 0.5x, Fire/Flying: 0x | 10% HP/round (scaling +10% every turn) | Ground moves become 2x accurate |
+| **Delta Stream** (Sup)| Untouchable | Non-Flying: 0.5x | — | Flying-type Speed $\times$ 2.0; blocks weather override |
+
+---
+
+### Terrain System (18 Types)
+
+Except for the neutral **Normal** terrain, each type-themed terrain applies defensive Def/SpD buffs/nerfs (based on weaknesses/resistances) and a stackable **+15% stat boost to Attack and Sp. Attack** for matching Pokémon types. It also provides a **1.2x power boost (1.5x for Electric/Grass/Psychic)** to matching move types.
+
+| Terrain | Move Type Boost | Active Type Boost (+15% Atk & SpA) | Dual-Type Def/SpD Modifiers (Weaknesses & Resistances) |
+|---------|-----------------|-----------------------------------|-------------------------------------------------------|
+| **Normal** | — | — | Neutral (No modifiers) |
+| **Fire** | Fire: 1.2x | Fire | **Weak (-10% to -20%):** Bug, Grass, Ice, Steel <br>**Resist (+10% to +20%):** Dragon, Fire, Rock, Water |
+| **Water** | Water: 1.2x | Water | **Weak (-10% to -20%):** Fire, Ground, Rock <br>**Resist (+10% to +20%):** Dragon, Grass, Water |
+| **Electric**| Electric: 1.5x | Electric | **Weak (-10% to -20%):** Flying, Water <br>**Resist (+10% to +20%):** Dragon, Electric, Grass <br>**Immune (+10%):** Ground |
+| **Grassy** | Grass: 1.5x | Grass | **Weak (-10% to -20%):** Ground, Rock, Water <br>**Resist (+10% to +20%):** Bug, Dragon, Fire, Flying, Grass, Poison, Steel |
+| **Ice** | Ice: 1.2x | Ice | **Weak (-10% to -20%):** Dragon, Flying, Grass, Ground <br>**Resist (+10% to +20%):** Fire, Ice, Steel, Water |
+| **Fighting**| Fighting: 1.2x | Fighting | **Weak (-10% to -20%):** Dark, Ice, Normal, Rock, Steel <br>**Resist (+10% to +20%):** Bug, Fairy, Flying, Poison, Psychic <br>**Immune (+10%):** Ghost |
+| **Poison** | Poison: 1.2x | Poison | **Weak (-10% to -20%):** Fairy, Grass <br>**Resist (+10% to +20%):** Ghost, Ground, Poison, Rock <br>**Immune (+10%):** Steel |
+| **Ground** | Ground: 1.2x | Ground | **Weak (-10% to -20%):** Electric, Fire, Poison, Rock, Steel <br>**Resist (+10% to +20%):** Bug, Grass <br>**Immune (+10%):** Flying |
+| **Flying** | Flying: 1.2x | Flying | **Weak (-10% to -20%):** Bug, Fighting, Grass <br>**Resist (+10% to +20%):** Electric, Rock, Steel |
+| **Psychic** | Psychic: 1.5x | Psychic | **Weak (-10% to -20%):** Fighting, Poison <br>**Resist (+10% to +20%):** Psychic, Steel <br>**Immune (+10%):** Dark |
+| **Bug** | Bug: 1.2x | Bug | **Weak (-10% to -20%):** Dark, Grass, Psychic <br>**Resist (+10% to +20%):** Fairy, Fighting, Fire, Flying, Ghost, Poison, Steel |
+| **Rock** | Rock: 1.2x | Rock | **Weak (-10% to -20%):** Bug, Fire, Flying, Ice <br>**Resist (+10% to +20%):** Fighting, Ground, Steel |
+| **Ghost** | Ghost: 1.2x | Ghost | **Weak (-10% to -20%):** Ghost, Psychic <br>**Resist (+10% to +20%):** Dark <br>**Immune (+10%):** Normal |
+| **Dragon** | Dragon: 1.2x | Dragon | **Weak (-10% to -20%):** Dragon <br>**Resist (+10% to +20%):** Steel <br>**Immune (+10%):** Fairy |
+| **Dark** | Dark: 1.2x | Dark | **Weak (-10% to -20%):** Ghost, Psychic <br>**Resist (+10% to +20%):** Dark, Fairy, Fighting |
+| **Steel** | Steel: 1.2x | Steel | **Weak (-10% to -20%):** Fairy, Ice, Rock <br>**Resist (+10% to +20%):** Electric, Fire, Steel, Water |
+| **Fairy** | Fairy: 1.2x <br>Dragon: 0.5x | Fairy | **Weak (-10% to -20%):** Dark, Dragon, Fighting <br>**Resist (+10% to +20%):** Fire, Poison, Steel |
+
 ---
 
 ## Damage Calculation

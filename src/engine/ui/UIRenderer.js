@@ -520,16 +520,13 @@ export class UIRenderer {
                 const effective = Math.max(1, val);
 
                 let colorClass = '';
-                let arrow = '';
                 if (effective > baseVal) {
                     colorClass = 'text-green-400 font-bold';
-                    arrow = ' ↑';
                 } else if (effective < baseVal) {
                     colorClass = 'text-red-400 font-bold';
-                    arrow = ' ↓';
                 }
 
-                return `<div class="${colorClass}">${effective}${arrow}</div>`;
+                return `<div class="${colorClass}">${effective}</div>`;
             }).join('');
     }
 

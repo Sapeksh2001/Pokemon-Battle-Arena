@@ -33,6 +33,22 @@ import { db } from '../../firebase.js';
 import { authManager } from './authManager.js';
 import { normalizeTier } from '../utils/helpers.js';
 
+// VUL-08: Client-side debounce / rate limiting for room creation
+const _roomCreateTimestamps = [];
+const ROOM_RATE_LIMIT = 3; // max rooms per window
+const ROOM_RATE_WINDOW_MS = 60_000;
+
+function assertRoomRateLimit() {
+    const now = Date.now();
+    while (_roomCreateTimestamps.length > 0 && now - _roomCreateTimestamps[0] >= ROOM_RATE_WINDOW_MS) {
+        _roomCreateTimestamps.shift();
+    }
+    if (_roomCreateTimestamps.length >= ROOM_RATE_LIMIT) {
+        throw new Error('Rate limit: too many rooms created. Please wait 60 seconds.');
+    }
+    _roomCreateTimestamps.push(now);
+}
+
 function generateRoomCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -232,6 +248,7 @@ export class MultiplayerManager {
 
     async createRoom(trainerName, settings = {}) {
         if (!trainerName) return;
+        assertRoomRateLimit();
 
         // Ensure Pokémon database is loaded before entering lobby
         if (this.arena && typeof this.arena.ensureDatabaseLoaded === 'function') {
@@ -680,6 +697,7 @@ export class MultiplayerManager {
         const actionsRef = ref(db, `rooms/${this.roomCode}/actions`);
         push(actionsRef, {
             sender: this.playerId,
+            senderUid: authManager.currentUser?.uid || null,
             action,
             payload,
             timestamp: Date.now()

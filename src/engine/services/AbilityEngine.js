@@ -7,8 +7,14 @@
 import { WEATHER_CONFIG } from '../data/weather.js';
 
 export class AbilityEngine {
-    constructor(arena) {
-        this.arena = arena;
+    constructor(arenaOrGs) {
+        if (arenaOrGs && arenaOrGs.gs) {
+            this.arena = arenaOrGs;
+        } else if (arenaOrGs) {
+            this.arena = { gs: arenaOrGs };
+        } else {
+            this.arena = null;
+        }
     }
 
     get weather() { return this.arena?.gs?.weather || 'none'; }
@@ -16,7 +22,10 @@ export class AbilityEngine {
 
     // ── Helpers ────────────────────────────────────────────────────────────
 
-    _notify(msg, type = 'action') { this.arena._notify(msg, type); }
+    _notify(msg, type = 'action') {
+        this.arena?._notify?.(msg, type);
+        this.arena?.log?.add?.(msg, type);
+    }
     _applyHP(pokemon, playerId, newHP, src) {
         if (this.arena?.battleController) {
             this.arena.battleController._applyHPChange(pokemon, playerId, newHP, src);
@@ -45,25 +54,92 @@ export class AbilityEngine {
         return mod;
     }
 
+    // ── Status Immunity Checker ────────────────────────────────────────────
+    /**
+     * Check if a Pokémon's ability grants immunity to a status condition.
+     * // ponytail: lookup table covers all immunity abilities
+     */
+    static checkStatusImmunity(ability, statusType) {
+        if (!ability || !statusType) return false;
+        const a = String(ability).toLowerCase().replace(/[\s\-]/g, '');
+        const s = String(statusType).toLowerCase().replace(/[\s\-_]/g, '');
+        if ((s.includes('paraly') || s === 'par') && a === 'limber') return true;
+        if ((s.includes('burn') || s === 'brn') && a === 'waterveil') return true;
+        if ((s.includes('poison') || s === 'toxic' || s === 'psn') && a === 'immunity') return true;
+        if ((s.includes('sleep') || s === 'slp') && (a === 'insomnia' || a === 'vitalspirit')) return true;
+        if ((s.includes('freeze') || s === 'frozen' || s === 'frz') && a === 'magmaarmor') return true;
+        if (s.includes('infatuat') && a === 'oblivious') return true;
+        if (a === 'overcoat') return true;
+        return false;
+    }
+
+    checkStatusImmunity(ability, statusType) {
+        return AbilityEngine.checkStatusImmunity(ability, statusType);
+    }
+
+    // ── Attack Lifecycle Hooks ─────────────────────────────────────────────
+    onBeforeAttack(user, move, gameState = null) {
+        if (!user || !move) return;
+        const a = this._ability(user);
+        // Sheer Force removes secondary effect to boost power
+        if (a === 'sheerforce' && move.secondary) {
+            move._sheerForceActive = true;
+            move.secondary = null;
+            this._notify(`${user.fullName || user.name}'s Sheer Force boosted attack power!`, 'action');
+        }
+        // Protean / Libero changes type to move type
+        if ((a === 'protean' || a === 'libero') && move.type) {
+            user.types = [move.type];
+            this._notify(`${user.fullName || user.name} transformed into ${move.type} type!`, 'action');
+        }
+    }
+
+    onModifyDamage(user, target, move, baseDamage, gameState = null) {
+        if (!user || !target || !move) return baseDamage;
+        const atkMult = this.getAttackMultiplier(user, target, move);
+        const defMult = this.getDefenseMultiplier(user, target, move);
+        return Math.floor(baseDamage * atkMult * defMult);
+    }
+
     // ── On Switch-In Triggers ──────────────────────────────────────────────
     /**
      * Call when a Pokémon enters the field (switch-in or game start)
      */
-    onSwitchIn(pokemon) {
+    onSwitchIn(pokemon, targetOrGameState = null, maybeGameState = null) {
         const pid = this._getPlayerId(pokemon);
         const a = this._ability(pokemon);
 
-        // Intimidate — lower all opponents' Attack by 20%
+        let opponent = null;
+        let gameState = null;
+        if (targetOrGameState && (targetOrGameState.stats || targetOrGameState.fullName || targetOrGameState.baseName)) {
+            opponent = targetOrGameState;
+            gameState = maybeGameState || this.gs;
+        } else {
+            gameState = targetOrGameState || this.gs;
+        }
+
+        // Intimidate — lower all opponents' Attack by 20% and -1 stage
         if (a === 'intimidate') {
-            const foes = this.gs.players.filter(p => p.getActivePokemon() !== pokemon);
-            foes.forEach(p => {
-                const foe = p.getActivePokemon();
-                if (!foe || foe.isFainted()) return;
+            const players = (gameState && gameState.players) || (this.gs && this.gs.players) || [];
+            const foes = opponent ? [opponent] : players
+                .map(p => (p.getActivePokemon ? p.getActivePokemon() : p.activePokemon))
+                .filter(f => f && f !== pokemon);
+
+            foes.forEach(foe => {
+                if (!foe || (foe.isFainted && foe.isFainted())) return;
                 if (this._hasAbility(foe, 'clearbody', 'whitesmoke', 'fullmetalbody', 'bigpecks')) return;
                 if (this._hasAbility(foe, 'innerFocus', 'innerfocus')) return; // Inner Focus blocks Intimidate
-                const reduction = Math.floor(foe.stats.attack * 0.20);
+                const baseAtk = (foe.stats && (foe.stats.attack || foe.stats.atk)) || 100;
+                const reduction = Math.floor(baseAtk * 0.20);
+                foe.statModifiers = foe.statModifiers || {};
                 foe.statModifiers.attack = (foe.statModifiers.attack || 0) - reduction;
-                this._notify(`${pokemon.fullName}'s Intimidate lowered ${foe.fullName}'s Attack!`, 'action');
+                foe.statModifiers.atk = (foe.statModifiers.atk || 0) - reduction;
+                foe.statStages = foe.statStages || {};
+                const currentStage = foe.statStages.attack ?? foe.statStages.atk ?? 0;
+                const newStage = Math.max(-6, currentStage - 1);
+                foe.statStages.attack = newStage;
+                foe.statStages.atk = newStage;
+                this._notify(`${pokemon.fullName || pokemon.name}'s Intimidate lowered ${foe.fullName || foe.name}'s Attack!`, 'action');
             });
         }
 
@@ -462,106 +538,172 @@ export class AbilityEngine {
     /**
      * After damage is dealt — apply on-hit effects from defender's ability.
      */
-    onHitDefender(attacker, defender, move, damage) {
+    onHit(attacker, defender, move, damageOrGameState = 0, maybeGameState = null, maybeOptions = null) {
+        let damage = 0;
+        let options = null;
+
+        if (typeof damageOrGameState === 'number') {
+            damage = damageOrGameState;
+            if (maybeGameState && typeof maybeGameState === 'object' && !maybeGameState.players) options = maybeGameState;
+            if (maybeOptions && typeof maybeOptions === 'object') options = maybeOptions;
+        } else if (typeof damageOrGameState === 'object' && damageOrGameState !== null) {
+            if (maybeGameState && typeof maybeGameState === 'object') options = maybeGameState;
+        }
+
+        return this.onHitDefender(attacker, defender, move, damage, options || {});
+    }
+
+    onHitDefender(attacker, defender, move, damage, options = {}) {
         const a = this._ability(defender);
-        const isContact = !!(move.flags?.contact);
-        const pid = this._getPlayerId(attacker);
+        const isContact = !!(move?.flags?.contact || (move?.category === 'Physical' && move?.flags?.contact !== false));
+        const force = !!(move?.forceTrigger || options?.forceTrigger);
 
         // Flame Body: 30% burn on contact
-        if (a === 'flamebody' && isContact && Math.random() < 0.30) {
-            if (attacker.applyStatus('burn')) {
-                this._notify(`${attacker.fullName} got burned by ${defender.fullName}'s Flame Body!`, 'action');
+        if (a === 'flamebody' && isContact && (force || Math.random() < 0.30)) {
+            const applied = typeof attacker.applyStatus === 'function' ? attacker.applyStatus('burn') : true;
+            if (applied) {
+                attacker.status = 'burn';
+                attacker.statuses = attacker.statuses || {};
+                attacker.statuses.burn = { duration: 0 };
+                this._notify(`${attacker.fullName || attacker.name} got burned by ${defender.fullName || defender.name}'s Flame Body!`, 'action');
             }
         }
 
         // Static: 30% paralysis on contact
-        if (a === 'static' && isContact && Math.random() < 0.30) {
-            if (attacker.applyStatus('paralysis')) {
-                this._notify(`${attacker.fullName} got paralyzed by ${defender.fullName}'s Static!`, 'action');
+        if (a === 'static' && isContact && (force || Math.random() < 0.30)) {
+            const applied = typeof attacker.applyStatus === 'function' ? attacker.applyStatus('paralysis') : true;
+            if (applied) {
+                attacker.status = 'paralysis';
+                attacker.statuses = attacker.statuses || {};
+                attacker.statuses.paralysis = { duration: 0 };
+                this._notify(`${attacker.fullName || attacker.name} got paralyzed by ${defender.fullName || defender.name}'s Static!`, 'action');
             }
         }
 
         // Poison Point: 30% poison on contact
-        if (a === 'poisonpoint' && isContact && Math.random() < 0.30) {
-            if (attacker.applyStatus('poison')) {
-                this._notify(`${attacker.fullName} got poisoned by ${defender.fullName}'s Poison Point!`, 'action');
+        if (a === 'poisonpoint' && isContact && (force || Math.random() < 0.30)) {
+            const applied = typeof attacker.applyStatus === 'function' ? attacker.applyStatus('poison') : true;
+            if (applied) {
+                attacker.status = 'poison';
+                attacker.statuses = attacker.statuses || {};
+                attacker.statuses.poison = { duration: 0 };
+                this._notify(`${attacker.fullName || attacker.name} got poisoned by ${defender.fullName || defender.name}'s Poison Point!`, 'action');
             }
         }
 
         // Effect Spore: 30% random status (spore) on contact
-        if (a === 'effectspore' && isContact && Math.random() < 0.30) {
+        if (a === 'effectspore' && isContact && (force || Math.random() < 0.30)) {
             const statuses = ['paralysis', 'poison', 'sleep'];
             const s = statuses[Math.floor(Math.random() * statuses.length)];
-            if (attacker.applyStatus(s)) {
-                this._notify(`${attacker.fullName} was hit by ${defender.fullName}'s Effect Spore (${s})!`, 'action');
+            const applied = typeof attacker.applyStatus === 'function' ? attacker.applyStatus(s) : true;
+            if (applied) {
+                attacker.status = s;
+                attacker.statuses = attacker.statuses || {};
+                attacker.statuses[s] = { duration: 0 };
+                this._notify(`${attacker.fullName || attacker.name} was hit by ${defender.fullName || defender.name}'s Effect Spore (${s})!`, 'action');
             }
         }
 
-        // Rough Skin: foe loses 10% HP on contact
-        if (a === 'roughskin' && isContact && pid) {
-            const dmg = Math.floor(attacker.maxHp * 0.10);
-            attacker.takeDamage(dmg);
-            this._notify(`${defender.fullName}'s Rough Skin hurt ${attacker.fullName}!`, 'damage');
+        // Rough Skin / Iron Barbs: foe loses 1/8 max HP on contact
+        if ((a === 'roughskin' || a === 'ironbarbs') && isContact) {
+            const dmg = Math.max(1, Math.floor(((attacker.maxHp || attacker.maxHP) || 100) * 0.125));
+            if (typeof attacker.takeDamage === 'function') {
+                attacker.takeDamage(dmg);
+            } else {
+                attacker.currentHP = Math.max(0, (attacker.currentHP || attacker.currentHp || 0) - dmg);
+            }
+            this._notify(`${defender.fullName || defender.name}'s ${defender.ability || 'Rough Skin'} hurt ${attacker.fullName || attacker.name}!`, 'damage');
         }
 
         // Clawed Armor: foe loses 30% HP on contact (game-specific)
         if (a === 'clawedarmor' && isContact) {
-            const dmg = Math.floor(attacker.maxHp * 0.30);
-            attacker.takeDamage(dmg);
-            this._notify(`${defender.fullName}'s Clawed Armor retaliated!`, 'damage');
+            const dmg = Math.floor((attacker.maxHp || 100) * 0.30);
+            if (typeof attacker.takeDamage === 'function') attacker.takeDamage(dmg);
+            else attacker.currentHP = Math.max(0, (attacker.currentHP || 0) - dmg);
+            this._notify(`${defender.fullName || defender.name}'s Clawed Armor retaliated!`, 'damage');
         }
 
         // Tangled Feet: raise evasion 20% on being hit (simplified: raise speed)
         if (a === 'tangledfeet') {
-            const boost = Math.floor(defender.stats.speed * 0.20);
+            const boost = Math.floor((defender.stats?.speed || 100) * 0.20);
+            defender.statModifiers = defender.statModifiers || {};
             defender.statModifiers.speed = (defender.statModifiers.speed || 0) + boost;
         }
 
-        // Weak Armor already handled in getDefenseMultiplier
-
-        // Inner Focus / Own Tempo (no flinch/confusion) — passive, no on-hit needed
-
         // Synchronize — copy status to attacker
         if (a === 'synchronize') {
-            const statuses = Object.keys(defender.statuses);
-            if (statuses.length > 0 && Math.random() < 0.5) {
-                statuses.forEach(s => attacker.applyStatus(s));
-                this._notify(`${defender.fullName}'s Synchronize copied its status to ${attacker.fullName}!`, 'action');
+            const statuses = Object.keys(defender.statuses || {});
+            if (statuses.length > 0 && (move?.forceTrigger || Math.random() < 0.5)) {
+                statuses.forEach(s => {
+                    if (typeof attacker.applyStatus === 'function') attacker.applyStatus(s);
+                    else attacker.status = s;
+                });
+                this._notify(`${defender.fullName || defender.name}'s Synchronize copied its status to ${attacker.fullName || attacker.name}!`, 'action');
             }
         }
     }
 
     /**
-     * After attacker uses a move — apply secondary effects from attacker's ability.
+     * After attacker uses a move — apply secondary effects from attacker's ability and KO triggers.
      */
+    onAfterAttack(attacker, defender, move, damage, gameState = null) {
+        this.onAttackUsed(attacker, defender, move, damage);
+
+        // Moxie & Beast Boost on KO
+        const isDefenderKO = defender && (
+            (typeof defender.isFainted === 'function' && defender.isFainted()) ||
+            (defender.currentHP !== undefined && defender.currentHP <= 0) ||
+            (defender.currentHp !== undefined && defender.currentHp <= 0)
+        );
+
+        if (isDefenderKO) {
+            const a = this._ability(attacker);
+            if (a === 'moxie') {
+                attacker.statStages = attacker.statStages || {};
+                attacker.statStages.attack = Math.min(6, (attacker.statStages.attack || 0) + 1);
+                const boost = Math.floor(((attacker.stats && attacker.stats.attack) || 100) * 0.10);
+                attacker.statModifiers = attacker.statModifiers || {};
+                attacker.statModifiers.attack = (attacker.statModifiers.attack || 0) + boost;
+                this._notify(`${attacker.fullName || attacker.name}'s Moxie raised its Attack!`, 'action');
+            } else if (a === 'beastboost') {
+                const highest = this._highestStat(attacker);
+                attacker.statStages = attacker.statStages || {};
+                attacker.statStages[highest] = Math.min(6, (attacker.statStages[highest] || 0) + 1);
+                const boost = Math.floor(((attacker.stats && attacker.stats[highest]) || 100) * 0.10);
+                attacker.statModifiers = attacker.statModifiers || {};
+                attacker.statModifiers[highest] = (attacker.statModifiers[highest] || 0) + boost;
+                this._notify(`${attacker.fullName || attacker.name}'s Beast Boost raised its ${highest}!`, 'action');
+            }
+        }
+    }
+
     onAttackUsed(attacker, defender, move, damage) {
         const a = this._ability(attacker);
-        const moveType = move.type || '';
+        const moveType = move?.type || '';
 
         // Poison Puppeteer: poison → also confuse foe
-        if (a === 'poisonpuppeteer' && defender.hasStatus('poison')) {
+        if (a === 'poisonpuppeteer' && defender?.hasStatus?.('poison')) {
             defender.applyStatus('confusion');
-            this._notify(`${defender.fullName} is confused from ${attacker.fullName}'s Poison Puppeteer!`, 'action');
+            this._notify(`${defender.fullName || defender.name} is confused from ${attacker.fullName || attacker.name}'s Poison Puppeteer!`, 'action');
         }
 
-        // Terrorize: lower foe atk+spatk 20% at end of round (handled in end-of-round instead)
-
         // Drain — heal attacker based on damage dealt
-        if (move.drain && damage > 0) {
-            const [num, denom] = move.drain;
-            const heal = Math.floor(damage * (num / denom));
-            attacker.currentHP = Math.min(attacker.maxHp, attacker.currentHP + heal);
-            this._notify(`${attacker.fullName} absorbed ${heal} HP!`, 'heal');
+        if (move?.drain && damage > 0) {
+            const drainFraction = Array.isArray(move.drain) ? (move.drain[0] / move.drain[1]) : (typeof move.drain === 'number' ? move.drain : 0.5);
+            const heal = Math.floor(damage * drainFraction);
+            attacker.currentHP = Math.min(attacker.maxHp || attacker.maxHP || 100, (attacker.currentHP || attacker.currentHp || 0) + heal);
+            if (attacker.currentHp !== undefined) attacker.currentHp = attacker.currentHP;
+            this._notify(`${attacker.fullName || attacker.name} absorbed ${heal} HP!`, 'heal');
         }
 
         // Recoil — damage attacker
-        if (move.recoil && damage > 0) {
-            const [num, denom] = move.recoil;
-            // Game has Reckless ability = 30% recoil. Move's base recoil is the fraction
-            const recoilMult = a === 'reckless' ? 0.30 : (num / denom);
-            const recoilDmg = Math.floor(attacker.maxHp * recoilMult);
-            attacker.takeDamage(recoilDmg);
-            this._notify(`${attacker.fullName} was damaged by recoil!`, 'damage');
+        if (move?.recoil && damage > 0) {
+            const recoilFraction = Array.isArray(move.recoil) ? (move.recoil[0] / move.recoil[1]) : (typeof move.recoil === 'number' ? move.recoil : 0.33);
+            const recoilMult = a === 'reckless' ? 0.30 : recoilFraction;
+            const recoilDmg = Math.floor((attacker.maxHp || attacker.maxHP || 100) * recoilMult);
+            if (typeof attacker.takeDamage === 'function') attacker.takeDamage(recoilDmg);
+            else attacker.currentHP = Math.max(0, (attacker.currentHP || attacker.currentHp || 0) - recoilDmg);
+            this._notify(`${attacker.fullName || attacker.name} was damaged by recoil!`, 'damage');
         }
 
         // Quark Drive (game version): track electric move count, boost on use
@@ -572,19 +714,40 @@ export class AbilityEngine {
     }
 
     // ── End-of-Round Triggers ──────────────────────────────────────────────
-    onEndRound(pokemon) {
+    onEndOfTurn(pokemon, gameState = null) {
+        return this.onEndRound(pokemon, gameState);
+    }
+
+    onEndRound(pokemon, gameState = null) {
         const a = this._ability(pokemon);
         const pid = this._getPlayerId(pokemon);
 
-        // Speed Boost: +20% speed each round (capped at 50% total)
+        // Speed Boost: raise Speed each round (+1 stage and +20%)
         if (a === 'speedboost') {
-            if (!pokemon._speedBoostTotal) pokemon._speedBoostTotal = 0;
-            if (pokemon._speedBoostTotal < 0.50) {
-                const boost = Math.floor(pokemon.stats.speed * 0.20);
-                pokemon.statModifiers.speed = (pokemon.statModifiers.speed || 0) + boost;
-                pokemon._speedBoostTotal = (pokemon._speedBoostTotal || 0) + 0.20;
-                this._notify(`${pokemon.fullName}'s Speed Boost raised its speed!`, 'action');
-            }
+            const boost = Math.floor(((pokemon.stats && (pokemon.stats.speed || pokemon.stats.spe)) || 100) * 0.20);
+            pokemon.statModifiers = pokemon.statModifiers || {};
+            pokemon.statModifiers.speed = (pokemon.statModifiers.speed || 0) + boost;
+            pokemon.statModifiers.spe = (pokemon.statModifiers.spe || 0) + boost;
+            pokemon.statStages = pokemon.statStages || {};
+            const curSpe = pokemon.statStages.speed ?? pokemon.statStages.spe ?? 0;
+            const newSpe = Math.min(6, curSpe + 1);
+            pokemon.statStages.speed = newSpe;
+            pokemon.statStages.spe = newSpe;
+            this._notify(`${pokemon.fullName || pokemon.name}'s Speed Boost raised its Speed!`, 'action');
+        }
+
+        // Bad Dreams: damage sleeping opponents for 1/8 HP
+        if (a === 'baddreams') {
+            const players = (gameState && gameState.players) || (this.gs && this.gs.players) || [];
+            players.forEach(p => {
+                const foe = p.getActivePokemon ? p.getActivePokemon() : p.activePokemon;
+                if (foe && foe !== pokemon && (!foe.isFainted || !foe.isFainted()) && (foe.hasStatus?.('sleep') || foe.status === 'sleep')) {
+                    const dmg = Math.max(1, Math.floor(((foe.maxHp || foe.maxHP) || 100) * 0.125));
+                    if (typeof foe.takeDamage === 'function') foe.takeDamage(dmg);
+                    else foe.currentHP = Math.max(0, (foe.currentHP || foe.currentHp || 0) - dmg);
+                    this._notify(`${foe.fullName || foe.name} was tormented by ${pokemon.fullName || pokemon.name}'s Bad Dreams!`, 'damage');
+                }
+            });
         }
 
         // Dry Skin: heal 12.5% in rain, lose 12.5% in sun
@@ -676,6 +839,24 @@ export class AbilityEngine {
         }
 
         // Grassy Surge: 50% chance heal from foe contact (handled inline)
+    }
+
+    // ── Status Applied Trigger (Synchronize) ───────────────────────────────
+    onStatusApplied(pokemon, status, gameState = null) {
+        if (!pokemon || !status) return;
+        const a = this._ability(pokemon);
+        if (a === 'synchronize') {
+            const players = (gameState && gameState.players) || (this.gs && this.gs.players) || [];
+            const foes = players.filter(p => (p.getActivePokemon ? p.getActivePokemon() : p.activePokemon) !== pokemon);
+            foes.forEach(p => {
+                const foe = p.getActivePokemon ? p.getActivePokemon() : p.activePokemon;
+                if (foe && (!foe.isFainted || !foe.isFainted())) {
+                    if (typeof foe.applyStatus === 'function') foe.applyStatus(status);
+                    else foe.status = status;
+                    this._notify(`${pokemon.fullName || pokemon.name}'s Synchronize shared ${status} with ${foe.fullName || foe.name}!`, 'action');
+                }
+            });
+        }
     }
 
     // ── Weather ability helper ─────────────────────────────────────────────

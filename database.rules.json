@@ -7,12 +7,14 @@
 
         "players": {
           "$player_id": {
-            ".write": "auth != null && (newData.child('uid').val() === auth.uid || data.parent().parent().child('hostUid').val() === auth.uid)"
+            ".write": "auth != null && (newData.child('uid').val() === auth.uid || data.parent().parent().child('hostUid').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['uid','name']) && newData.child('uid').isString() && newData.child('name').isString() && newData.child('name').val().length <= 32 && newData.child('name').val().length > 0"
           }
         },
         "actions": {
           "$action_id": {
-            ".write": "auth != null && !data.exists() && (data.parent().parent().child('hostUid').val() === auth.uid || (root.child('rooms').child($room_id).child('players').child(newData.child('sender').val()).child('uid').val() === auth.uid && (newData.child('action').val() === 'switch_pokemon' || newData.child('action').val() === 'form_change' || newData.child('action').val() === 'trade_pokemon' || newData.child('action').val() === 'attack' || newData.child('action').val() === 'evolve' || newData.child('action').val() === 'devolve')))"
+            ".write": "auth != null && !data.exists() && (data.parent().parent().child('hostUid').val() === auth.uid || root.child('rooms').child($room_id).child('players').child(newData.child('sender').val()).child('uid').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['sender', 'action', 'timestamp']) && newData.child('timestamp').isNumber() && newData.child('action').isString() && newData.child('action').val().length < 64"
           }
         },
         "entryQueue": {
@@ -21,7 +23,14 @@
           }
         },
         "state": {
-          ".write": "auth != null && data.parent().child('hostUid').val() === auth.uid"
+          ".write": "auth != null && data.parent().child('hostUid').val() === auth.uid",
+          "players": {
+            "$pid": {
+              "hp": {
+                ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000)"
+              }
+            }
+          }
         },
         "settings": {
           ".write": "auth != null && data.parent().child('hostUid').val() === auth.uid"
@@ -29,15 +38,18 @@
       }
     },
     "roomAliases": {
-      ".read": "auth != null",
-      ".write": "auth != null",
       "$room_code": {
-        ".validate": "newData.isString() && newData.val().length > 0"
+        ".read": "auth != null",
+        ".write": "auth != null && (!data.exists() || data.val() === newData.val())",
+        ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length < 64"
       }
     },
     "errors": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.child('message').isString() && newData.child('timestamp').isNumber()"
+      }
     },
     "users": {
       "$uid": {

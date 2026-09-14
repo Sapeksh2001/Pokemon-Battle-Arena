@@ -20,7 +20,7 @@ export const WEATHER_CONFIG = {
     sandstorm: {
         label: 'Sandstorm',
         superior: false,
-        tickDamage: { amount: 0.05, immuneTypes: ['Rock', 'Ground', 'Steel'] },
+        tickDamage: { amount: 0.0625, immuneTypes: ['Rock', 'Ground', 'Steel'] },
         immune: ['Rock', 'Ground', 'Steel'],
         moveModifiers: {
             // Sunlight/moonlight based moves halved — handled via move flags
@@ -36,7 +36,7 @@ export const WEATHER_CONFIG = {
     hail: {
         label: 'Hail',
         superior: false,
-        tickDamage: { amount: 0.05, immuneTypes: ['Ice'] },
+        tickDamage: { amount: 0.0625, immuneTypes: ['Ice'] },
         immune: ['Ice'],
         moveModifiers: {},
         nullified: [],

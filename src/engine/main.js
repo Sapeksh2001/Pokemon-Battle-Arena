@@ -348,6 +348,10 @@ export class PokemonBattleArena {
         this.battleController.endRound();
     }
 
+    resolveEndOfTurn(gameState = this.gs) {
+        return this.battleController.resolveEndOfTurn(gameState);
+    }
+
     // ── Attack ────────────────────────────────────────────────────────────
 
     handleAttack(attackType) {
@@ -2114,5 +2118,7 @@ export class PokemonBattleArena {
 
 
 // Expose functions globally for inline HTML onclick handlers
-window.escapeHTML = escapeHTML;
+if (typeof window !== 'undefined') {
+    window.escapeHTML = escapeHTML;
+}
 

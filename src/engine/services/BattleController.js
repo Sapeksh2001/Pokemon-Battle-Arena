@@ -21,7 +21,7 @@ export class BattleController {
         const clamped = Math.max(0, Math.min(pokemon.maxHp, newHP));
         const delta = clamped - pokemon.currentHP;
         pokemon.currentHP = clamped;
-        this.arena.renderer.renderAll(); // Immediate sync
+        this.arena.renderer?.renderAll?.(); // Immediate sync
 
         if (delta === 0) return;
 
@@ -29,19 +29,19 @@ export class BattleController {
         const isFaint = clamped === 0 && delta < 0;
         const label = source ? ` (${source})` : '';
 
-        this.arena._showDamageNumber(playerId, Math.abs(delta), isHeal ? 'heal' : 'damage');
-        this.arena._notify(
+        this.arena._showDamageNumber?.(playerId, Math.abs(delta), isHeal ? 'heal' : 'damage');
+        this.arena._notify?.(
             `${pokemon.fullName}: ${isHeal ? '+' : ''}${delta} HP${label} (${clamped}/${pokemon.maxHp})`,
             isHeal ? 'heal' : 'damage'
         );
 
         const animType = isFaint ? 'faint' : isHeal ? 'heal' : 'damage';
-        if (isFaint) this.arena.audio.playCry(pokemon);
-        this.arena._animateSprite(playerId, animType, () => this.arena.renderer.renderAll());
+        if (isFaint) this.arena.audio?.playCry?.(pokemon);
+        this.arena._animateSprite?.(playerId, animType, () => this.arena.renderer?.renderAll?.());
 
         // Multiplayer Action Sync
         if (!preventSync && this.arena.multiplayer && this.arena.multiplayer.mode === 'playing') {
-            const slotId = this.arena.gs.players.find(p => p.id === playerId)?.team.indexOf(pokemon);
+            const slotId = this.arena.gs?.players?.find(p => p.id === playerId)?.team?.indexOf(pokemon);
             if (slotId !== undefined && slotId !== -1) {
                 this.arena.multiplayer.sendAction('hp_change', {
                     playerId,
@@ -53,7 +53,7 @@ export class BattleController {
         }
 
         // Autosave Local State
-        this.arena.saveLocalState();
+        this.arena.saveLocalState?.();
     }
 
     // ── Attack ────────────────────────────────────────────────────────────
@@ -386,6 +386,11 @@ export class BattleController {
             this.arena.log.add(mainMsg, 'action');
             this.arena._announce(mainMsg);
 
+            // Ability onBeforeAttack hook
+            if (this.abilityEngine?.onBeforeAttack) {
+                this.abilityEngine.onBeforeAttack(attacker, move, this.arena.gs);
+            }
+
             let totalDamageDealtToAny = 0;
 
             // Execute attack on each target
@@ -397,8 +402,10 @@ export class BattleController {
                 if (isStatusMove) {
                     tDamage = 0;
                     tEffectiveness = 1;
-                    const statusMsg = `${attacker.fullName} targeted ${tPoke.fullName} with status move!`;
+                    const statusMsg = `${attacker.fullName} used ${moveObj?.name || moveName}!`;
                     this.arena.log.add(statusMsg, 'action');
+                    // Unconditionally apply move effect for status moves
+                    this.arena.engine.applyMoveEffect(move, attacker, tPoke, 0, this.arena.gs);
                 } else {
                     // Check Protect
                     if (tPoke.protected) {
@@ -439,6 +446,9 @@ export class BattleController {
                                 this.weather, move, this.abilityEngine, this.arena.gs.terrain
                             );
                             strikeDmg = calc.damage;
+                            if (this.abilityEngine?.onModifyDamage && strikeDmg > 0) {
+                                strikeDmg = this.abilityEngine.onModifyDamage(attacker, tPoke, move, strikeDmg, this.arena.gs);
+                            }
                             tEffectiveness = calc.effectiveness;
                             if (nameClean === 'bonerush') {
                                 currentPower += 25;
@@ -468,6 +478,9 @@ export class BattleController {
 
                     tDamage = accumDmg;
                     totalDamageDealtToAny += tDamage;
+
+                    // Unconditionally apply move effect pipeline
+                    this.arena.engine.applyMoveEffect(move, attacker, tPoke, tDamage, this.arena.gs);
 
                     const dmgMsg = `${tPoke.fullName} took ${tDamage} damage!`;
                     this.arena.log.add(dmgMsg, tEffectiveness === 0 ? 'action' : 'damage');
@@ -550,33 +563,9 @@ export class BattleController {
 
                     // Post-attack abilities
                     if (this.abilityEngine) {
-                        this.abilityEngine.onAttackUsed(attacker, tPoke, move, tDamage);
-                        this.abilityEngine.onHitDefender(attacker, tPoke, move, tDamage);
+                        this.abilityEngine.onHit(attacker, tPoke, move, tDamage, this.arena.gs);
+                        this.abilityEngine.onAfterAttack(attacker, tPoke, move, tDamage, this.arena.gs);
                     }
-                }
-
-                // If status move direct status
-                if (isStatusMove && move.status && tEffectiveness > 0) {
-                    const sName = move.status === 'brn' ? 'burn' :
-                                  move.status === 'par' ? 'paralysis' :
-                                  move.status === 'psn' ? 'poison' :
-                                  move.status === 'frz' ? 'freeze' :
-                                  move.status === 'slp' ? 'sleep' : move.status;
-                    if (tPoke.applyStatus(sName)) {
-                        this.arena.log.add(`[EFFECT] ${tPoke.fullName} got ${sName}!`, 'status');
-                    }
-                }
-
-                // If status move direct boosts
-                if (isStatusMove && move.boosts && tEffectiveness > 0) {
-                    Object.entries(move.boosts).forEach(([stat, stages]) => {
-                        const statMap = { atk: 'attack', def: 'defence', spa: 'specialAttack', spd: 'specialDefence', spe: 'speed' };
-                        const statName = statMap[stat] || stat;
-                        const pct = stages * 0.10;
-                        const mod = Math.floor(tPoke.stats[statName] * Math.abs(pct));
-                        tPoke.statModifiers[statName] = (tPoke.statModifiers[statName] || 0) + (stages < 0 ? -mod : mod);
-                        this.arena.log.add(`[BOOST] ${tPoke.fullName}'s ${statName} ${stages < 0 ? 'fell' : 'rose'}!`, 'action');
-                    });
                 }
 
                 // Extremely Harsh Sunlight severe burn
@@ -585,6 +574,11 @@ export class BattleController {
                     this._notify(`${tPoke.fullName} was severely burned by the extreme sunlight!`, 'action');
                 }
             });
+
+            // React UI state notification
+            if (typeof window !== 'undefined' && typeof window.__arenaNotify === 'function') {
+                window.__arenaNotify(this.arena.gs);
+            }
 
             // Self-sacrifice, Destiny Bond, Healing (Category D, F)
             if (nameClean === 'destinybond') {
@@ -845,10 +839,7 @@ export class BattleController {
             }
         }
 
-        this._applyWeatherDamage();
-        this._applyStatusDamage();
-        this._applyDelayedEffects();
-        this._applyEndRoundAbilities();
+        this.resolveEndOfTurn(this.arena.gs);
         this.arena.renderer.renderAll();
         this.arena._notify(`========== ROUND ${this.arena.gs.round} BEGINS ==========`, 'round');
 
@@ -859,6 +850,33 @@ export class BattleController {
 
         // Autosave Local State
         this.arena.saveLocalState();
+    }
+
+    /**
+     * Resolve all end-of-turn residual effects (weather, status, delayed moves, abilities, weather counter).
+     * // ponytail: single centralized residual pipeline for engine and tests
+     */
+    resolveEndOfTurn(gameState = this.arena.gs) {
+        this._applyWeatherDamage();
+        this._applyStatusDamage();
+        this._applyDelayedEffects();
+        this._applyEndRoundAbilities();
+
+        // Weather turns counter
+        if (gameState.weatherTurnsLeft > 0) {
+            gameState.weatherTurnsLeft--;
+            if (gameState.weatherTurnsLeft === 0) {
+                gameState.weather = null;
+                this.arena.log.add('The weather cleared up!', 'action');
+                this.arena._notify('The weather cleared up!', 'action');
+            }
+        }
+
+        // React UI state notification
+        if (typeof window !== 'undefined' && typeof window.__arenaNotify === 'function') {
+            window.__arenaNotify(gameState);
+        }
+        return gameState;
     }
 
     _applyDelayedEffects() {
@@ -902,37 +920,49 @@ export class BattleController {
             let totalDmg = 0;
             let curedStatus = [];
 
-            if (pokemon.hasStatus('poison')) {
-                const rounds = pokemon.statuses['poison'].duration;
-                const multipliers = [0.05, 0.10, 0.15];
-                const mult = multipliers[Math.min(rounds, 2)];
-                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * mult));
-                pokemon.statuses['poison'].duration++;
-                if (pokemon.statuses['poison'].duration >= 3) curedStatus.push('poison');
+            // Poison: 1/8 max HP
+            if (pokemon.hasStatus('poison') || pokemon.status === 'poison') {
+                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * (1 / 8)));
+                if (pokemon.statuses?.['poison']) {
+                    pokemon.statuses['poison'].duration = (pokemon.statuses['poison'].duration || 0) + 1;
+                }
             }
 
-            if (pokemon.hasStatus('bad_poison') || pokemon.hasStatus('toxic')) {
-                const sName = pokemon.hasStatus('bad_poison') ? 'bad_poison' : 'toxic';
-                const rounds = pokemon.statuses[sName].duration;
-                const mult = 0.10 + (0.02 * rounds); // 10%, 12%, 14%...
-                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * mult));
-                pokemon.statuses[sName].duration++;
+            // Toxic / Bad Poison: escalating (1/16, 2/16, 3/16...)
+            if (pokemon.hasStatus('bad_poison') || pokemon.hasStatus('toxic') || pokemon.status === 'toxic' || pokemon.status === 'bad_poison') {
+                const sName = (pokemon.hasStatus('bad_poison') || pokemon.status === 'bad_poison') ? 'bad_poison' : 'toxic';
+                const counter = pokemon.poisonCounter || (pokemon.statuses?.[sName]?.duration ? pokemon.statuses[sName].duration + 1 : 1);
+                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * (counter / 16)));
+                pokemon.poisonCounter = counter + 1;
+                if (pokemon.statuses?.[sName]) {
+                    pokemon.statuses[sName].duration = counter;
+                }
             }
 
-            if (pokemon.hasStatus('burn')) {
-                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * 0.10));
-                pokemon.statuses['burn'].duration++;
-                if (pokemon.statuses['burn'].duration >= 3) curedStatus.push('burn');
+            // Burn: 1/16 max HP (or 1/8 for severe burn)
+            if (pokemon.hasStatus('severe_burn') || pokemon.status === 'severe_burn') {
+                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * (1 / 8)));
+                if (pokemon.statuses?.['severe_burn']) {
+                    pokemon.statuses['severe_burn'].duration = (pokemon.statuses['severe_burn'].duration || 0) + 1;
+                }
+            } else if (pokemon.hasStatus('burn') || pokemon.status === 'burn') {
+                totalDmg += Math.max(1, Math.floor(pokemon.maxHp * (1 / 16)));
+                if (pokemon.statuses?.['burn']) {
+                    pokemon.statuses['burn'].duration = (pokemon.statuses['burn'].duration || 0) + 1;
+                }
             }
 
             if (pokemon.hasStatus('curse')) {
                 totalDmg += Math.max(1, Math.floor(pokemon.maxHp * 0.30));
-                pokemon.statuses['curse'].duration++;
+                if (pokemon.statuses?.['curse']) {
+                    pokemon.statuses['curse'].duration = (pokemon.statuses['curse'].duration || 0) + 1;
+                }
             }
 
             if (pokemon.hasStatus('paralysis')) {
-                pokemon.statuses['paralysis'].duration++;
-                if (pokemon.statuses['paralysis'].duration >= 3) curedStatus.push('paralysis');
+                if (pokemon.statuses?.['paralysis']) {
+                    pokemon.statuses['paralysis'].duration = (pokemon.statuses['paralysis'].duration || 0) + 1;
+                }
             }
 
             // Trapping DoT & Leech Seed
@@ -959,8 +989,8 @@ export class BattleController {
             }
 
             if (totalDmg > 0) {
-                pokemon.takeDamage(totalDmg);
-                this._applyHPChange(pokemon, player.id, pokemon.currentHP, 'status conditions');
+                const newHP = pokemon.currentHP - totalDmg;
+                this._applyHPChange(pokemon, player.id, newHP, 'status conditions');
                 affected.push(pokemon.fullName);
             }
 
@@ -969,10 +999,10 @@ export class BattleController {
         });
 
         if (affected.length > 0) {
-            this.arena._notify(`${affected.join(', ')} took damage from status conditions!`, 'damage');
+            this.arena._notify?.(`${affected.join(', ')} took damage from status conditions!`, 'damage');
         }
         if (cured.length > 0) {
-            this.arena._notify(`${cured.join(', ')} recovered from status conditions!`, 'heal');
+            this.arena._notify?.(`${cured.join(', ')} recovered from status conditions!`, 'heal');
         }
     }
 
@@ -985,14 +1015,14 @@ export class BattleController {
         );
 
         ticks.forEach(({ pokemon, playerId, damage, source }) => {
-            pokemon.takeDamage(damage);
-            this._applyHPChange(pokemon, playerId, pokemon.currentHP, source);
+            const newHP = pokemon.currentHP - damage;
+            this._applyHPChange(pokemon, playerId, newHP, source);
         });
 
         if (ticks.length > 0) {
             const names = ticks.map(t => t.pokemon.fullName);
             const wLabel = WEATHER_CONFIG[weather]?.label || weather;
-            this.arena._notify(
+            this.arena._notify?.(
                 `${names.join(', ')} ${names.length === 1 ? 'is' : 'are'} buffeted by ${wLabel}!`,
                 'damage'
             );

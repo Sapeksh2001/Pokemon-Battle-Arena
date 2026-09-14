@@ -15,15 +15,17 @@ import { BattleController } from './services/BattleController.js';
 import { AbilityEngine } from './services/AbilityEngine.js';
 import { PersistenceManager } from './services/PersistenceManager.js';
 import { InputManager } from './ui/InputManager.js';
+import { BattleRng } from './utils/BattleRng.js';
 import { WEATHER_CONFIG, SUPERIOR_WEATHERS, UNTOUCHABLE_WEATHERS } from './data/weather.js';
 
 export class PokemonBattleArena {
     constructor() {
         // Services
+        this.rng = new BattleRng();
         this.battleController = new BattleController(this);
         this.audio = new AudioManager();
-        this.db = new PokemonDatabase(window.MergedPokemonData || {});
-        this.engine = new BattleEngine(typeChart);
+        this.db = new PokemonDatabase(typeof window !== 'undefined' ? window.MergedPokemonData || {} : {});
+        this.engine = new BattleEngine(typeChart, this.rng);
         this.log = new BattleLog(200);
         this.history = new HistoryManager(30);
         this.modals = new ModalManager();
@@ -52,6 +54,11 @@ export class PokemonBattleArena {
 
         // Hook up round timer timeout
         this.timer.onTimeout = () => this._handleTimeout();
+    }
+
+    setBattleSeed(seed) {
+        this.rng = new BattleRng(seed);
+        if (this.engine) this.engine.rng = this.rng;
     }
 
     // ── Bootstrap ─────────────────────────────────────────────────────────
@@ -93,7 +100,10 @@ export class PokemonBattleArena {
     }
 
     _initRemaining() {
-        document.body.addEventListener('click', () => Tone.start(), { once: true });
+        document.body.addEventListener('click', () => {
+            if (typeof Tone !== 'undefined' && Tone.start) Tone.start();
+            else if (typeof window !== 'undefined' && window.Tone && window.Tone.start) window.Tone.start();
+        }, { once: true });
         document.body.addEventListener('click', () => this.audio.init(), { once: true });
 
         if (Object.keys(this.db._raw).length > 0) {
@@ -109,7 +119,9 @@ export class PokemonBattleArena {
         this._setupMultiplayerUI();
 
         this.renderer.renderAll();
-        lucide.createIcons();
+        if (typeof window !== 'undefined' && window.lucide) {
+            window.lucide.createIcons();
+        }
         this._setArena('Normal');
         this.history._updateButtons();
 
@@ -643,7 +655,9 @@ export class PokemonBattleArena {
             }
             container.appendChild(slot);
         }
-        lucide.createIcons();
+        if (typeof window !== 'undefined' && window.lucide) {
+            window.lucide.createIcons();
+        }
 
         // Attach slot event listeners with improved delegation
         container.querySelectorAll('div[data-slot-id]').forEach(slot => {

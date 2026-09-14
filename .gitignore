@@ -26,3 +26,4 @@ dist-ssr
 *.sw?
 legacy_vanilla_app/
 .code-review-graph/
+.firebase/

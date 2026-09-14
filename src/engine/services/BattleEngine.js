@@ -7,8 +7,9 @@ import { getTerrainDefenseModifier, getTerrainMovePowerMultiplier, getTerrainSta
 import { AbilityEngine } from './AbilityEngine.js';
 
 export class BattleEngine {
-    constructor(chart) {
+    constructor(chart, rng = null) {
         this._chart = chart; // typeChart mapping
+        this.rng = rng;
     }
 
     /**
@@ -267,7 +268,11 @@ export class BattleEngine {
      * // ponytail: minimal direct pipeline, supports roadmap and game-data schemas
      */
     applyMoveEffect(move, user, target, damageDealt = 0, gameState = {}) {
-        return applyMoveEffect(move, user, target, damageDealt, gameState);
+        return applyMoveEffect(move, user, target, damageDealt, { ...gameState, rng: gameState?.rng || this.rng });
+    }
+
+    applyMoveEffects(move, user, target, damageDealt = 0, gameState = {}) {
+        return this.applyMoveEffect(move, user, target, damageDealt, gameState);
     }
 
     applyStatusCondition(target, statusType, gameState = {}) {
@@ -461,9 +466,11 @@ export function applyMoveEffect(move, user, target, damageDealt = 0, gameState =
         }
     }
 
+    const activeRng = gameState?.rng || gameState?.arena?.rng || (typeof window !== 'undefined' && window.arena?.rng);
+
     // 1. Status conditions
     if (statusToApply && target) {
-        const roll = Math.random() * 100;
+        const roll = (activeRng ? activeRng.next() : Math.random()) * 100;
         if (effectChance === undefined || effectChance === null || roll < effectChance) {
             applyStatusCondition(target, statusToApply, gameState);
         }
@@ -485,7 +492,8 @@ export function applyMoveEffect(move, user, target, damageDealt = 0, gameState =
     // Also support moves.json secondary.boosts
     if (move.secondary?.boosts && target) {
         const secChance = move.secondary.chance || 100;
-        if (Math.random() * 100 < secChance) {
+        const secRoll = (activeRng ? activeRng.next() : Math.random()) * 100;
+        if (secRoll < secChance) {
             for (const [sStat, sStages] of Object.entries(move.secondary.boosts)) {
                 applyStatStage(target, sStat, sStages, gameState);
             }

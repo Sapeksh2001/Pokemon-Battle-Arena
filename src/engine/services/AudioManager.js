@@ -2,6 +2,12 @@
 // AUDIO MANAGER (Tone.js Wrapper)
 // ==========================================
 
+import * as Tone from 'tone';
+
+if (typeof window !== 'undefined') {
+    window.Tone = Tone;
+}
+
 export class AudioManager {
     constructor() {
         this._ready = false;

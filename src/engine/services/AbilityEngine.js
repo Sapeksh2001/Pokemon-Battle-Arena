@@ -20,6 +20,10 @@ export class AbilityEngine {
     get weather() { return this.arena?.gs?.weather || 'none'; }
     get gs() { return this.arena?.gs; }
 
+    _rngNext() {
+        return this.arena?.rng ? this.arena.rng.next() : Math.random();
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────
 
     _notify(msg, type = 'action') {
@@ -559,7 +563,7 @@ export class AbilityEngine {
         const force = !!(move?.forceTrigger || options?.forceTrigger);
 
         // Flame Body: 30% burn on contact
-        if (a === 'flamebody' && isContact && (force || Math.random() < 0.30)) {
+        if (a === 'flamebody' && isContact && (force || this._rngNext() < 0.30)) {
             const applied = typeof attacker.applyStatus === 'function' ? attacker.applyStatus('burn') : true;
             if (applied) {
                 attacker.status = 'burn';
@@ -570,7 +574,7 @@ export class AbilityEngine {
         }
 
         // Static: 30% paralysis on contact
-        if (a === 'static' && isContact && (force || Math.random() < 0.30)) {
+        if (a === 'static' && isContact && (force || this._rngNext() < 0.30)) {
             const applied = typeof attacker.applyStatus === 'function' ? attacker.applyStatus('paralysis') : true;
             if (applied) {
                 attacker.status = 'paralysis';
@@ -581,7 +585,7 @@ export class AbilityEngine {
         }
 
         // Poison Point: 30% poison on contact
-        if (a === 'poisonpoint' && isContact && (force || Math.random() < 0.30)) {
+        if (a === 'poisonpoint' && isContact && (force || this._rngNext() < 0.30)) {
             const applied = typeof attacker.applyStatus === 'function' ? attacker.applyStatus('poison') : true;
             if (applied) {
                 attacker.status = 'poison';
@@ -592,9 +596,9 @@ export class AbilityEngine {
         }
 
         // Effect Spore: 30% random status (spore) on contact
-        if (a === 'effectspore' && isContact && (force || Math.random() < 0.30)) {
+        if (a === 'effectspore' && isContact && (force || this._rngNext() < 0.30)) {
             const statuses = ['paralysis', 'poison', 'sleep'];
-            const s = statuses[Math.floor(Math.random() * statuses.length)];
+            const s = statuses[Math.floor(this._rngNext() * statuses.length)];
             const applied = typeof attacker.applyStatus === 'function' ? attacker.applyStatus(s) : true;
             if (applied) {
                 attacker.status = s;
@@ -633,7 +637,7 @@ export class AbilityEngine {
         // Synchronize — copy status to attacker
         if (a === 'synchronize') {
             const statuses = Object.keys(defender.statuses || {});
-            if (statuses.length > 0 && (move?.forceTrigger || Math.random() < 0.5)) {
+            if (statuses.length > 0 && (move?.forceTrigger || this._rngNext() < 0.5)) {
                 statuses.forEach(s => {
                     if (typeof attacker.applyStatus === 'function') attacker.applyStatus(s);
                     else attacker.status = s;
@@ -809,7 +813,7 @@ export class AbilityEngine {
         if (a === 'mutliboost' || a === 'multiboost') {
             const stats = ['attack','defence','specialAttack','specialDefence','speed'];
             for (let i = 0; i < 3; i++) {
-                const s = stats[Math.floor(Math.random() * stats.length)];
+                const s = stats[Math.floor(this._rngNext() * stats.length)];
                 const boost = Math.floor(pokemon.stats[s] * 0.15);
                 pokemon.statModifiers[s] = (pokemon.statModifiers[s] || 0) + boost;
             }
@@ -825,7 +829,7 @@ export class AbilityEngine {
         // RKS System: change to random type each round
         if (a === 'rkssystem') {
             const types = ['Normal','Fire','Water','Grass','Electric','Ice','Fighting','Poison','Ground','Flying','Psychic','Bug','Rock','Ghost','Dragon','Dark','Steel','Fairy'];
-            pokemon.types = [types[Math.floor(Math.random() * types.length)]];
+            pokemon.types = [types[Math.floor(this._rngNext() * types.length)]];
             this._notify(`${pokemon.fullName}'s RKS System changed its type!`, 'action');
         }
 

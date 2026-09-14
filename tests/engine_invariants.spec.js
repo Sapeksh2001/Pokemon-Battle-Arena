@@ -8,6 +8,7 @@ import { BattleController } from '../src/engine/services/BattleController.js';
 import { MultiplayerManager } from '../src/engine/api/socketClient.js';
 import { PersistenceManager, SCHEMA_VERSION } from '../src/engine/services/PersistenceManager.js';
 import { InputManager } from '../src/engine/ui/InputManager.js';
+import { BattleRng } from '../src/engine/utils/BattleRng.js';
 import { typeChart } from '../src/engine/data/constants.js';
 
 function createPokemon(config = {}) {
@@ -271,6 +272,49 @@ test.describe('Phase 1: Engine Invariants & Correctness', () => {
         inputMgr.unbind();
         expect(inputMgr._isBound).toBe(false);
         expect(mockWindow.events['keydown']).toBeUndefined();
+    });
+
+    test('9. BattleRng generates 100% deterministic, reproducible pseudo-random streams given identical seeds', () => {
+        const rng1 = new BattleRng(424242);
+        const rng2 = new BattleRng(424242);
+
+        const seq1 = [rng1.next(), rng1.next(), rng1.nextInt(1, 100), rng1.chance(50), rng1.pick(['Fire', 'Water', 'Grass'])];
+        const seq2 = [rng2.next(), rng2.next(), rng2.nextInt(1, 100), rng2.chance(50), rng2.pick(['Fire', 'Water', 'Grass'])];
+
+        expect(seq1).toEqual(seq2);
+
+        // Resetting back to initial seed reproduces the exact same stream
+        rng1.reset();
+        const seqReset = [rng1.next(), rng1.next(), rng1.nextInt(1, 100), rng1.chance(50), rng1.pick(['Fire', 'Water', 'Grass'])];
+        expect(seqReset).toEqual(seq1);
+    });
+
+    test('10. BattleEngine with BattleRng produces deterministic secondary effect rolls', () => {
+        const seed = 987654;
+        const rngA = new BattleRng(seed);
+        const rngB = new BattleRng(seed);
+
+        const engineA = new BattleEngine(typeChart, rngA);
+        const engineB = new BattleEngine(typeChart, rngB);
+
+        const attackerA = createPokemon({ name: 'Raichu', types: ['Electric'] });
+        const defenderA = createPokemon({ name: 'Squirtle', types: ['Water'] });
+
+        const attackerB = createPokemon({ name: 'Raichu', types: ['Electric'] });
+        const defenderB = createPokemon({ name: 'Squirtle', types: ['Water'] });
+
+        // Thunderbolt with 10% secondary paralysis chance
+        const move = {
+            name: 'Thunderbolt',
+            type: 'Electric',
+            power: 90,
+            secondary: { status: 'paralysis', chance: 10 }
+        };
+
+        engineA.applyMoveEffects(move, attackerA, defenderA, 100, {});
+        engineB.applyMoveEffects(move, attackerB, defenderB, 100, {});
+
+        expect(defenderA.hasStatus('paralysis')).toBe(defenderB.hasStatus('paralysis'));
     });
 
 });

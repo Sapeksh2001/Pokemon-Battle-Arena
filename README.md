@@ -338,12 +338,27 @@ sequenceDiagram
 
 ---
 
-## Known Notes
+## Testing & Quality Assurance
 
-- `socket.io-client` is in `package.json` but unused — Firebase RTDB is the real-time transport
-- Data files (`movesets.js` etc.) total ~3MB bundled — bundle split is a future optimization
-- No automated test suite currently configured
-- Battle math is client-side authoritative — acceptable for MVP
+The project includes an automated test suite powered by `@playwright/test`:
+- **Engine Invariants & Mechanics**: Custom damage math verification, Teravolt paralysis and status immunities, string ID uniformity, HistoryManager snapshots, and `BattleRng` deterministic rolls.
+- **Move & Ability Dispatch Chains**: Drain, recoil, stat stage modifications, weather and terrain tick damage, contact abilities (Flame Body, Static, Effect Spore), and status damage escalations.
+- **Security & Authorization**: Firebase security rule validation, dependency sanitation, and payload injection defenses.
+- **End-to-End Simulation**: Complete simulated multiplayer battle lifecycle from lobby to victory.
+
+Run the test suite:
+```bash
+npm test
+```
+
+---
+
+## Architectural Notes
+
+- **Deterministic Simulation (`BattleRng`)**: Seeded PRNG ensures identical battle calculation, secondary effect resolution, and replay verification across multiplayer clients without desynchronization.
+- **Startup Payload Optimization**: Core battle datasets (~1.1 MB) load immediately to minimize time-to-interactive; the large `movesets.json` (1.92 MB) payload is loaded lazily in the background.
+- **Transport Layer**: Real-time multiplayer synchronization is powered directly by Firebase Realtime Database with action idempotency and client-side damage re-verification.
+- **Deployment**: Primary production target is Firebase Hosting ([pokemon-1248.web.app](https://pokemon-1248.web.app)).
 
 ---
 

@@ -277,12 +277,18 @@ export class MultiplayerManager {
 
         await set(aliasRef, roomId);
 
+        const battleSeed = Math.floor(Math.random() * 0xFFFFFFFF);
+        if (this.arena?.setBattleSeed) {
+            this.arena.setBattleSeed(battleSeed);
+        }
+
         await set(roomRef, {
             createdAt: Date.now(),
             hostId: this.playerId,
             hostUid: authManager.currentUser?.uid || null,
             status: 'lobby',
             aliasCode: roomCode,
+            battleSeed,
             settings: {
                 roomName: settings.roomName || 'Epic Battle Room',
                 maxPlayers: settings.maxPlayers || 2,
@@ -341,6 +347,10 @@ export class MultiplayerManager {
 
         const roomData = snapshot.val();
         const selectedRole = role;
+
+        if (roomData?.battleSeed && this.arena?.setBattleSeed) {
+            this.arena.setBattleSeed(roomData.battleSeed);
+        }
 
         // Allow wild card entries if game is started and player joins as 'player'
         if (roomData.status !== 'lobby' && selectedRole === 'player') {

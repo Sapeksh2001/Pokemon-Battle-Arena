@@ -8,6 +8,10 @@ export class BattleController {
         this.arena = arena;
     }
 
+    _rngNext() {
+        return this.arena?.rng ? this.arena.rng.next() : Math.random();
+    }
+
     get abilityEngine() { return this.arena.abilityEngine; }
     get weather() { return this.arena.gs?.weather || 'none'; }
     get wCfg() { return WEATHER_CONFIG[this.weather] || WEATHER_CONFIG.none; }
@@ -197,7 +201,7 @@ export class BattleController {
 
         // Confusion Check (50% chance to hurt self for 50 dmg; 25% chance to snap out if able to move)
         if (attacker.hasStatus('confusion') && !remoteData) {
-            if (Math.random() < 0.5) {
+            if (this._rngNext() < 0.5) {
                 attacker.takeDamage(50);
                 this._applyHPChange(attacker, attackerPlayer.id, attacker.currentHP, 'Confusion');
                 const confHitMsg = `${attacker.fullName} is confused and hurt itself in confusion for 50 damage!`;
@@ -206,7 +210,7 @@ export class BattleController {
                 this.arena.renderer.renderAll();
                 return;
             } else {
-                if (Math.random() < 0.25) {
+                if (this._rngNext() < 0.25) {
                     attacker.removeStatus('confusion');
                     const cureMsg = `${attacker.fullName} snapped out of confusion!`;
                     this.arena._notify(cureMsg, 'heal');
@@ -225,7 +229,7 @@ export class BattleController {
             }
         }
 
-        if (isParalyzed && !remoteData && Math.random() < 0.5) {
+        if (isParalyzed && !remoteData && this._rngNext() < 0.5) {
             this.arena._notify(`${attacker.fullName} is paralyzed and couldn't move!`, 'damage');
             this.arena.audio.playCry(attacker);
 
@@ -387,7 +391,7 @@ export class BattleController {
                 else if (['furyswipes'].includes(nameClean)) hitCount = 5;
                 else hitCount = 2;
             } else if (isTossDependent) {
-                hitCount = Math.floor(Math.random() * 4) + 2; // 2-5 hits
+                hitCount = Math.floor(this._rngNext() * 4) + 2; // 2-5 hits
             }
 
             // Delayed move check
@@ -526,12 +530,12 @@ export class BattleController {
                     }
 
                     // Wake up on damage (50% for Sleep, 30% for Deep Sleep)
-                    if (tPoke.hasStatus('sleep') && Math.random() < 0.5) {
+                    if (tPoke.hasStatus('sleep') && this._rngNext() < 0.5) {
                         tPoke.removeStatus('sleep');
                         this.arena._notify(`${tPoke.fullName} woke up upon taking damage!`, 'heal');
                         this.arena.log.add(`[SLEEP] ${tPoke.fullName} woke up!`, 'heal');
                     }
-                    if ((tPoke.hasStatus('deep_sleep') || tPoke.hasStatus('deepsleep')) && Math.random() < 0.3) {
+                    if ((tPoke.hasStatus('deep_sleep') || tPoke.hasStatus('deepsleep')) && this._rngNext() < 0.3) {
                         tPoke.removeStatus('deep_sleep');
                         tPoke.removeStatus('deepsleep');
                         this.arena._notify(`${tPoke.fullName} woke up from deep sleep upon taking damage!`, 'heal');
@@ -539,7 +543,7 @@ export class BattleController {
                     }
 
                     // Infatuation end on damage (50% chance)
-                    if (tPoke.hasStatus('infatuation') && Math.random() < 0.5) {
+                    if (tPoke.hasStatus('infatuation') && this._rngNext() < 0.5) {
                         tPoke.removeStatus('infatuation');
                         this.arena._notify(`${tPoke.fullName} is no longer infatuated!`, 'heal');
                         this.arena.log.add(`[INFATUATION] ${tPoke.fullName} is no longer infatuated!`, 'heal');
@@ -1067,7 +1071,7 @@ export class BattleController {
     // ── Secondary Effect Helper ────────────────────────────────────────────
     _applySecondaryEffect(attacker, target, secondary) {
         const { chance, status, boosts, volatileStatus } = secondary;
-        if (!chance || Math.random() * 100 > chance) return;
+        if (!chance || this._rngNext() * 100 > chance) return;
 
         // Block weather-immune statuses
         if (status) {

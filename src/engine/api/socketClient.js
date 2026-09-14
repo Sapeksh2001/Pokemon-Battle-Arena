@@ -425,6 +425,12 @@ export class MultiplayerManager {
         this.mode = 'offline';
         this.isSpectator = false;
         this._entryPath = null;
+        // P1-B: Reset all protocol state between rooms
+        this._peerSequences = {};
+        this._processedActionIds = new Set();
+        this._battleSequence = 0;
+        this._stateVersion = 0;
+        this._lastReceivedStateVersion = 0;
         setActiveRoom(null, null);
         // Dismiss lingering wildcard queue overlay if present
         const queueEl = document.getElementById('wildcard-queue');
@@ -681,13 +687,18 @@ export class MultiplayerManager {
         if (!targetId || this.mode !== 'playing') return;
         try {
             const state = this.serializeGameState();
-            state._sender = this.playerId; 
+            state._sender = this.playerId;
+            // P1-C: Attach monotonic stateVersion for snapshot ordering
+            if (!this._stateVersion) this._stateVersion = 0;
+            this._stateVersion++;
+            state._stateVersion = this._stateVersion;
             const stateRef = ref(db, `rooms/${targetId}/state`);
             
             if (this.lastSentState) {
                 const diff = getObjectDiff(this.lastSentState, state);
                 if (Object.keys(diff).length > 0) {
                     diff["_sender"] = this.playerId;
+                    diff["_stateVersion"] = this._stateVersion;
                     update(stateRef, diff);
                 }
             } else {
@@ -700,6 +711,15 @@ export class MultiplayerManager {
     }
 
     receiveGameState(state) {
+        // P1-C: Reject stale state snapshots via monotonic stateVersion
+        if (state._stateVersion != null) {
+            if (!this._lastReceivedStateVersion) this._lastReceivedStateVersion = 0;
+            if (state._stateVersion <= this._lastReceivedStateVersion) {
+                console.warn(`[Multiplayer] Dropped stale state v${state._stateVersion}, current v${this._lastReceivedStateVersion}`);
+                return;
+            }
+            this._lastReceivedStateVersion = state._stateVersion;
+        }
         try {
             this.deserializeGameState(state);
             this.lastSentState = state;
@@ -739,17 +759,13 @@ export class MultiplayerManager {
             }
         }
 
-        // P2: Track highest seen sequence per sender to reject stale/out-of-order commands
+        // P0-A: Read sequence — do NOT advance yet (advance only after validation succeeds)
         if (!this._peerSequences) this._peerSequences = {};
         const senderSeq = payload?.battleSequence;
         const senderId = actionMetadata?.sender || payload?.sender;
         let expectedSequence = undefined;
         if (senderId && senderSeq != null) {
-            const lastSeen = this._peerSequences[senderId] || 0;
-            expectedSequence = lastSeen + 1;
-            if (senderSeq > lastSeen) {
-                this._peerSequences[senderId] = senderSeq;
-            }
+            expectedSequence = (this._peerSequences[senderId] ?? 0) + 1;
         }
 
         // Validate incoming action — isHost is derived from roomContext.hostId, never from client metadata
@@ -764,7 +780,12 @@ export class MultiplayerManager {
 
         if (!validation.valid) {
             console.warn(`[Multiplayer Security] Dropped unauthorized/invalid action '${action}':`, validation.reason, { payload, actionMetadata });
-            return;
+            return; // Sequence NOT advanced — rejected commands don't poison protocol state
+        }
+
+        // P0-A: Advance sequence ONLY after successful validation
+        if (senderId && senderSeq != null) {
+            this._peerSequences[senderId] = senderSeq;
         }
 
         switch (action) {

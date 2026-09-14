@@ -11,13 +11,13 @@ export class InputManager {
     }
 
     bind() {
-        if (typeof window === 'undefined' || this._isBound) return;
+        if (typeof window === 'undefined' || typeof window.addEventListener !== 'function' || this._isBound) return;
         window.addEventListener('keydown', this._handler);
         this._isBound = true;
     }
 
     unbind() {
-        if (typeof window === 'undefined' || !this._isBound) return;
+        if (typeof window === 'undefined' || typeof window.removeEventListener !== 'function' || !this._isBound) return;
         window.removeEventListener('keydown', this._handler);
         this._isBound = false;
     }

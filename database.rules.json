@@ -14,7 +14,7 @@
         "actions": {
           "$action_id": {
             ".write": "auth != null && !data.exists() && (data.parent().parent().child('hostUid').val() === auth.uid || root.child('rooms').child($room_id).child('players').child(newData.child('sender').val()).child('uid').val() === auth.uid)",
-            ".validate": "newData.hasChildren(['sender', 'action', 'timestamp']) && newData.child('timestamp').isNumber() && newData.child('action').isString() && newData.child('action').val().length < 64"
+            ".validate": "newData.hasChildren(['sender', 'action', 'timestamp', 'actionId', 'payload']) && newData.child('timestamp').isNumber() && newData.child('action').isString() && newData.child('action').val().length < 64 && newData.child('actionId').isString() && newData.child('actionId').val().length < 64 && newData.child('sender').isString()"
           }
         },
         "entryQueue": {

@@ -122,23 +122,25 @@ export class BattleController {
             targetId     = remoteData.targetId;
             moveName     = remoteData.moveName || '';
 
-            // P0-B: Canonicalize — resolve trusted move attributes from MovesData, never trust client values
+            // P0-B: Canonicalize from trusted MovesData — reject unknown moves, no network fallback
             const canonicalMove = (typeof window !== 'undefined' && window.MovesData && moveName)
                 ? window.MovesData[moveName] : null;
-            if (canonicalMove) {
-                moveType   = canonicalMove.type || remoteData.moveType;
-                movePower  = canonicalMove.basePower ?? remoteData.movePower;
-                attackType = canonicalMove.category === 'Physical' ? 'physical'
-                           : canonicalMove.category === 'Special'  ? 'special'
-                           : canonicalMove.category === 'Status'   ? 'status'
-                           : remoteData.attackType;
-            } else {
-                // Graceful fallback for custom/unknown moves
-                moveType   = remoteData.moveType;
-                movePower  = remoteData.movePower;
-                attackType = remoteData.attackType;
+
+            if (!canonicalMove) {
+                // Unknown move from network — reject, never trust payload values
+                console.warn(`[Security] Rejected unknown remote move: "${moveName}"`);
+                this.arena._announce(`Unknown move "${moveName}" rejected.`, true);
+                return;
             }
-            // Ignore pre-computed damage/effectiveness — recalculate locally for parity
+
+            // P0-C: Use canonical fields only — no || remoteData fallback
+            moveType   = canonicalMove.type;
+            movePower  = canonicalMove.power ?? canonicalMove.basePower ?? 0;
+            const cat  = (canonicalMove.category || '').toLowerCase();
+            attackType = cat === 'physical' ? 'physical'
+                       : cat === 'special'  ? 'special'
+                       : 'status';
+            // Always recalculate damage/effectiveness locally
             damage        = undefined;
             effectiveness = undefined;
         } else {

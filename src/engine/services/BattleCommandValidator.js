@@ -30,10 +30,10 @@ export class BattleCommandValidator {
         // ponytail: derive host status ONLY from trusted server-side roomContext — never from client metadata
         const isHost = !!(roomContext.hostId && String(roomContext.hostId) === String(senderId));
 
-        // P2: Reject stale / out-of-order commands via monotonic battleSequence
+        // P0-A: Reject out-of-order commands via strict monotonic battleSequence (no gaps allowed)
         if (roomContext.expectedSequence != null && payload.battleSequence != null) {
-            if (payload.battleSequence < roomContext.expectedSequence) {
-                return { valid: false, reason: `Stale command: sequence ${payload.battleSequence} < expected ${roomContext.expectedSequence}` };
+            if (payload.battleSequence !== roomContext.expectedSequence) {
+                return { valid: false, reason: `Sequence mismatch: got ${payload.battleSequence}, expected ${roomContext.expectedSequence}` };
             }
         }
 
@@ -52,9 +52,16 @@ export class BattleCommandValidator {
                     return { valid: false, reason: `Sender ${senderId} does not own attacking player ${attackerId}` };
                 }
 
-                // 2. Self-targeting check for attacks (standard offensive moves cannot target own team)
+                // 2. Self-targeting check — status moves (Swords Dance, Recover, etc.) may legitimately self-target
                 if (String(attackerId) === String(targetId)) {
-                    return { valid: false, reason: 'Attacking Pokémon cannot target itself or own player in standard attack' };
+                    const moveCategory = payload.attackType || payload.category;
+                    const isSelfTargetAllowed = moveCategory === 'status'
+                        || moveCategory === 'Status'
+                        || payload.movePower === 0
+                        || payload.movePower == null;
+                    if (!isSelfTargetAllowed) {
+                        return { valid: false, reason: 'Offensive move cannot target own player' };
+                    }
                 }
 
                 // 3. Attacker & Target Presence

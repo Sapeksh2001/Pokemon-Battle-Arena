@@ -165,22 +165,41 @@ test.describe('Phase 1: Engine Invariants & Correctness', () => {
 
         arena.gs.players = [p1, p2];
 
-        // Malicious client sends spoofed damage = 9999
-        arena.battleController.handleAttack('physical', {
-            attackerId: 'p1',
-            targetId: 'p2',
-            moveName: 'Thunder Punch',
-            moveType: 'Electric',
-            movePower: 90,
-            attackType: 'physical',
-            damage: 9999, // <--- Spoofed malicious damage
-            effectiveness: 1
-        });
+        // Provide canonical MovesData for trusted move validation (Phase 2 hardening)
+        const hadWindow = 'window' in globalThis;
+        const origWindow = globalThis.window;
+        globalThis.window = globalThis.window || {};
+        const origMovesData = globalThis.window.MovesData;
+        globalThis.window.MovesData = {
+            'Thunder Punch': { type: 'Electric', category: 'Physical', power: 90 }
+        };
 
-        // Expected deterministic calculation:
-        // rawDamage = (120 - 80) + (90 * 2) = 220
-        // Target HP before: 300. After taking 220 damage, currentHP should be 80, NOT 0!
-        expect(defender.currentHP).toBe(80);
+        try {
+            // Malicious client sends spoofed damage = 9999
+            arena.battleController.handleAttack('physical', {
+                attackerId: 'p1',
+                targetId: 'p2',
+                moveName: 'Thunder Punch',
+                moveType: 'Electric',
+                movePower: 90,
+                attackType: 'physical',
+                damage: 9999, // <--- Spoofed malicious damage
+                effectiveness: 1
+            });
+
+            // Expected deterministic calculation:
+            // rawDamage = (120 - 80) + (90 * 2) = 220
+            // Target HP before: 300. After taking 220 damage, currentHP should be 80, NOT 0!
+            expect(defender.currentHP).toBe(80);
+        } finally {
+            if (!hadWindow) {
+                delete globalThis.window;
+            } else {
+                globalThis.window = origWindow;
+                if (origMovesData !== undefined) globalThis.window.MovesData = origMovesData;
+                else delete globalThis.window.MovesData;
+            }
+        }
     });
 
     test('6. MultiplayerManager drops duplicate actions sharing the same actionId', () => {

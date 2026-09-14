@@ -27,11 +27,15 @@ export class BattleCommandValidator {
             return { valid: false, reason: 'Missing sender ID in command envelope' };
         }
 
-        const isHost = !!(
-            actionMetadata.isHost ||
-            (roomContext.hostId && String(roomContext.hostId) === String(senderId)) ||
-            (gameState.hostId && String(gameState.hostId) === String(senderId))
-        );
+        // ponytail: derive host status ONLY from trusted server-side roomContext — never from client metadata
+        const isHost = !!(roomContext.hostId && String(roomContext.hostId) === String(senderId));
+
+        // P2: Reject stale / out-of-order commands via monotonic battleSequence
+        if (roomContext.expectedSequence != null && payload.battleSequence != null) {
+            if (payload.battleSequence < roomContext.expectedSequence) {
+                return { valid: false, reason: `Stale command: sequence ${payload.battleSequence} < expected ${roomContext.expectedSequence}` };
+            }
+        }
 
         const players = gameState.players || [];
 
@@ -169,9 +173,15 @@ export class BattleCommandValidator {
             }
 
             case 'log_add':
-            case 'player_add':
-            case 'player_remove':
                 return { valid: true };
+
+            case 'player_add':
+            case 'player_remove': {
+                if (!isHost) {
+                    return { valid: false, reason: `Only the host can ${action}` };
+                }
+                return { valid: true };
+            }
 
             default:
                 // Unknown actions are rejected defensively

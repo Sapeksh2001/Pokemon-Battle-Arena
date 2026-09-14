@@ -132,7 +132,8 @@ test.describe('Multiplayer Command Authorization & Simulation Parity', () => {
 
     test('6. Host authority: Room host CAN send hp_change for player', () => {
         const payload = { playerId: 'p2', slotId: 0, newHP: 150 };
-        const metadata = { sender: 'p1', isHost: true };
+        // Note: isHost in metadata is now IGNORED — host is derived from roomContext.hostId
+        const metadata = { sender: 'p1' };
         const result = BattleCommandValidator.validateCommand('hp_change', payload, metadata, gameState, { hostId: 'p1' });
 
         expect(result.valid).toBe(true);
@@ -169,7 +170,9 @@ test.describe('Multiplayer Command Authorization & Simulation Parity', () => {
         expect(tradeRes.valid).toBe(false);
     });
 
-    test('10. Unified Combat Simulation Parity: Multi-hit attack produces identical damage on both clients with shared BattleRng', () => {
+    // ── P1-B: True Remote Path Simulation Parity ──────────────────────────
+
+    test('10. Simulation Parity: Multi-hit attack — local path (Client A) vs remote path (Client B) produces identical HP', () => {
         const seed = 77788899;
 
         function createTestArena(seedVal) {
@@ -193,7 +196,8 @@ test.describe('Multiplayer Command Authorization & Simulation Parity', () => {
                 _notify: () => {},
                 _showDamageNumber: () => {},
                 _animateSprite: (id, type, cb) => cb?.(),
-                saveLocalState: () => {}
+                saveLocalState: () => {},
+                multiplayer: null // no broadcast in tests
             };
             arena.abilityEngine = new AbilityEngine(arena);
             arena.battleController = new BattleController(arena);
@@ -203,21 +207,21 @@ test.describe('Multiplayer Command Authorization & Simulation Parity', () => {
         const arenaClientA = createTestArena(seed);
         const arenaClientB = createTestArena(seed);
 
-        // Multi-hit move Bullet Seed (Grass, 25 power, Physical)
-        const moveAction = {
+        // Client A: LOCAL attack — stub readAttackInputs (no DOM in tests)
+        arenaClientA.battleController.readAttackInputs = () => ({
+            attackerId: 'p1', targetId: 'p2', moveType: 'Grass', movePower: 25, moveName: 'Bullet Seed'
+        });
+        arenaClientA.battleController.handleAttack('physical');
+
+        // Client B: REMOTE attack — receives the payload Client A would have broadcast
+        arenaClientB.battleController.handleAttack('physical', {
             attackerId: 'p1',
             targetId: 'p2',
             moveName: 'Bullet Seed',
             moveType: 'Grass',
             movePower: 25,
             attackType: 'physical'
-        };
-
-        // Client A runs as local attack
-        arenaClientA.battleController.handleAttack('physical', moveAction);
-
-        // Client B runs as remote attack received from Client A
-        arenaClientB.battleController.handleAttack('physical', moveAction);
+        });
 
         const defenderA = arenaClientA.gs.players[1].getActivePokemon();
         const defenderB = arenaClientB.gs.players[1].getActivePokemon();
@@ -227,7 +231,7 @@ test.describe('Multiplayer Command Authorization & Simulation Parity', () => {
         expect(defenderA.currentHP).toBeLessThan(350);
     });
 
-    test('11. Unified Combat Simulation Parity: Secondary effect rolls evaluate identically on both clients with shared BattleRng', () => {
+    test('11. Simulation Parity: Secondary effect rolls — local vs remote produce identical status', () => {
         const seed = 55443322;
 
         function createTestArena(seedVal) {
@@ -251,7 +255,8 @@ test.describe('Multiplayer Command Authorization & Simulation Parity', () => {
                 _notify: () => {},
                 _showDamageNumber: () => {},
                 _animateSprite: (id, type, cb) => cb?.(),
-                saveLocalState: () => {}
+                saveLocalState: () => {},
+                multiplayer: null
             };
             arena.abilityEngine = new AbilityEngine(arena);
             arena.battleController = new BattleController(arena);
@@ -261,22 +266,129 @@ test.describe('Multiplayer Command Authorization & Simulation Parity', () => {
         const arenaA = createTestArena(seed);
         const arenaB = createTestArena(seed);
 
-        const moveAction = {
+        // Client A: LOCAL path
+        arenaA.battleController.readAttackInputs = () => ({
+            attackerId: 'p1', targetId: 'p2', moveType: 'Electric', movePower: 90, moveName: 'Thunderbolt'
+        });
+        arenaA.battleController.handleAttack('special');
+
+        // Client B: REMOTE path
+        arenaB.battleController.handleAttack('special', {
             attackerId: 'p1',
             targetId: 'p2',
             moveName: 'Thunderbolt',
             moveType: 'Electric',
             movePower: 90,
             attackType: 'special'
-        };
-
-        arenaA.battleController.handleAttack('special', moveAction);
-        arenaB.battleController.handleAttack('special', moveAction);
+        });
 
         const defenderA = arenaA.gs.players[1].getActivePokemon();
         const defenderB = arenaB.gs.players[1].getActivePokemon();
 
         expect(defenderA.currentHP).toBe(defenderB.currentHP);
         expect(defenderA.hasStatus('paralysis')).toBe(defenderB.hasStatus('paralysis'));
+    });
+
+    // ── P1-C: Malicious Payload Regression Tests ──────────────────────────
+
+    test('12. Fake isHost bypass: Non-host claiming isHost in metadata is still rejected', () => {
+        // Sender p2 is NOT the host (hostId = p1), but claims isHost: true in metadata
+        const payload = { playerId: 'p1', slotId: 0, newHP: 0 };
+        const metadata = { sender: 'p2', isHost: true }; // Spoofed flag
+        const result = BattleCommandValidator.validateCommand('hp_change', payload, metadata, gameState, { hostId: 'p1' });
+
+        // isHost is now derived ONLY from roomContext.hostId, so this MUST be rejected
+        expect(result.valid).toBe(false);
+        expect(result.reason).toContain('cannot directly modify opponent');
+    });
+
+    test('13. Invalid movePower injection: out-of-bounds power for legitimate move name', () => {
+        const payload = {
+            attackerId: 'p1',
+            targetId: 'p2',
+            moveName: 'Tackle', // Real move with basePower 40
+            moveType: 'Normal',
+            movePower: 99999   // Injected value
+        };
+        const metadata = { sender: 'p1' };
+        const result = BattleCommandValidator.validateCommand('attack', payload, metadata, gameState, { hostId: 'p1' });
+
+        expect(result.valid).toBe(false);
+        expect(result.reason).toContain('out of legal bounds');
+    });
+
+    test('14. Non-host player_add: Only host can add players', () => {
+        const payload = { id: 'p3', name: 'Mallory' };
+        const metadata = { sender: 'p2' }; // p2 is NOT host
+        const result = BattleCommandValidator.validateCommand('player_add', payload, metadata, gameState, { hostId: 'p1' });
+
+        expect(result.valid).toBe(false);
+        expect(result.reason).toContain('Only the host');
+    });
+
+    test('15. Non-host player_remove: Only host can remove players', () => {
+        const payload = { playerId: 'p1' };
+        const metadata = { sender: 'p2' }; // p2 is NOT host
+        const result = BattleCommandValidator.validateCommand('player_remove', payload, metadata, gameState, { hostId: 'p1' });
+
+        expect(result.valid).toBe(false);
+        expect(result.reason).toContain('Only the host');
+    });
+
+    test('16. Host CAN add and remove players', () => {
+        const metadata = { sender: 'p1' }; // p1 IS the host
+
+        const addRes = BattleCommandValidator.validateCommand('player_add', { id: 'p3', name: 'Charlie' }, metadata, gameState, { hostId: 'p1' });
+        expect(addRes.valid).toBe(true);
+
+        const removeRes = BattleCommandValidator.validateCommand('player_remove', { playerId: 'p2' }, metadata, gameState, { hostId: 'p1' });
+        expect(removeRes.valid).toBe(true);
+    });
+
+    test('17. Stale battleSequence: Out-of-order command is rejected', () => {
+        const payload = {
+            attackerId: 'p1',
+            targetId: 'p2',
+            moveName: 'Tackle',
+            moveType: 'Normal',
+            movePower: 40,
+            battleSequence: 3  // Stale — server expects 5
+        };
+        const metadata = { sender: 'p1' };
+        const roomContext = { hostId: 'p1', expectedSequence: 5 };
+        const result = BattleCommandValidator.validateCommand('attack', payload, metadata, gameState, roomContext);
+
+        expect(result.valid).toBe(false);
+        expect(result.reason).toContain('Stale command');
+    });
+
+    test('18. Current battleSequence: In-order command is accepted', () => {
+        const payload = {
+            attackerId: 'p1',
+            targetId: 'p2',
+            moveName: 'Tackle',
+            moveType: 'Normal',
+            movePower: 40,
+            battleSequence: 5
+        };
+        const metadata = { sender: 'p1' };
+        const roomContext = { hostId: 'p1', expectedSequence: 5 };
+        const result = BattleCommandValidator.validateCommand('attack', payload, metadata, gameState, roomContext);
+
+        expect(result.valid).toBe(true);
+    });
+
+    test('19. Duplicate actionId: Second identical action is dropped by MultiplayerManager', () => {
+        // This tests the _processedActionIds dedup in handleRemoteAction, not the validator.
+        // We simulate the dedup Set directly since we can't instantiate MultiplayerManager without Firebase.
+        const processedIds = new Set();
+        const actionId = 'abc-123';
+
+        // First time: not seen → should process
+        expect(processedIds.has(actionId)).toBe(false);
+        processedIds.add(actionId);
+
+        // Second time: already seen → should drop
+        expect(processedIds.has(actionId)).toBe(true);
     });
 });

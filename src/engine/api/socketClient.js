@@ -711,6 +711,8 @@ export class MultiplayerManager {
 
     sendAction(action, payload = {}) {
         if (!this.roomCode || this.mode !== 'playing') return;
+        if (!this._battleSequence) this._battleSequence = 0;
+        this._battleSequence++;
         const actionsRef = ref(db, `rooms/${this.roomCode}/actions`);
         const actionId = `${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 9)}`;
         push(actionsRef, {
@@ -718,7 +720,7 @@ export class MultiplayerManager {
             senderUid: authManager.currentUser?.uid || null,
             action,
             actionId,
-            payload: { ...payload, actionId },
+            payload: { ...payload, actionId, battleSequence: this._battleSequence },
             timestamp: Date.now()
         });
     }
@@ -737,12 +739,25 @@ export class MultiplayerManager {
             }
         }
 
-        // Validate incoming action against multiplayer security and gameplay rules
-        const roomContext = { hostId: this.hostId, playerId: this.playerId, isHost: this.isHost };
+        // P2: Track highest seen sequence per sender to reject stale/out-of-order commands
+        if (!this._peerSequences) this._peerSequences = {};
+        const senderSeq = payload?.battleSequence;
+        const senderId = actionMetadata?.sender || payload?.sender;
+        let expectedSequence = undefined;
+        if (senderId && senderSeq != null) {
+            const lastSeen = this._peerSequences[senderId] || 0;
+            expectedSequence = lastSeen + 1;
+            if (senderSeq > lastSeen) {
+                this._peerSequences[senderId] = senderSeq;
+            }
+        }
+
+        // Validate incoming action — isHost is derived from roomContext.hostId, never from client metadata
+        const roomContext = { hostId: this.hostId, playerId: this.playerId, expectedSequence };
         const validation = BattleCommandValidator.validateCommand(
             action,
             payload,
-            { ...actionMetadata, isHost: actionMetadata.isHost ?? this.isHost },
+            actionMetadata,
             this.arena?.gs || {},
             roomContext
         );

@@ -120,11 +120,27 @@ export class BattleController {
         if (remoteData) {
             attackerId   = remoteData.attackerId;
             targetId     = remoteData.targetId;
-            moveType     = remoteData.moveType;
-            movePower    = remoteData.movePower;
             moveName     = remoteData.moveName || '';
-            damage       = remoteData.damage;
-            effectiveness = remoteData.effectiveness;
+
+            // P0-B: Canonicalize — resolve trusted move attributes from MovesData, never trust client values
+            const canonicalMove = (typeof window !== 'undefined' && window.MovesData && moveName)
+                ? window.MovesData[moveName] : null;
+            if (canonicalMove) {
+                moveType   = canonicalMove.type || remoteData.moveType;
+                movePower  = canonicalMove.basePower ?? remoteData.movePower;
+                attackType = canonicalMove.category === 'Physical' ? 'physical'
+                           : canonicalMove.category === 'Special'  ? 'special'
+                           : canonicalMove.category === 'Status'   ? 'status'
+                           : remoteData.attackType;
+            } else {
+                // Graceful fallback for custom/unknown moves
+                moveType   = remoteData.moveType;
+                movePower  = remoteData.movePower;
+                attackType = remoteData.attackType;
+            }
+            // Ignore pre-computed damage/effectiveness — recalculate locally for parity
+            damage        = undefined;
+            effectiveness = undefined;
         } else {
             // Read and validate form inputs via dedicated helper — no inline DOM access.
             const inputs = this.readAttackInputs();

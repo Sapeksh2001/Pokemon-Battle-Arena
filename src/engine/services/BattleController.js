@@ -255,69 +255,13 @@ export class BattleController {
         this.arena.history.snapshot(this.arena.gs);
         this.arena.audio.playCry(attacker);
 
-        if (remoteData) {
-            // Validate & compute deterministic damage using the custom battle math
-            let computedDamage = damage;
-            let computedEffectiveness = effectiveness;
-            try {
-                const moveObj = (typeof window !== 'undefined' && window.MovesData && moveName)
-                    ? window.MovesData[moveName]
-                    : null;
-                const move = moveObj
-                    ? { ...moveObj, type: moveType, category: moveObj.category || (attackType === 'physical' ? 'Physical' : 'Special'), flags: moveObj.flags || {} }
-                    : { type: moveType, category: attackType === 'physical' ? 'Physical' : 'Special', flags: {} };
-
-                const calc = this.arena.engine.calculateDamage(
-                    attacker, target, movePower, moveType, attackType,
-                    this.weather, move, this.abilityEngine, this.arena.gs?.terrain
-                );
-                if (typeof calc.damage === 'number' && !isNaN(calc.damage)) {
-                    computedDamage = calc.damage;
-                    computedEffectiveness = calc.effectiveness;
-                }
-            } catch (err) {
-                console.warn('[BattleController] Error evaluating remote damage:', err);
-            }
-            damage = computedDamage;
-            effectiveness = computedEffectiveness;
-
-            // Apply calculated damage
-            let msg = `${attacker.fullName} used a ${attackType} ${moveType} attack on ${target.fullName} for ${damage} damage!`;
-            if (effectiveness > 1) msg += " It's super effective!";
-            if (effectiveness < 1 && effectiveness > 0) msg += " It's not very effective...";
-            if (effectiveness === 0) msg = `${target.fullName} is immune!`;
-
-            this.arena.log.add(msg, effectiveness === 0 ? 'action' : 'damage');
-            this.arena._announce(msg);
-
-            if (damage > 0) {
-                this.arena._showDamageNumber(targetId, damage, effectiveness >= 2 ? 'critical' : 'damage');
-            }
-
-            target.currentHP = Math.max(0, target.currentHP - damage);
-            this.arena.renderer.renderAll();
-
-            const onDone = () => {
-                if (target.isFainted()) {
-                    this.arena.audio.playCry(target);
-                    this.arena._announce(`${target.fullName} fainted!`);
-                    this.arena._animateSprite(targetId, 'faint', () => this.arena.renderer.renderAll());
-                } else {
-                    this.arena.renderer.renderAll();
-                }
-            };
-
-            damage > 0
-                ? this.arena._animateSprite(targetId, 'damage', onDone)
-                : onDone();
-        } else {
-            // ── Get enriched move object (from window.MovesData) ─────────
-            const moveObj = window.MovesData && moveName
-                ? window.MovesData[moveName]
-                : null;
-            const move = moveObj
-                ? { ...moveObj, type: moveType, category: moveObj.category || (attackType === 'physical' ? 'Physical' : 'Special'), flags: moveObj.flags || {} }
-                : { type: moveType, category: attackType === 'physical' ? 'Physical' : 'Special', flags: {} };
+        // ── Get enriched move object (from window.MovesData) ─────────
+        const moveObj = (typeof window !== 'undefined' && window.MovesData && moveName)
+            ? window.MovesData[moveName]
+            : null;
+        const move = moveObj
+            ? { ...moveObj, type: moveType, category: moveObj.category || (attackType === 'physical' ? 'Physical' : 'Special'), flags: moveObj.flags || {} }
+            : { type: moveType, category: attackType === 'physical' ? 'Physical' : 'Special', flags: {} };
 
             const isStatusMove = move.category === 'Status' || move.category === 'status' || attackType === 'status';
             const nameClean = moveName ? moveName.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
@@ -810,8 +754,8 @@ export class BattleController {
                 }
             };
 
-            // Broadcast to other players
-            if (this.arena.multiplayer && this.arena.multiplayer.mode === 'playing') {
+            // Broadcast to other players (only for locally initiated attacks)
+            if (!remoteData && this.arena.multiplayer && this.arena.multiplayer.mode === 'playing') {
                 this.arena.multiplayer.sendAction('attack', {
                     attackerId,
                     targetId,
@@ -827,7 +771,6 @@ export class BattleController {
             totalDamageDealtToAny > 0
                 ? this.arena._animateSprite(targetId, 'damage', onDone)
                 : onDone();
-        }
 
         // Autosave Local State
         this.arena.saveLocalState();

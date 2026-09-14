@@ -1,5 +1,6 @@
 import { Player } from '../models/Player.js';
 import { Pokemon } from '../models/Pokemon.js';
+import { BattleCommandValidator } from '../services/BattleCommandValidator.js';
 import { 
     ref as dbRef, set, get, onValue, off, push, update, remove, 
     serverTimestamp, onDisconnect, query, limitToLast, onChildAdded, orderByChild
@@ -118,6 +119,7 @@ export class MultiplayerManager {
         this.playerId = generatePlayerId();
         this.playerName = '';
         this.isHost = false;
+        this.hostId = null;
         this.isConnected = true; 
         this.mode = 'offline'; 
         this.unsubscribes = [];
@@ -314,6 +316,7 @@ export class MultiplayerManager {
         this.saveRecentRoom(roomCode, 'host');
         this._recordJoinedGame();
         this.isHost = true;
+        this.hostId = this.playerId;
         this.mode = 'lobby';
         this.showRoomLobby();
         this._listenToLobby();
@@ -351,6 +354,8 @@ export class MultiplayerManager {
         if (roomData?.battleSeed && this.arena?.setBattleSeed) {
             this.arena.setBattleSeed(roomData.battleSeed);
         }
+
+        this.hostId = roomData.hostId || null;
 
         // Allow wild card entries if game is started and player joins as 'player'
         if (roomData.status !== 'lobby' && selectedRole === 'player') {
@@ -730,6 +735,21 @@ export class MultiplayerManager {
                 const oldest = this._processedActionIds.values().next().value;
                 this._processedActionIds.delete(oldest);
             }
+        }
+
+        // Validate incoming action against multiplayer security and gameplay rules
+        const roomContext = { hostId: this.hostId, playerId: this.playerId, isHost: this.isHost };
+        const validation = BattleCommandValidator.validateCommand(
+            action,
+            payload,
+            { ...actionMetadata, isHost: actionMetadata.isHost ?? this.isHost },
+            this.arena?.gs || {},
+            roomContext
+        );
+
+        if (!validation.valid) {
+            console.warn(`[Multiplayer Security] Dropped unauthorized/invalid action '${action}':`, validation.reason, { payload, actionMetadata });
+            return;
         }
 
         switch (action) {

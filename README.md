@@ -341,10 +341,12 @@ sequenceDiagram
 ## Testing & Quality Assurance
 
 The project includes an automated test suite powered by `@playwright/test`:
-- **Engine Invariants & Mechanics**: Custom damage math verification, Teravolt paralysis and status immunities, string ID uniformity, HistoryManager snapshots, and `BattleRng` deterministic rolls.
-- **Move & Ability Dispatch Chains**: Drain, recoil, stat stage modifications, weather and terrain tick damage, contact abilities (Flame Body, Static, Effect Spore), and status damage escalations.
+- **Engine Invariants & Mechanics**: Verification of Gen-5-inspired battle mechanics with custom damage calculations, Teravolt paralysis and status immunities, string ID uniformity, HistoryManager snapshots, and `BattleRng` deterministic rolls.
+- **Multiplayer Command Authorization**: `BattleCommandValidator` enforcement of sender ownership, cross-client state mutation protection (blocking arbitrary `hp_change`, `stat_update`, `status_toggle`, `evolve`, `switch`), and power bounds verification.
+- **Simulation Parity**: Unified combat pipeline ensuring multi-hit moves, ability hooks, secondary status rolls, drain, and recoil resolve identically on local and remote clients.
+- **Move & Ability Dispatch Chains**: Drain, recoil, stat stage modifications, weather/terrain tick damage, contact abilities (Flame Body, Static, Effect Spore), and status damage escalations.
 - **Security & Authorization**: Firebase security rule validation, dependency sanitation, and payload injection defenses.
-- **End-to-End Simulation**: Complete simulated multiplayer battle lifecycle from lobby to victory.
+- **Production Smoke Test**: End-to-end browser smoke test executing a complete guest battle lifecycle on live deployment.
 
 Run the test suite:
 ```bash
@@ -356,7 +358,9 @@ npm test
 ## Architectural Notes
 
 - **Deterministic Simulation (`BattleRng`)**: Seeded PRNG ensures identical battle calculation, secondary effect resolution, and replay verification across multiplayer clients without desynchronization.
-- **Startup Payload Optimization**: Core battle datasets (~1.1 MB) load immediately to minimize time-to-interactive; the large `movesets.json` (1.92 MB) payload is loaded lazily in the background.
+- **Command Authorization (`BattleCommandValidator`)**: Incoming network actions are strictly validated against sender ownership, turn state, and legal targets before hitting the engine.
+- **Unified Combat Pipeline**: Both local and remote attack executions run the identical domain logic in `BattleController`, ensuring complete simulation parity.
+- **True Lazy Loading**: Core battle metadata (~1.1 MB) loads immediately to achieve fast time-to-interactive; the bulky `movesets.json` (1.92 MB) payload is deferred until idle time or on-demand request.
 - **Transport Layer**: Real-time multiplayer synchronization is powered directly by Firebase Realtime Database with action idempotency and client-side damage re-verification.
 - **Deployment**: Primary production target is Firebase Hosting ([pokemon-1248.web.app](https://pokemon-1248.web.app)).
 

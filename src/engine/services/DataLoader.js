@@ -132,8 +132,14 @@ export async function loadGameData(onProgress) {
 
     console.log('[DataLoader] Starting to fetch core game data files in parallel...', total, 'files');
 
-    // Trigger background load of large movesets payload concurrently
-    loadMovesets();
+    // Defer loading of heavy movesets.json (1.92 MB) until idle time or on-demand request
+    if (typeof window !== 'undefined') {
+        if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(() => loadMovesets(), { timeout: 8000 });
+        } else {
+            setTimeout(() => loadMovesets(), 5000);
+        }
+    }
 
     const loadTasks = CORE_DATA_FILES.map(async ({ src, global: globalName, label }) => {
         // Skip if already present (e.g. hot-reload scenarios)

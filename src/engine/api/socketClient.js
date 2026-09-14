@@ -124,17 +124,19 @@ export class MultiplayerManager {
         this.lastSentState = null;
 
         // UI Helpers called via global scope from React components
-        window.copyRoomCode = () => {
-            if (!this.roomCode) return;
-            navigator.clipboard.writeText(this.roomCode);
-            this.showNotification('Room code copied!', 'success');
-        };
-        window.shareRoomLink = () => {
-            if (!this.roomCode) return;
-            const link = `${window.location.origin}?room=${this.roomCode}`;
-            navigator.clipboard.writeText(link);
-            this.showNotification('Share link copied!', 'success');
-        };
+        if (typeof window !== 'undefined') {
+            window.copyRoomCode = () => {
+                if (!this.roomCode) return;
+                navigator.clipboard.writeText(this.roomCode);
+                this.showNotification('Room code copied!', 'success');
+            };
+            window.shareRoomLink = () => {
+                if (!this.roomCode) return;
+                const link = `${window.location.origin}?room=${this.roomCode}`;
+                navigator.clipboard.writeText(link);
+                this.showNotification('Share link copied!', 'success');
+            };
+        }
         this.connect();
     }
 
@@ -652,7 +654,7 @@ export class MultiplayerManager {
         const unsubActions = onChildAdded(actionsRef, (snapshot) => {
             const data = snapshot.val();
             if (data && data.sender !== this.playerId && data.timestamp > listenTime) {
-                this.handleRemoteAction(data.action, data.payload);
+                this.handleRemoteAction(data.action, data.payload, { ...data, actionId: data.actionId || snapshot.key });
             }
         });
 
@@ -692,19 +694,34 @@ export class MultiplayerManager {
         }
     }
 
-    sendAction(action, payload) {
+    sendAction(action, payload = {}) {
         if (!this.roomCode || this.mode !== 'playing') return;
         const actionsRef = ref(db, `rooms/${this.roomCode}/actions`);
+        const actionId = `${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 9)}`;
         push(actionsRef, {
             sender: this.playerId,
             senderUid: authManager.currentUser?.uid || null,
             action,
-            payload,
+            actionId,
+            payload: { ...payload, actionId },
             timestamp: Date.now()
         });
     }
 
-    handleRemoteAction(action, payload) {
+    handleRemoteAction(action, payload, actionMetadata = {}) {
+        const actionId = payload?.actionId || actionMetadata?.actionId;
+        if (actionId) {
+            if (!this._processedActionIds) this._processedActionIds = new Set();
+            if (this._processedActionIds.has(actionId)) {
+                return; // Drop duplicate action from network replay/retry
+            }
+            this._processedActionIds.add(actionId);
+            if (this._processedActionIds.size > 200) {
+                const oldest = this._processedActionIds.values().next().value;
+                this._processedActionIds.delete(oldest);
+            }
+        }
+
         switch (action) {
             case 'log_add':
                 if (payload) {

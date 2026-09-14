@@ -50,9 +50,12 @@ export class HistoryManager {
     /** Serialise the game state to a plain-object snapshot. */
     _serialise(gs) {
         return {
+            version: 1,
             players: gs.players.map(p => p.toJSON()),
             round: gs.round,
             weather: gs.weather,
+            terrain: gs.terrain ? JSON.parse(JSON.stringify(gs.terrain)) : null,
+            delayedEffects: JSON.parse(JSON.stringify(gs.delayedEffects || [])),
             activeTurnPlayerId: gs.activeTurnPlayerId,
             selectedAttackTargetId: gs.selectedAttackTargetId,
             selectedStatusTargetId: gs.selectedStatusTargetId,
@@ -65,40 +68,40 @@ export class HistoryManager {
         gs.players = snap.players.map(d => Player.fromJSON(d, db));
         gs.round = snap.round;
         gs.weather = snap.weather;
+        gs.terrain = snap.terrain ? JSON.parse(JSON.stringify(snap.terrain)) : null;
+        gs.delayedEffects = (snap.delayedEffects || []).map(e => ({ ...e }));
         gs.activeTurnPlayerId = snap.activeTurnPlayerId;
         gs.selectedAttackTargetId = snap.selectedAttackTargetId;
         gs.selectedStatusTargetId = snap.selectedStatusTargetId;
     }
 
     /**
-     * Emit a 'history:changed' event so that React components (or legacy
+     * Emit a 'history:changed' event so that React consumers (or legacy
      * DOM code) can update undo/redo button state without the service
      * needing to touch the DOM directly.
-     *
-     * Legacy fallback: also update DOM buttons if they exist, so the
-     * in-engine HTML still works during the migration period.
      */
     _notifyChange() {
-        // Emit event for React consumers (ArenaContext, useArena hook, etc.)
-        window.dispatchEvent(new CustomEvent('history:changed', {
-            detail: { canUndo: this.canUndo, canRedo: this.canRedo }
-        }));
-
-        // Legacy DOM update — kept so existing #undo-btn / #redo-btn HTML still works.
-        // Remove this block once ArenaView fully manages its own undo/redo buttons.
-        const undoBtn = document.getElementById('undo-btn');
-        const redoBtn = document.getElementById('redo-btn');
-        if (undoBtn) {
-            undoBtn.disabled = this._past.length === 0;
-            undoBtn.title = this._past.length > 0
-                ? `Undo (${this._past.length} action(s) available)`
-                : 'Nothing to undo';
+        if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+            window.dispatchEvent(new CustomEvent('history:changed', {
+                detail: { canUndo: this.canUndo, canRedo: this.canRedo }
+            }));
         }
-        if (redoBtn) {
-            redoBtn.disabled = this._future.length === 0;
-            redoBtn.title = this._future.length > 0
-                ? `Redo (${this._future.length} action(s) available)`
-                : 'Nothing to redo';
+
+        if (typeof document !== 'undefined') {
+            const undoBtn = document.getElementById('undo-btn');
+            const redoBtn = document.getElementById('redo-btn');
+            if (undoBtn) {
+                undoBtn.disabled = this._past.length === 0;
+                undoBtn.title = this._past.length > 0
+                    ? `Undo (${this._past.length} action(s) available)`
+                    : 'Nothing to undo';
+            }
+            if (redoBtn) {
+                redoBtn.disabled = this._future.length === 0;
+                redoBtn.title = this._future.length > 0
+                    ? `Redo (${this._future.length} action(s) available)`
+                    : 'Nothing to redo';
+            }
         }
     }
 

@@ -6,7 +6,7 @@ import { Pokemon } from './Pokemon.js';
 
 export class Player {
     constructor(id, name, teamSize = 6) {
-        this.id = id;
+        this.id = String(id);
         this.name = name;
         this.team = Array(teamSize).fill(null); // Array<Pokemon|null>
         this.activePokemonIndex = 0;

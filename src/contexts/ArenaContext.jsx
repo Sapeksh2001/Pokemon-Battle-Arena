@@ -28,10 +28,12 @@ function snapshotGs(gs) {
     players:               (gs.players || []).map(p => ({ ...p })),
     round:                 gs.round,
     weather:               gs.weather,
+    terrain:               gs.terrain,
     activeTurnPlayerId:    gs.activeTurnPlayerId,
     selectedAttackTargetId:gs.selectedAttackTargetId,
     selectedStatusTargetId:gs.selectedStatusTargetId,
     currentHPEdit:         gs.currentHPEdit,
+    delayedEffects:        gs.delayedEffects || [],
     // expose raw ref for reads that need deep data
     _raw: gs,
   };
@@ -57,6 +59,7 @@ export function ArenaProvider({ children }) {
 
   useEffect(() => {
     let cancelled = false;
+    let unsubscribeArena = null;
 
     // Safety net: if engine never dispatches arena:ready, show an error after 30 s.
     const timeoutId = setTimeout(() => {
@@ -94,7 +97,14 @@ export function ArenaProvider({ children }) {
       if (!arena) return;
       arenaRef.current = arena;
 
-      // Install notify hook — engine calls this after every state mutation
+      // Subscribe cleanly via arena.onStateChange
+      if (typeof arena.onStateChange === 'function') {
+        unsubscribeArena = arena.onStateChange(() => {
+          if (!cancelled) notify();
+        });
+      }
+
+      // Install notify hook — engine or legacy code calls this after state mutation
       window.__arenaNotify = () => {
         if (!cancelled) notify();
       };
@@ -124,6 +134,9 @@ export function ArenaProvider({ children }) {
     return () => {
       cancelled = true;
       clearTimeout(timeoutId);
+      if (typeof unsubscribeArena === 'function') {
+        unsubscribeArena();
+      }
       window.removeEventListener('arena:ready', handleReady);
       window.removeEventListener('arena:progress', handleProgress);
       if (window.__arenaNotify) delete window.__arenaNotify;

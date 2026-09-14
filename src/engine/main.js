@@ -13,6 +13,8 @@ import { UIRenderer } from './ui/UIRenderer.js';
 import { MultiplayerManager } from './api/socketClient.js';
 import { BattleController } from './services/BattleController.js';
 import { AbilityEngine } from './services/AbilityEngine.js';
+import { PersistenceManager } from './services/PersistenceManager.js';
+import { InputManager } from './ui/InputManager.js';
 import { WEATHER_CONFIG, SUPERIOR_WEATHERS, UNTOUCHABLE_WEATHERS } from './data/weather.js';
 
 export class PokemonBattleArena {
@@ -28,6 +30,9 @@ export class PokemonBattleArena {
         this.timer = new Timer(120);
         this.multiplayer = new MultiplayerManager(this);
         this.abilityEngine = new AbilityEngine(this);
+        this.persistence = new PersistenceManager(this);
+        this.input = new InputManager(this);
+        this._stateListeners = [];
 
         this.gs = {
             players: [],
@@ -134,88 +139,70 @@ export class PokemonBattleArena {
     }
 
 
-    saveLocalState() {
-        try {
-            const state = {
-                players: this.gs.players.map(p => p.toJSON()),
-                round: this.gs.round,
-                weather: this.gs.weather,
-                activeTurnPlayerId: this.gs.activeTurnPlayerId,
-                selectedAttackTargetId: this.gs.selectedAttackTargetId,
-                selectedStatusTargetId: this.gs.selectedStatusTargetId,
-                logs: this.log._buffer.toArray()
-            };
-            localStorage.setItem('pba_active_battle_state', JSON.stringify(state));
-        } catch (err) {
-            console.error('[Arena] Local save failed:', err);
+    onStateChange(listener) {
+        if (!this._stateListeners) this._stateListeners = [];
+        this._stateListeners.push(listener);
+        return () => {
+            this._stateListeners = this._stateListeners.filter(l => l !== listener);
+        };
+    }
+
+    notifyStateChange() {
+        if (this._stateListeners) {
+            this._stateListeners.forEach(cb => {
+                try { cb(this.gs); } catch (e) { console.error('[Arena] State listener error:', e); }
+            });
         }
+        if (typeof window !== 'undefined' && typeof window.__arenaNotify === 'function') {
+            window.__arenaNotify(this.gs);
+        }
+    }
+
+    saveLocalState() {
+        return this.persistence.saveState(this.gs, this.log);
     }
 
     loadLocalState() {
-        try {
-            const saved = localStorage.getItem('pba_active_battle_state');
-            if (!saved) return false;
-            const state = JSON.parse(saved);
-            this.gs.players = (state.players || []).map(p => Player.fromJSON(p, this.db));
-            this.gs.round = state.round || 1;
-            this.gs.weather = state.weather || 'none';
-            this.gs.activeTurnPlayerId = state.activeTurnPlayerId || null;
-            this.gs.selectedAttackTargetId = state.selectedAttackTargetId || null;
-            this.gs.selectedStatusTargetId = state.selectedStatusTargetId || null;
-            if (state.logs) this.log.loadLogs(state.logs);
-            return true;
-        } catch (err) {
-            console.error('[Arena] Local load failed:', err);
-            return false;
+        return this.persistence.loadState(this.gs, this.db, this.log);
+    }
+
+    createMultiplayerRoom(name, settings = {}) {
+        const trainerName = name
+            || (typeof document !== 'undefined' ? document.getElementById('mp-host-name-input')?.value?.trim() : null)
+            || this.multiplayer?.playerName
+            || 'Trainer';
+
+        if (!trainerName) {
+            this._announce('Enter a trainer name to create a room.', true);
+            return;
         }
+
+        this.multiplayer?.connect();
+        setTimeout(() => this.multiplayer?.createRoom(trainerName, settings), 500);
+    }
+
+    joinMultiplayerRoom(code, name) {
+        const roomCode = code
+            || (typeof document !== 'undefined' ? document.getElementById('mp-join-code-input')?.value?.trim() : null);
+        const trainerName = name
+            || (typeof document !== 'undefined' ? document.getElementById('mp-join-name-input')?.value?.trim() : null)
+            || this.multiplayer?.playerName
+            || 'Trainer';
+
+        if (!roomCode) {
+            this._announce('Enter a room code to join.', true);
+            return;
+        }
+
+        this.multiplayer?.connect();
+        setTimeout(() => this.multiplayer?.joinRoom(roomCode.toUpperCase(), trainerName), 500);
     }
 
     _setupMultiplayerUI() {
-        /**
-         * window.createMultiplayerRoom(name)
-         *
-         * Called by the React "Create Room" modal's submit handler.
-         * 'name' is provided as a parameter — no prompt() needed.
-         */
-        window.createMultiplayerRoom = (name, settings = {}) => {
-            // Fallback: read from the auth display name if no name was passed
-            const trainerName = name
-                || document.getElementById('mp-host-name-input')?.value?.trim()
-                || this.multiplayer?.playerName
-                || 'Trainer';
-
-            if (!trainerName) {
-                this._announce('Enter a trainer name to create a room.', true);
-                return;
-            }
-
-            this.multiplayer.connect();
-            // Use setTimeout to allow Firebase connection to stabilise
-            setTimeout(() => this.multiplayer.createRoom(trainerName, settings), 500);
-        };
-
-        /**
-         * window.joinMultiplayerRoom(code, name)
-         *
-         * Called by the React "Join Room" modal's submit handler.
-         * Parameters are provided directly — no prompt() needed.
-         */
-        window.joinMultiplayerRoom = (code, name) => {
-            const roomCode = code
-                || document.getElementById('mp-join-code-input')?.value?.trim();
-            const trainerName = name
-                || document.getElementById('mp-join-name-input')?.value?.trim()
-                || this.multiplayer?.playerName
-                || 'Trainer';
-
-            if (!roomCode) {
-                this._announce('Enter a room code to join.', true);
-                return;
-            }
-
-            this.multiplayer.connect();
-            setTimeout(() => this.multiplayer.joinRoom(roomCode.toUpperCase(), trainerName), 500);
-        };
+        if (typeof window !== 'undefined') {
+            window.createMultiplayerRoom = (name, settings = {}) => this.createMultiplayerRoom(name, settings);
+            window.joinMultiplayerRoom = (code, name) => this.joinMultiplayerRoom(code, name);
+        }
     }
 
 
@@ -470,8 +457,7 @@ export class PokemonBattleArena {
         }
         if (!status || !targetId) return;
 
-        const numericId = parseInt(targetId);
-        const player = this.gs.players.find(p => p.id === targetId || p.id === numericId);
+        const player = this.gs.players.find(p => p.id === String(targetId));
         const pokemon = player?.getActivePokemon();
         if (!pokemon) return;
 
@@ -524,8 +510,7 @@ export class PokemonBattleArena {
             if (!remoteData) this._announce('Please select a target, stat, and value.', true);
             return;
         }
-        const numericId = parseInt(targetId);
-        const player = this.gs.players.find(p => p.id === targetId || p.id === numericId);
+        const player = this.gs.players.find(p => p.id === String(targetId));
         const pokemon = player?.getActivePokemon();
         if (!pokemon) return;
 
@@ -2024,93 +2009,7 @@ export class PokemonBattleArena {
     }
 
     _setupKeyboardShortcuts() {
-        document.addEventListener('keydown', e => {
-            const active = document.activeElement;
-            const inInput = active && ['INPUT', 'SELECT', 'TEXTAREA'].includes(active.tagName);
-            const isMod = e.ctrlKey || e.metaKey;
-
-            // Don't fire shortcuts if the user is typing in an input,
-            // UNLESS it's a modifier shortcut (like Ctrl+Z).
-            if (inInput && !isMod) return;
-
-            // ── Undo / Redo ──────────────────────────────────────────────
-            if (isMod && e.key?.toLowerCase() === 'z') {
-                e.preventDefault();
-                if (e.shiftKey) {
-                    document.getElementById('redo-btn')?.click();
-                } else {
-                    document.getElementById('undo-btn')?.click();
-                }
-                return;
-            }
-            if (isMod && e.key?.toLowerCase() === 'y') {
-                e.preventDefault();
-                document.getElementById('redo-btn')?.click();
-                return;
-            }
-
-            // ── Modals ──────────────────────────────────────────────────
-            if (e.key === 'Escape') {
-                if (this.modals.anyOpen()) {
-                    this.modals.closeAll();
-                    this.audio.play('click');
-                    return;
-                }
-            }
-
-            // Don't fire arena shortcuts when a modal is open.
-            if (this.modals.anyOpen()) return;
-
-            // ── Timer controls ───────────────────────────────────────────
-            if (e.key?.toLowerCase() === 't') {
-                e.preventDefault();
-                if (e.shiftKey) {
-                    document.getElementById('timer-reset')?.click();
-                } else {
-                    // Toggle: if running, pause; if paused, start.
-                    if (this.timer.isRunning) {
-                        document.getElementById('timer-pause')?.click();
-                    } else {
-                        document.getElementById('timer-start')?.click();
-                    }
-                }
-                return;
-            }
-
-            // ── Battle Actions ───────────────────────────────────────────
-            const shortcuts = {
-                ' ': 'end-round-btn',
-                'p': 'physical-attack-btn',
-                's': 'special-attack-btn',
-                'e': 'evolve-btn',
-                'd': 'devolve-btn',
-                'r': 'generate-number-btn',
-            };
-            const key = e.key?.toLowerCase();
-            if (key === 'f' && e.shiftKey) {
-                e.preventDefault();
-                document.getElementById('change-form-btn')?.click();
-                return;
-            }
-            if (shortcuts[key] && !e.shiftKey) {
-                e.preventDefault();
-                document.getElementById(shortcuts[key])?.click();
-                return;
-            }
-
-            // ── Player Selection (1-6) ───────────────────────────────────
-            if (e.key >= '1' && e.key <= '6') {
-                e.preventDefault();
-                const playerIndex = parseInt(e.key) - 1;
-                const player = this.gs.players[playerIndex];
-                const sel = document.getElementById('attacker-select');
-                if (player && sel) {
-                    sel.value = player.id;
-                    sel.dispatchEvent(new Event('change'));
-                    this.audio.play('click');
-                }
-            }
-        });
+        this.input.bind();
     }
 
 

@@ -7,15 +7,16 @@
 const BASE_URL = import.meta.env.BASE_URL || '/';
 const cleanBaseUrl = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
 
-const DATA_FILES = [
+const CORE_DATA_FILES = [
     { src: `${cleanBaseUrl}data/pokemon.json`,       global: 'MergedPokemonData',    label: 'Pokémon data'   },
     { src: `${cleanBaseUrl}data/abilities.json`,     global: 'AbilitiesData',         label: 'Abilities'      },
     { src: `${cleanBaseUrl}data/abilities_data.json`,global: 'AbilitiesDetailedData', label: 'Abilities detail'},
     { src: `${cleanBaseUrl}data/abilities_map.json`, global: 'PokemonAbilitiesMap',   label: 'Abilities map'  },
     { src: `${cleanBaseUrl}data/moves.json`,         global: 'MovesData',             label: 'Move data'      },
-    { src: `${cleanBaseUrl}data/movesets.json`,      global: 'MovesetsData',          label: 'Move sets'      },
     { src: `${cleanBaseUrl}data/attack_chart.json`,  global: 'AttackChartData',       label: 'Attack chart'   },
 ];
+
+let movesetsPromise = null;
 
 /**
  * Fetch a JSON file and store it on the global window object.
@@ -70,27 +71,73 @@ async function loadJson(src, globalName) {
  * Emit a structured progress event that ArenaContext v3 listens for.
  */
 function emitProgress(loaded, total, label) {
-    window.dispatchEvent(new CustomEvent('arena:progress', {
-        detail: { loaded, total, label }
-    }));
+    if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('arena:progress', {
+            detail: { loaded, total, label }
+        }));
+    }
 }
 
 /**
- * Load all game data files in parallel, emitting progress events after each one.
+ * Loads movesets.json (1.9 MB) lazily in the background or on demand.
+ * @returns {Promise<Object>} Resolves with window.MovesetsData.
+ */
+export function loadMovesets() {
+    if (typeof window !== 'undefined' && window.MovesetsData) {
+        return Promise.resolve(window.MovesetsData);
+    }
+    if (!movesetsPromise) {
+        movesetsPromise = loadJson(`${cleanBaseUrl}data/movesets.json`, 'MovesetsData')
+            .then(() => {
+                console.log('[DataLoader] MovesetsData loaded in background.');
+                if (typeof window !== 'undefined' && window.arena && window.arena.gs) {
+                    // Populate moves for any Pokémon that initialised without a moveset
+                    (window.arena.gs.players || []).forEach(player => {
+                        (player.team || []).forEach(poke => {
+                            if (poke && (!poke.moves || poke.moves.length === 0)) {
+                                poke.shuffleMoves();
+                            }
+                        });
+                    });
+                    if (typeof window.arena.notifyStateChange === 'function') {
+                        window.arena.notifyStateChange();
+                    }
+                }
+                return typeof window !== 'undefined' ? window.MovesetsData : {};
+            })
+            .catch(err => {
+                console.warn('[DataLoader] Failed to load MovesetsData:', err);
+                if (typeof window !== 'undefined') window.MovesetsData = {};
+                return {};
+            });
+    }
+    return movesetsPromise;
+}
+
+export async function ensureMovesetsLoaded() {
+    return loadMovesets();
+}
+
+/**
+ * Load core game data files in parallel, emitting progress events after each one.
+ * Starts loading the large movesets.json payload asynchronously in the background.
  *
  * @param {function(loaded: number, total: number, label: string): void} [onProgress]
  *   Optional legacy callback.
- * @returns {Promise<void>} Resolves when every global is available.
+ * @returns {Promise<void>} Resolves when core globals are available.
  */
 export async function loadGameData(onProgress) {
-    const total = DATA_FILES.length;
+    const total = CORE_DATA_FILES.length;
     let loadedCount = 0;
 
-    console.log('[DataLoader] Starting to fetch game data files in parallel...', total, 'files');
+    console.log('[DataLoader] Starting to fetch core game data files in parallel...', total, 'files');
 
-    const loadTasks = DATA_FILES.map(async ({ src, global: globalName, label }) => {
+    // Trigger background load of large movesets payload concurrently
+    loadMovesets();
+
+    const loadTasks = CORE_DATA_FILES.map(async ({ src, global: globalName, label }) => {
         // Skip if already present (e.g. hot-reload scenarios)
-        if (window[globalName]) {
+        if (typeof window !== 'undefined' && window[globalName]) {
             console.log(`[DataLoader] ${globalName} already exists on window. Skipping.`);
         } else {
             try {
@@ -107,7 +154,7 @@ export async function loadGameData(onProgress) {
     });
 
     await Promise.all(loadTasks);
-    console.log('[DataLoader] All game data files loaded successfully.');
+    console.log('[DataLoader] All core game data files loaded successfully.');
 }
 
 

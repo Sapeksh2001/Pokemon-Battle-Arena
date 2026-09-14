@@ -224,13 +224,13 @@ export class AbilityEngine {
             this._notify(`${pokemon.fullName} created a Fairy Terrain (Misty)!`, 'action');
         }
 
-        // Teravolt → burn foe
+        // Teravolt → paralyze foe
         if (a === 'teravolt') {
             const foes = this.gs.players.filter(p => p.getActivePokemon() !== pokemon);
             foes.forEach(p => {
                 const foe = p.getActivePokemon();
-                if (foe && !foe.hasStatus('burn') && !foe.types.includes('Fire')) {
-                    foe.applyStatus('burn');
+                if (foe && !foe.hasStatus('paralysis') && !foe.types.includes('Electric')) {
+                    foe.applyStatus('paralysis');
                     this._notify(`${pokemon.fullName}'s Teravolt paralyzed ${foe.fullName}!`, 'action');
                 }
             });

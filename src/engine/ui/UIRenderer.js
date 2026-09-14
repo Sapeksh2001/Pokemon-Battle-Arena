@@ -690,8 +690,7 @@ export class UIRenderer {
     _updateStatusButtonStyles() {
         const rawVal = document.getElementById('status-target-select')?.value;
         const targetId = rawVal && rawVal.includes('|') ? rawVal.split('|')[0] : rawVal;
-        const numericId = parseInt(targetId);
-        const player = this._gs.players.find(p => p.id === targetId || p.id === numericId);
+        const player = this._gs.players.find(p => p.id === String(targetId));
         const statuses = player?.getActivePokemon()?.statuses ?? {};
         document.querySelectorAll('.status-btn').forEach(btn => {
             if (btn.dataset.status) {

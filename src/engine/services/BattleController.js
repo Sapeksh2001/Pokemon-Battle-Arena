@@ -252,7 +252,32 @@ export class BattleController {
         this.arena.audio.playCry(attacker);
 
         if (remoteData) {
-            // Apply predetermined remote damage directly
+            // Validate & compute deterministic damage using the custom battle math
+            let computedDamage = damage;
+            let computedEffectiveness = effectiveness;
+            try {
+                const moveObj = (typeof window !== 'undefined' && window.MovesData && moveName)
+                    ? window.MovesData[moveName]
+                    : null;
+                const move = moveObj
+                    ? { ...moveObj, type: moveType, category: moveObj.category || (attackType === 'physical' ? 'Physical' : 'Special'), flags: moveObj.flags || {} }
+                    : { type: moveType, category: attackType === 'physical' ? 'Physical' : 'Special', flags: {} };
+
+                const calc = this.arena.engine.calculateDamage(
+                    attacker, target, movePower, moveType, attackType,
+                    this.weather, move, this.abilityEngine, this.arena.gs?.terrain
+                );
+                if (typeof calc.damage === 'number' && !isNaN(calc.damage)) {
+                    computedDamage = calc.damage;
+                    computedEffectiveness = calc.effectiveness;
+                }
+            } catch (err) {
+                console.warn('[BattleController] Error evaluating remote damage:', err);
+            }
+            damage = computedDamage;
+            effectiveness = computedEffectiveness;
+
+            // Apply calculated damage
             let msg = `${attacker.fullName} used a ${attackType} ${moveType} attack on ${target.fullName} for ${damage} damage!`;
             if (effectiveness > 1) msg += " It's super effective!";
             if (effectiveness < 1 && effectiveness > 0) msg += " It's not very effective...";
@@ -786,6 +811,7 @@ export class BattleController {
                 this.arena.multiplayer.sendAction('attack', {
                     attackerId,
                     targetId,
+                    moveName: moveObj?.name || moveName || '',
                     moveType,
                     movePower,
                     attackType,
